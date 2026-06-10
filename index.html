@@ -616,7 +616,7 @@ function PlannerSurface({formFactor,tasks,dark,accent,theme,listLayout,subtaskMo
       <SidebarCats/>
       <div className="sidebar-foot" style={{marginTop:'auto'}}>
         <button className={`avatar${session?' logged-in':''}`} title={session?'Account':'Sign in'} onClick={()=>setShowAuth(true)}>{initials}</button>
-        <div style={{flex:1,minWidth:0}}><div style={{fontSize:13,fontWeight:650}}>{displayName||'Work Planner'}</div><div style={{fontSize:11,color:'var(--ink-3)',display:'flex',alignItems:'center',gap:5,marginTop:2}}><span className={`sync-dot ${syncStatus}`}/>{syncLabel}</div></div>
+        <div style={{flex:1,minWidth:0}}><div style={{fontSize:13,fontWeight:650}}>{displayName||'Work Planner'}</div><div style={{fontSize:11,color:'var(--ink-3)',display:'flex',alignItems:'center',gap:5,marginTop:2,cursor:IS_SUPABASE&&session?'pointer':'default'}} onClick={()=>IS_SUPABASE&&session&&root.refresh()} title={syncStatus==='off'&&session?'Tap to retry sync':undefined}><span className={`sync-dot ${syncStatus}`}/>{syncLabel}</div></div>
         {IS_SUPABASE&&session&&<button className="mini-btn" title="Refresh" onClick={root.refresh}><span style={{display:'flex',animation:syncStatus==='busy'?'spin .7s linear infinite':'none'}}><Icon name="refresh" size={16}/></span></button>}
         <button className="mini-btn" title="Settings" onClick={()=>setShowSettings(true)}><Icon name="settings" size={16}/></button>
         <button className="mini-btn" title="Toggle theme" onClick={()=>root.setDark(!dark)}><Icon name={dark?'sun':'moon'} size={17}/></button>
@@ -659,13 +659,18 @@ function AppRoot(){
   const[showAuth,setShowAuth]=React.useState(false);
   const[settings,setSettingsState]=React.useState(()=>({...DEFAULT_SETTINGS,...lsLoad(LS_SETTINGS,{})}));
   const syncTimer=React.useRef(null);
+  const sessionRef=React.useRef(session);
+  React.useEffect(()=>{sessionRef.current=session;},[session]);
   CATEGORIES=categories;
 
   // auth
   React.useEffect(()=>{
     if(!IS_SUPABASE){setAuthLoading(false);return;}
-    sb.auth.getSession().then(({data:{session}})=>{setSession(session);if(session)loadRemote(session.user.id);else setAuthLoading(false);});
-    const{data:{subscription}}=sb.auth.onAuthStateChange((event,session)=>{setSession(session);if(event==='SIGNED_IN')loadRemote(session.user.id);if(event==='SIGNED_OUT')setAuthLoading(false);});
+    const{data:{subscription}}=sb.auth.onAuthStateChange((event,session)=>{
+      setSession(session);
+      if(session)loadRemote(session.user.id);
+      else setAuthLoading(false);
+    });
     return()=>subscription.unsubscribe();
   },[]);
 
@@ -686,12 +691,15 @@ function AppRoot(){
   };
 
   const scheduleSync=(newTasks,newCats)=>{
-    if(!IS_SUPABASE||!session)return;
+    if(!IS_SUPABASE||!sessionRef.current)return;
+    const uid=sessionRef.current.user.id;
     setSyncStatus('busy');
     if(syncTimer.current)clearTimeout(syncTimer.current);
     syncTimer.current=setTimeout(async()=>{
-      await sb.from('user_data').upsert({user_id:session.user.id,tasks:newTasks,categories:newCats,updated_at:new Date().toISOString()});
-      setSyncStatus('ok');
+      try{
+        const{error}=await sb.from('user_data').upsert({user_id:uid,tasks:newTasks,categories:newCats,updated_at:new Date().toISOString()});
+        setSyncStatus(error?'off':'ok');
+      }catch{setSyncStatus('off');}
     },1500);
   };
 
@@ -704,7 +712,7 @@ function AppRoot(){
   const root=React.useMemo(()=>({
     setDark,
     openAuth:()=>setShowAuth(true),
-    refresh:()=>{if(IS_SUPABASE&&session)loadRemote(session.user.id);},
+    refresh:()=>{if(IS_SUPABASE&&sessionRef.current)loadRemote(sessionRef.current.user.id);},
     signOut:async()=>{if(IS_SUPABASE)await sb.auth.signOut();setSession(null);},
     toggleTask:id=>setTasks(ts=>{const n=ts.map(x=>{if(x.id!==id)return x;if(x.subtasks&&x.subtasks.length){const all=x.subtasks.every(s=>s.done);return{...x,subtasks:x.subtasks.map(s=>({...s,done:!all})),done:!all};}return{...x,done:!x.done};});lsSave(LS_TASKS,n);scheduleSync(n,CATEGORIES);return n;}),
     toggleSub:(id,sid)=>setTasks(ts=>{const n=ts.map(x=>{if(x.id!==id)return x;const subtasks=x.subtasks.map(s=>s.id===sid?{...s,done:!s.done}:s);return{...x,subtasks,done:subtasks.every(s=>s.done)};});lsSave(LS_TASKS,n);scheduleSync(n,CATEGORIES);return n;}),
