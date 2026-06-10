@@ -469,12 +469,25 @@ function AuthModal({session,displayName,onSave,onSignOut,onClose}){
     if(!IS_SUPABASE){setErr('Supabase not configured.');return;}
     if(!email||!password)return;
     setLoading(true);setErr('');
-    const{error}=mode==='signin'?await sb.auth.signInWithPassword({email,password}):await sb.auth.signUp({email,password});
-    if(error)setErr(error.message);
-    else if(mode==='signup')setErr('Check your email to confirm your account, then sign in.');
+    if(mode==='signin'){
+      const{error}=await sb.auth.signInWithPassword({email,password});
+      if(error)setErr(error.message);
+    }else{
+      const{error}=await sb.auth.signUp({email,password});
+      if(error){setErr(error.message);}
+      else{
+        if(nameVal.trim()){await sb.auth.updateUser({data:{display_name:nameVal.trim()}});onSave(nameVal.trim());}
+        setErr('Check your email to confirm your account, then sign in.');
+      }
+    }
     setLoading(false);
   };
-  const saveName=()=>{onSave(nameVal.trim());onClose();};
+  const saveName=async()=>{
+    const n=nameVal.trim();
+    onSave(n);
+    if(IS_SUPABASE&&session)await sb.auth.updateUser({data:{display_name:n}});
+    onClose();
+  };
   const SQL_SETUP=`create table if not exists user_data (\n  user_id uuid primary key references auth.users on delete cascade,\n  tasks jsonb not null default '[]',\n  categories jsonb not null default '[]',\n  updated_at timestamptz not null default now()\n);\nalter table user_data enable row level security;\ncreate policy "own data" on user_data for all\n  using (auth.uid() = user_id)\n  with check (auth.uid() = user_id);`;
   return<Modal onClose={onClose}>
     <div className="modal-head"><h3>{isLoggedIn?'Account':'Sign in to sync'}</h3><button className="mini-btn" onClick={onClose}><Icon name="x" size={18}/></button></div>
@@ -490,9 +503,10 @@ function AuthModal({session,displayName,onSave,onSignOut,onClose}){
       </React.Fragment>:<React.Fragment>
         {err&&<div className="login-err" style={{marginBottom:12}}>{err}</div>}
         {!IS_SUPABASE&&<div className="login-err" style={{marginBottom:12}}>Supabase not configured — app is running in local-only mode.</div>}
-        <div className="field"><label className="field-label">Display name (optional)</label>
+        {mode==='signup'&&<div className="field"><label className="field-label">Display name (optional)</label>
           <input className="input" value={nameVal} placeholder="Your name" onChange={e=>setNameVal(e.target.value)}/>
-        </div>
+        </div>}
+        <div className="field"><label className="field-label">Email</label><input className="input" type="email" autoCapitalize="off" autoCorrect="off" value={email} placeholder="you@example.com" onChange={e=>setEmail(e.target.value)} onKeyDown={e=>e.key==='Enter'&&submit()}/></div>
         <div className="field"><label className="field-label">Password</label><input className="input" type="password" value={password} placeholder="••••••••" onChange={e=>setPassword(e.target.value)} onKeyDown={e=>e.key==='Enter'&&submit()}/></div>
         <div className="login-footer" style={{textAlign:'right'}}>{mode==='signin'?<>No account? <button onClick={()=>setMode('signup')}>Create one</button></>:<>Have an account? <button onClick={()=>setMode('signin')}>Sign in</button></>}</div>
         <details style={{marginTop:4}}><summary style={{fontSize:12,color:'var(--ink-3)',cursor:'pointer'}}>First-time setup: SQL to run in Supabase</summary><div className="setup-box" style={{marginTop:10}}><pre style={{fontSize:11,whiteSpace:'pre-wrap',fontFamily:'ui-monospace,monospace'}}>{SQL_SETUP}</pre></div></details>
@@ -650,6 +664,9 @@ function AppRoot(){
   const loadRemote=async uid=>{
     setSyncStatus('busy');
     try{
+      const{data:userData}=await sb.auth.getUser();
+      const metaName=userData?.user?.user_metadata?.display_name;
+      if(metaName){setDisplayNameState(metaName);lsSave(LS_NAME,metaName);}
       const{data}=await sb.from('user_data').select('tasks,categories').eq('user_id',uid).maybeSingle();
       if(data){
         if(data.tasks?.length){setTasks(data.tasks);lsSave(LS_TASKS,data.tasks);}
