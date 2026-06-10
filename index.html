@@ -2,6 +2,10 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<link rel="icon" type="image/png" href="icon.png"/>
+<link rel="apple-touch-icon" href="icon.png"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-title" content="Work Planner"/>
 <title>Work Planner</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&display=swap" rel="stylesheet"/>
@@ -603,7 +607,7 @@ function PlannerSurface({formFactor,tasks,dark,accent,theme,listLayout,subtaskMo
 
   if(!mobile)return<div className={`surface desktop${dark?' dark':''}`} style={{'--accent':accent}}>
     <aside className="sidebar">
-      <div className="brand"><div className="brand-mark"><Icon name="check" size={19} strokeWidth={2.6}/></div><div><div className="brand-name">Work Planner</div><div className="brand-sub">Plan · Track · Done</div></div></div>
+      <div className="brand"><div className="brand-mark" style={{background:'none',boxShadow:'none',padding:0,overflow:'hidden'}}><img src="icon.png" style={{width:32,height:32,borderRadius:9,display:'block'}}/></div><div><div className="brand-name">Work Planner</div><div className="brand-sub">Plan · Track · Done</div></div></div>
       {orderedTabs.map(d=><button key={d.id} className={`nav-item${tab===d.id?' active':''}`} onClick={()=>setTab(d.id)}><Icon name={d.icon} size={19}/>{d.label}{cnt[d.id]!=null&&<span className="count">{cnt[d.id]}</span>}</button>)}
       <div className="nav-label"><span className="nav-label-text">Categories</span><button className="mini-btn" title="Manage categories" onClick={()=>setShowCatMgr(true)}><Icon name="settings" size={14}/></button></div>
       <SidebarCats/>
