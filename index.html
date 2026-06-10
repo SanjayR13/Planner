@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
 <title>Work Planner</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&display=swap" rel="stylesheet"/>
@@ -12,7 +12,7 @@
 .surface{font-family:var(--font);color:var(--ink);background:var(--bg);height:100%;width:100%;display:flex;-webkit-font-smoothing:antialiased;position:relative;overflow:hidden}
 .surface,.surface *{font-family:var(--font)}
 button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
-input,textarea,select{font-family:inherit}
+input,textarea,select{font-family:inherit;font-size:16px}
 .scroll{overflow-y:auto;overflow-x:hidden}.scroll::-webkit-scrollbar{width:10px}.scroll::-webkit-scrollbar-thumb{background:var(--line);border-radius:99px;border:3px solid transparent;background-clip:content-box}.scroll::-webkit-scrollbar-thumb:hover{background:var(--ink-3);background-clip:content-box}
 /* sidebar */
 .desktop .sidebar{width:256px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--line);display:flex;flex-direction:column;padding:22px 14px 16px;gap:2px}
@@ -26,17 +26,21 @@ input,textarea,select{font-family:inherit}
 .nav-label{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);padding:14px 11px 5px;display:flex;align-items:center;gap:4px}
 .nav-label-text{flex:1}
 .sidebar:hover .nav-label .mini-btn{opacity:1}.nav-label .mini-btn{opacity:0;transition:opacity .12s}
-.cat-row{display:flex;align-items:center;gap:9px;padding:7px 11px;border-radius:var(--r-sm);font-size:14px;font-weight:550;color:var(--ink-2);width:100%;text-align:left;transition:background .12s}
-.cat-row:hover{background:var(--surface-2)}.cat-row.active{background:var(--surface-2);color:var(--ink)}
+.cat-row-wrap{display:flex;align-items:center;border-radius:var(--r-sm);transition:background .12s}.cat-row-wrap:hover{background:var(--surface-2)}.cat-row-wrap.active{background:var(--surface-2)}
+.cat-chevron-btn{width:24px;min-height:34px;display:flex;align-items:center;justify-content:center;border-radius:var(--r-sm);color:var(--ink-3);flex-shrink:0;padding:0}
+.cat-chevron-btn:hover{background:color-mix(in oklab,var(--line) 50%,transparent)}
+.cat-row-btn{display:flex;align-items:center;gap:9px;padding:7px 8px 7px 2px;font-size:14px;font-weight:550;color:var(--ink-2);flex:1;text-align:left;border-radius:var(--r-sm)}
+.cat-row-wrap.active .cat-row-btn{color:var(--ink)}
 .cat-dot{width:10px;height:10px;border-radius:3px;flex-shrink:0}
-.cat-row .count{margin-left:auto;font-size:12px;color:var(--ink-3);font-weight:600}
-.cat-chevron{transition:transform .15s;color:var(--ink-3);flex-shrink:0}
-.cat-chevron.open{transform:rotate(90deg)}
+.cat-row-btn .count{margin-left:auto;font-size:12px;color:var(--ink-3);font-weight:600}
+.sub-badge{background:var(--accent-soft);color:var(--accent-ink);font-size:10px;font-weight:700;padding:1px 6px;border-radius:99px;margin-left:2px;white-space:nowrap}
 .subcat-row{display:flex;align-items:center;gap:9px;padding:6px 11px 6px 30px;border-radius:var(--r-sm);font-size:13.5px;font-weight:500;color:var(--ink-3);width:100%;text-align:left;transition:background .12s}
 .subcat-row:hover{background:var(--surface-2);color:var(--ink-2)}.subcat-row.active{background:var(--surface-2);color:var(--ink)}
 .subcat-row .count{margin-left:auto;font-size:11.5px;color:var(--ink-3);font-weight:600}
 .sidebar-foot{margin-top:auto;display:flex;align-items:center;gap:10px;padding:10px;border-radius:var(--r-md);background:var(--surface-2)}
-.avatar{width:32px;height:32px;border-radius:50%;background:var(--accent);color:var(--accent-on);display:grid;place-items:center;font-weight:700;font-size:13px;flex-shrink:0}
+.avatar{width:32px;height:32px;border-radius:50%;background:var(--accent);color:var(--accent-on);display:grid;place-items:center;font-weight:700;font-size:13px;flex-shrink:0;cursor:pointer;transition:opacity .12s;border:none}
+.avatar:hover{opacity:.82}
+.avatar.logged-in{box-shadow:0 0 0 2px var(--accent),0 0 0 4px var(--surface-2)}
 .sync-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
 .sync-dot.ok{background:var(--green)}.sync-dot.busy{background:var(--amber);animation:pulse 1s infinite}
 .sync-dot.off{background:var(--ink-3)}
@@ -133,7 +137,7 @@ input,textarea,select{font-family:inherit}
 .empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;text-align:center;color:var(--ink-3);gap:12px}.empty-ic{width:56px;height:56px;border-radius:18px;background:var(--surface-2);display:grid;place-items:center}.empty-ic svg{width:26px;height:26px}.empty h4{font-size:16px;font-weight:650;color:var(--ink-2)}.empty p{font-size:13.5px;max-width:280px;line-height:1.5}
 /* category manager */
 .cat-edit-row{display:flex;align-items:center;gap:10px;padding:5px 0}.cat-color-btn{width:28px;height:28px;border-radius:8px;flex-shrink:0;cursor:pointer;transition:transform .1s}.cat-color-btn:hover{transform:scale(1.1)}
-.hue-picker{display:flex;flex-wrap:wrap;gap:5px;padding:8px 0 6px 38px}.hue-swatch{width:22px;height:22px;border-radius:6px;border:2px solid transparent;cursor:pointer;transition:transform .1s,border-color .1s;flex-shrink:0}.hue-swatch:hover{transform:scale(1.15)}.hue-swatch.on{border-color:var(--ink);transform:scale(1.15)}
+.color-picker-row{display:flex;align-items:center;gap:8px;padding:6px 0 6px 38px}.color-picker-row input[type=color]{width:36px;height:36px;border-radius:8px;border:1px solid var(--line);padding:2px;cursor:pointer;background:var(--surface)}.color-picker-row .hex-input{width:96px;font-size:13px;font-family:monospace;padding:6px 9px;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--surface);color:var(--ink);outline:none}.color-picker-row .hex-input:focus{border-color:var(--accent)}
 .subcat-indent{padding-left:22px}
 /* login */
 .login-wrap{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:24px}
@@ -212,11 +216,11 @@ const RECUR=[{id:'none',name:'Does not repeat'},{id:'daily',name:'Daily'},{id:'w
 const HUE_PRESETS=[{h:22,label:'Red'},{h:45,label:'Orange'},{h:58,label:'Peach'},{h:90,label:'Lime'},{h:150,label:'Mint'},{h:185,label:'Teal'},{h:220,label:'Blue'},{h:264,label:'Periwinkle'},{h:290,label:'Violet'},{h:322,label:'Pink'}];
 
 const DEFAULT_CATEGORIES=[
-  {id:'work',     name:'Work',     parentId:null,h:264,c:0.13},
-  {id:'personal', name:'Personal', parentId:null,h:322,c:0.12},
-  {id:'health',   name:'Health',   parentId:null,h:156,c:0.12},
-  {id:'errands',  name:'Errands',  parentId:null,h:58, c:0.13},
-  {id:'finance',  name:'Finance',  parentId:null,h:200,c:0.11},
+  {id:'work',     name:'Work',     parentId:null,h:264,c:0.13,hex:'#7B8FD4'},
+  {id:'personal', name:'Personal', parentId:null,h:322,c:0.12,hex:'#C87DB0'},
+  {id:'health',   name:'Health',   parentId:null,h:156,c:0.12,hex:'#5ABD8C'},
+  {id:'errands',  name:'Errands',  parentId:null,h:58, c:0.13,hex:'#C4A832'},
+  {id:'finance',  name:'Finance',  parentId:null,h:200,c:0.11,hex:'#5AAFC0'},
 ];
 let CATEGORIES=[...DEFAULT_CATEGORIES];
 
@@ -228,7 +232,7 @@ const catStyle=(cat,{vibrant=false,dark=false,mono=false}={})=>{
   if(dark)return{'--cc-bg':`oklch(0.36 ${c*.8} ${h})`,'--cc-tx':`oklch(0.9 ${Math.min(c,.1)} ${h})`,'--cc-dot':`oklch(0.72 ${c} ${h})`};
   return{'--cc-bg':`oklch(0.95 ${c*.5} ${h})`,'--cc-tx':`oklch(0.46 ${Math.min(c*1.3,.15)} ${h})`,'--cc-dot':`oklch(0.72 ${c} ${h})`};
 };
-const catDotColor=(cat,vibrant,mono)=>{if(mono)return'oklch(0.7 0 0)';const c=vibrant?Math.min(cat.c*1.65,.22):cat.c;return`oklch(0.72 ${c} ${cat.h})`;};
+const catDotColor=(cat,vibrant,mono)=>{if(mono)return'oklch(0.7 0 0)';if(cat.hex)return cat.hex;const c=vibrant?Math.min(cat.c*1.65,.22):cat.c;return`oklch(0.72 ${c} ${cat.h})`;};
 
 const bucketOf=t=>{if(taskDone(t))return'done';if(!t.due)return'nodate';const diff=dayDiff(TODAY,parseYmd(t.due));if(diff<0)return'overdue';if(diff===0)return'today';if(diff<=7)return'week';return'later';};
 const PRANK={high:0,med:1,low:2,null:3,undefined:3};
@@ -365,78 +369,112 @@ function TaskEditor({initial,vibrant,dark,onSave,onClose,onDelete}){
 }
 
 /* ---- CategoryManager ---- */
+const CAT_COLOR_PRESETS=['#7B8FD4','#C87DB0','#5ABD8C','#C4A832','#5AAFC0','#E0836A','#A67BC8','#6BBD6B','#D4896A','#7BBDD4'];
+
+function isValidHex(h){return/^#[0-9a-fA-F]{6}$/.test(h);}
+
+function CatRow({c,isChild,pickingFor,setPickingFor,update,remove,addChild,topLevelCount}){
+  const[hexInput,setHexInput]=React.useState(c.hex||'#888888');
+  React.useEffect(()=>setHexInput(c.hex||'#888888'),[c.hex]);
+  const color=c.hex||`oklch(0.72 ${c.c||0.12} ${c.h||220})`;
+  const applyHex=h=>{if(isValidHex(h)){update(c.id,{hex:h});}};
+  return<div>
+    <div className={`cat-edit-row${isChild?' subcat-indent':''}`}>
+      <button className="cat-color-btn" style={{background:color,outline:pickingFor===c.id?'2px solid var(--ink)':'2px solid transparent',outlineOffset:2}} onClick={()=>setPickingFor(pickingFor===c.id?null:c.id)} title="Change colour"/>
+      <input className="input" value={c.name} onChange={e=>update(c.id,{name:e.target.value})} style={{flex:1,padding:'8px 11px',fontSize:14}}/>
+      {!isChild&&<button className="mini-btn" title="Add sub-category" onClick={()=>addChild(c.id)} style={{opacity:.7}}><Icon name="plus" size={14}/></button>}
+      <button className="mini-btn" onClick={()=>remove(c.id)} style={{opacity:topLevelCount<=1&&!isChild?.3:1}} disabled={topLevelCount<=1&&!isChild} title="Delete"><Icon name="trash" size={14}/></button>
+    </div>
+    {pickingFor===c.id&&<div className={`color-picker-row${isChild?' subcat-indent':''}`}>
+      <input type="color" value={isValidHex(hexInput)?hexInput:'#888888'} onChange={e=>{setHexInput(e.target.value);applyHex(e.target.value);}}/>
+      <input className="hex-input" value={hexInput} placeholder="#000000" maxLength={7}
+        onChange={e=>{const v=e.target.value;setHexInput(v);if(isValidHex(v))update(c.id,{hex:v});}}
+        onBlur={e=>{if(!isValidHex(e.target.value))setHexInput(c.hex||'#888888');}}/>
+      <div style={{display:'flex',gap:4,flexWrap:'wrap'}}>
+        {CAT_COLOR_PRESETS.map(p=><button key={p} onClick={()=>{update(c.id,{hex:p});setHexInput(p);setPickingFor(null);}} style={{width:20,height:20,borderRadius:5,background:p,border:c.hex===p?'2px solid var(--ink)':'2px solid transparent',cursor:'pointer'}}/>)}
+      </div>
+    </div>}
+  </div>;
+}
+
 function CategoryManager({categories,onSave,onClose}){
-  const[cats,setCats]=React.useState(categories.map(c=>({...c})));
+  const[cats,setCats]=React.useState(()=>categories.map(c=>({...c})));
   const[pickingFor,setPickingFor]=React.useState(null);
   const add=(parentId=null)=>{
-    const usedH=new Set(cats.map(c=>c.h));
-    const preset=HUE_PRESETS.find(p=>!usedH.has(p.h))||HUE_PRESETS[cats.length%HUE_PRESETS.length];
-    // inherit hue from parent if adding sub
+    const usedHex=new Set(cats.map(c=>c.hex));
+    const hex=CAT_COLOR_PRESETS.find(p=>!usedHex.has(p))||CAT_COLOR_PRESETS[cats.length%CAT_COLOR_PRESETS.length];
     const parentCat=parentId?cats.find(c=>c.id===parentId):null;
-    setCats(prev=>[...prev,{id:'cat_'+Date.now(),name:'New '+(parentId?'Sub-':'')+'Category',parentId,h:parentCat?parentCat.h:preset.h,c:0.12}]);
+    setCats(prev=>[...prev,{id:'cat_'+Date.now(),name:'New '+(parentId?'Sub-':'')+'Category',parentId,hex:parentCat?parentCat.hex:hex,h:220,c:0.12}]);
   };
   const update=(id,patch)=>setCats(prev=>prev.map(c=>c.id===id?{...c,...patch}:c));
-  const remove=id=>{
-    // also remove children
-    setCats(prev=>prev.filter(c=>c.id!==id&&c.parentId!==id));
-    if(pickingFor===id)setPickingFor(null);
-  };
+  const remove=id=>{setCats(prev=>prev.filter(c=>c.id!==id&&c.parentId!==id));if(pickingFor===id)setPickingFor(null);};
   const save=()=>{const valid=cats.filter(c=>c.name.trim());if(valid.length===0)return;onSave(valid);};
-
   const topLevel=cats.filter(c=>!c.parentId);
   const children=id=>cats.filter(c=>c.parentId===id);
-
-  function CatRow({c,isChild}){
-    return<div>
-      <div className={`cat-edit-row${isChild?' subcat-indent':''}`}>
-        <button className="cat-color-btn" style={{background:`oklch(0.72 ${c.c} ${c.h})`,outline:pickingFor===c.id?'2px solid var(--ink)':'2px solid transparent',outlineOffset:2}} onClick={()=>setPickingFor(pickingFor===c.id?null:c.id)} title="Change colour"/>
-        <input className="input" value={c.name} onChange={e=>update(c.id,{name:e.target.value})} style={{flex:1,padding:'8px 11px',fontSize:14}}/>
-        {!isChild&&<button className="mini-btn" title="Add sub-category" onClick={()=>add(c.id)} style={{opacity:.7}}><Icon name="plus" size={14}/></button>}
-        <button className="mini-btn" onClick={()=>remove(c.id)} style={{opacity:cats.filter(c=>!c.parentId).length<=1&&!isChild?.3:1}} disabled={cats.filter(c=>!c.parentId).length<=1&&!isChild} title="Delete"><Icon name="trash" size={14}/></button>
-      </div>
-      {pickingFor===c.id&&<div className={`hue-picker${isChild?' subcat-indent':''}`}>{HUE_PRESETS.map(p=><button key={p.h} className={`hue-swatch${c.h===p.h?' on':''}`} style={{background:`oklch(0.72 0.13 ${p.h})`}} title={p.label} onClick={()=>update(c.id,{h:p.h,c:0.12})}/>)}</div>}
-      {!isChild&&children(c.id).map(sc=><CatRow key={sc.id} c={sc} isChild/>)}
-    </div>;
-  }
-
   return<Modal onClose={onClose}><div className="modal-head"><h3>Manage Categories</h3><button className="mini-btn" onClick={onClose}><Icon name="x" size={18}/></button></div>
   <div className="modal-body scroll" style={{overflowY:'auto',gap:0}}>
-    <p style={{fontSize:13,color:'var(--ink-3)',marginBottom:14}}>Click the colour dot to change colour. Use <strong>+</strong> to add a sub-category under any parent.</p>
-    <div style={{display:'flex',flexDirection:'column'}}>{topLevel.map(c=><CatRow key={c.id} c={c}/>)}</div>
+    <p style={{fontSize:13,color:'var(--ink-3)',marginBottom:14}}>Click the colour dot to pick a colour or enter a hex code. Use <strong>+</strong> to add a sub-category.</p>
+    <div style={{display:'flex',flexDirection:'column'}}>
+      {topLevel.map(c=><React.Fragment key={c.id}>
+        <CatRow c={c} isChild={false} pickingFor={pickingFor} setPickingFor={setPickingFor} update={update} remove={remove} addChild={add} topLevelCount={topLevel.length}/>
+        {children(c.id).map(sc=><CatRow key={sc.id} c={sc} isChild={true} pickingFor={pickingFor} setPickingFor={setPickingFor} update={update} remove={remove} addChild={add} topLevelCount={topLevel.length}/>)}
+      </React.Fragment>)}
+    </div>
     <button className="btn btn-ghost" style={{marginTop:14,width:'100%',justifyContent:'center'}} onClick={()=>add(null)}><Icon name="plus" size={16}/>Add category</button>
   </div>
   <div className="modal-foot"><span/><div style={{display:'flex',gap:10}}><button className="btn btn-ghost" onClick={onClose}>Cancel</button><button className="btn btn-primary" onClick={save}><Icon name="check" size={16}/>Save</button></div></div></Modal>;
 }
 
-/* ---- Login ---- */
-function LoginScreen(){
+/* ---- Auth Modal ---- */
+function AuthModal({session,displayName,onSave,onSignOut,onClose}){
   const[email,setEmail]=React.useState('');const[password,setPassword]=React.useState('');const[mode,setMode]=React.useState('signin');const[err,setErr]=React.useState('');const[loading,setLoading]=React.useState(false);
+  const[nameVal,setNameVal]=React.useState(displayName||'');
+  const isLoggedIn=!!session;
   const submit=async()=>{
+    if(!IS_SUPABASE){setErr('Supabase not configured.');return;}
     if(!email||!password)return;
     setLoading(true);setErr('');
     const{error}=mode==='signin'?await sb.auth.signInWithPassword({email,password}):await sb.auth.signUp({email,password});
     if(error)setErr(error.message);
+    else if(mode==='signup')setErr('Check your email to confirm your account, then sign in.');
     setLoading(false);
   };
-  const SQL_SETUP=`create table if not exists user_data (
-  user_id uuid primary key references auth.users on delete cascade,
-  tasks jsonb not null default '[]',
-  categories jsonb not null default '[]',
-  updated_at timestamptz not null default now()
-);
-alter table user_data enable row level security;
-create policy "own data" on user_data for all
-  using (auth.uid() = user_id)
-  with check (auth.uid() = user_id);`;
-  return<div className="login-wrap"><div className="login-card">
-    <div className="login-brand"><div className="login-mark"><Icon name="check" size={22} strokeWidth={2.6}/></div><div><div className="login-title">Work Planner</div><div className="login-sub">Sign in to sync across devices</div></div></div>
-    {err&&<div className="login-err">{err}</div>}
-    <div className="field"><label className="field-label">Email</label><input className="input" type="email" value={email} placeholder="you@example.com" onChange={e=>setEmail(e.target.value)} onKeyDown={e=>e.key==='Enter'&&submit()}/></div>
-    <div className="field"><label className="field-label">Password</label><input className="input" type="password" value={password} placeholder="••••••••" onChange={e=>setPassword(e.target.value)} onKeyDown={e=>e.key==='Enter'&&submit()}/></div>
-    <button className="btn btn-primary" style={{width:'100%',justifyContent:'center'}} onClick={submit} disabled={loading}>{loading?'Signing in…':mode==='signin'?'Sign in':'Create account'}</button>
-    <div className="login-footer">{mode==='signin'?<>No account? <button onClick={()=>setMode('signup')}>Create one</button></>:<>Have an account? <button onClick={()=>setMode('signin')}>Sign in</button></>}</div>
-    <details style={{marginTop:4}}><summary style={{fontSize:12,color:'var(--ink-3)',cursor:'pointer'}}>First-time setup: SQL to run in Supabase</summary><div className="setup-box" style={{marginTop:10}}><pre style={{fontSize:11,whiteSpace:'pre-wrap',fontFamily:'ui-monospace,monospace'}}>{SQL_SETUP}</pre></div></details>
-  </div></div>;
+  const saveName=()=>{onSave(nameVal.trim());onClose();};
+  const SQL_SETUP=`create table if not exists user_data (\n  user_id uuid primary key references auth.users on delete cascade,\n  tasks jsonb not null default '[]',\n  categories jsonb not null default '[]',\n  updated_at timestamptz not null default now()\n);\nalter table user_data enable row level security;\ncreate policy "own data" on user_data for all\n  using (auth.uid() = user_id)\n  with check (auth.uid() = user_id);`;
+  return<Modal onClose={onClose}>
+    <div className="modal-head"><h3>{isLoggedIn?'Account':'Sign in to sync'}</h3><button className="mini-btn" onClick={onClose}><Icon name="x" size={18}/></button></div>
+    <div className="modal-body scroll" style={{overflowY:'auto'}}>
+      {isLoggedIn?<React.Fragment>
+        <div style={{display:'flex',alignItems:'center',gap:12,padding:'4px 0 16px'}}>
+          <div className="avatar logged-in" style={{width:44,height:44,fontSize:16,cursor:'default'}}>{nameVal?nameVal.slice(0,2).toUpperCase():'WP'}</div>
+          <div><div style={{fontWeight:650,fontSize:15}}>{nameVal||'Work Planner'}</div><div style={{fontSize:12.5,color:'var(--ink-3)',marginTop:2}}>{session.user.email}</div></div>
+        </div>
+        <div className="field"><label className="field-label">Display name</label>
+          <input className="input" value={nameVal} placeholder="Your name" onChange={e=>setNameVal(e.target.value)} onKeyDown={e=>e.key==='Enter'&&saveName()}/>
+        </div>
+      </React.Fragment>:<React.Fragment>
+        {err&&<div className="login-err" style={{marginBottom:12}}>{err}</div>}
+        {!IS_SUPABASE&&<div className="login-err" style={{marginBottom:12}}>Supabase not configured — app is running in local-only mode.</div>}
+        <div className="field"><label className="field-label">Display name (optional)</label>
+          <input className="input" value={nameVal} placeholder="Your name" onChange={e=>setNameVal(e.target.value)}/>
+        </div>
+        <div className="field"><label className="field-label">Password</label><input className="input" type="password" value={password} placeholder="••••••••" onChange={e=>setPassword(e.target.value)} onKeyDown={e=>e.key==='Enter'&&submit()}/></div>
+        <div className="login-footer" style={{textAlign:'right'}}>{mode==='signin'?<>No account? <button onClick={()=>setMode('signup')}>Create one</button></>:<>Have an account? <button onClick={()=>setMode('signin')}>Sign in</button></>}</div>
+        <details style={{marginTop:4}}><summary style={{fontSize:12,color:'var(--ink-3)',cursor:'pointer'}}>First-time setup: SQL to run in Supabase</summary><div className="setup-box" style={{marginTop:10}}><pre style={{fontSize:11,whiteSpace:'pre-wrap',fontFamily:'ui-monospace,monospace'}}>{SQL_SETUP}</pre></div></details>
+      </React.Fragment>}
+    </div>
+    <div className="modal-foot">
+      {isLoggedIn
+        ?<button className="btn btn-ghost" style={{color:'var(--red-ink)'}} onClick={()=>{onSignOut();onClose();}}><Icon name="logout" size={16}/>Sign out</button>
+        :<span/>}
+      <div style={{display:'flex',gap:10}}>
+        <button className="btn btn-ghost" onClick={onClose}>Cancel</button>
+        {isLoggedIn
+          ?<button className="btn btn-primary" onClick={saveName}><Icon name="check" size={16}/>Save</button>
+          :<button className="btn btn-primary" onClick={submit} disabled={loading||!IS_SUPABASE}>{loading?'Signing in…':mode==='signin'?'Sign in':'Create account'}</button>}
+      </div>
+    </div>
+  </Modal>;
 }
 
 /* ---- PlannerSurface ---- */
@@ -444,7 +482,7 @@ const TAB_DEF=[{id:'today',label:'Today',icon:'today'},{id:'upcoming',label:'Upc
 const CAL_VIEWS=[{id:'month',label:'Month',icon:'grid'},{id:'agenda',label:'Agenda',icon:'agenda'},{id:'timeline',label:'Timeline',icon:'timeline'}];
 const matchSearch=(t,q)=>{if(!q)return true;q=q.toLowerCase();return t.title.toLowerCase().includes(q)||(t.notes||'').toLowerCase().includes(q)||(t.subtasks||[]).some(s=>s.title.toLowerCase().includes(q));};
 
-function PlannerSurface({formFactor,tasks,dark,accent,theme,listLayout,subtaskMode,calendarDefault,syncStatus,root}){
+function PlannerSurface({formFactor,tasks,dark,accent,theme,listLayout,subtaskMode,calendarDefault,syncStatus,session,displayName,showAuth,setShowAuth,setDisplayName,root}){
   const mobile=formFactor==='mobile';const vibrant=theme==='vibrant';const mono=theme==='mono';
   const[tab,setTab]=React.useState('today');const[catFilter,setCatFilter]=React.useState(null);const[search,setSearch]=React.useState('');const[sort,setSort]=React.useState('due');const[hideDone,setHideDone]=React.useState(false);const[calView,setCalView]=React.useState(calendarDefault);const[monthDate,setMonthDate]=React.useState(new Date(TODAY.getFullYear(),TODAY.getMonth(),1));const[selDay,setSelDay]=React.useState(TODAY_STR);const[editId,setEditId]=React.useState(undefined);const[showCatMgr,setShowCatMgr]=React.useState(false);const[expandedCats,setExpandedCats]=React.useState({});
   React.useEffect(()=>{setCalView(calendarDefault);},[calendarDefault]);
@@ -471,21 +509,24 @@ function PlannerSurface({formFactor,tasks,dark,accent,theme,listLayout,subtaskMo
     return topLevelCats.map(c=>{
       const kids=catChildren(c.id);
       const hasKids=kids.length>0;
-      const expanded=expandedCats[c.id];
-      const nTop=tasks.filter(x=>x.categoryId===c.id&&!taskDone(x)).length;
+      const expanded=!!expandedCats[c.id];
       const nAll=tasks.filter(x=>catAllIds(c.id).includes(x.categoryId)&&!taskDone(x)).length;
+      const nSubs=hasKids&&!expanded?kids.reduce((s,sc)=>s+tasks.filter(x=>x.categoryId===sc.id&&!taskDone(x)).length,0):0;
+      const isActive=catFilter===c.id;
       return<React.Fragment key={c.id}>
-        <button className={`cat-row${catFilter===c.id?' active':''}`} onClick={()=>setCatFilter(catFilter===c.id?null:c.id)}>
-          {hasKids?<Icon name="chevronR" size={13} style={{transform:expanded?'rotate(90deg)':'none',transition:'transform .15s',color:'var(--ink-3)',flexShrink:0}} />:<span style={{width:13,flexShrink:0}}/>}
-          <span className="cat-dot" style={{background:catDotColor(c,vibrant,mono)}}/>
-          {c.name}
-          <span className="count">{nAll}</span>
-          {hasKids&&<button style={{marginLeft:-4,padding:'0 2px',color:'var(--ink-3)',fontSize:11,flexShrink:0}} onClick={e=>{e.stopPropagation();toggleExpand(c.id);}} title={expanded?'Collapse':'Expand'}/>}
-        </button>
-        {hasKids&&<button style={{display:'none'}} onClick={()=>toggleExpand(c.id)}/>}
-        {hasKids&&<div style={{cursor:'pointer'}} onClick={()=>toggleExpand(c.id)} onMouseDown={e=>e.preventDefault()}>
-          {/* invisible click area on the chevron row handled inline above */}
-        </div>}
+        <div className={`cat-row-wrap${isActive?' active':''}`}>
+          {hasKids
+            ?<button className="cat-chevron-btn" onClick={()=>toggleExpand(c.id)} title={expanded?'Collapse':'Expand'}>
+                <Icon name="chevronR" size={13} style={{transform:expanded?'rotate(90deg)':'none',transition:'transform .15s'}}/>
+              </button>
+            :<span style={{width:24,flexShrink:0}}/>}
+          <button className="cat-row-btn" onClick={()=>setCatFilter(isActive?null:c.id)}>
+            <span className="cat-dot" style={{background:catDotColor(c,vibrant,mono)}}/>
+            {c.name}
+            <span className="count">{nAll}</span>
+            {hasKids&&!expanded&&nSubs>0&&<span className="sub-badge">{nSubs} pending</span>}
+          </button>
+        </div>
         {hasKids&&expanded&&kids.map(sc=>{
           const nSc=tasks.filter(x=>x.categoryId===sc.id&&!taskDone(x)).length;
           return<button key={sc.id} className={`subcat-row${catFilter===sc.id?' active':''}`} onClick={()=>setCatFilter(catFilter===sc.id?null:sc.id)}>
@@ -499,10 +540,12 @@ function PlannerSurface({formFactor,tasks,dark,accent,theme,listLayout,subtaskMo
 
   function CalendarBlock(){return<div>{!mobile&&<div className="cal-head">{calView==='month'&&<React.Fragment><div className="cal-month">{MONTHS[monthDate.getMonth()]} {monthDate.getFullYear()}</div><div className="cal-nav"><button className="icon-btn" onClick={()=>setMonthDate(new Date(monthDate.getFullYear(),monthDate.getMonth()-1,1))}><Icon name="chevronL" size={18}/></button><button className="icon-btn" onClick={()=>setMonthDate(new Date(monthDate.getFullYear(),monthDate.getMonth()+1,1))}><Icon name="chevronR" size={18}/></button><button className="btn btn-ghost" onClick={()=>setMonthDate(new Date(TODAY.getFullYear(),TODAY.getMonth(),1))}>Today</button></div></React.Fragment>}<div className="topbar-spacer"/><Segmented options={CAL_VIEWS} value={calView} onChange={setCalView}/></div>}{mobile&&<div style={{display:'flex',gap:8,padding:'0 0 12px',alignItems:'center'}}><Segmented options={CAL_VIEWS} value={calView} onChange={setCalView}/>{calView==='month'&&<div className="cal-nav" style={{marginLeft:'auto'}}><button className="icon-btn" style={{width:34,height:34}} onClick={()=>setMonthDate(new Date(monthDate.getFullYear(),monthDate.getMonth()-1,1))}><Icon name="chevronL" size={16}/></button><button className="icon-btn" style={{width:34,height:34}} onClick={()=>setMonthDate(new Date(monthDate.getFullYear(),monthDate.getMonth()+1,1))}><Icon name="chevronR" size={16}/></button></div>}</div>}{calView==='month'&&<MonthGrid tasks={base} monthDate={monthDate} onEdit={handlers.onEdit} vibrant={vibrant} mono={mono} mobile={mobile} selected={selDay} setSelected={setSelDay}/>}{calView==='month'&&mobile&&<MobileDayList tasks={base} day={selDay} onEdit={handlers.onEdit} vibrant={vibrant} dark={dark} mono={mono}/>}{calView==='agenda'&&<AgendaView tasks={base} onEdit={handlers.onEdit} vibrant={vibrant} dark={dark} mono={mono}/>}{calView==='timeline'&&<TimelineView tasks={base} onEdit={handlers.onEdit} vibrant={vibrant} dark={dark} mono={mono} mobile={mobile}/>}</div>;}
 
-  const syncLabel=syncStatus==='busy'?'Syncing…':syncStatus==='ok'?'Synced':IS_SUPABASE?'Offline':'Local only';
+  const syncLabel=syncStatus==='busy'?'Syncing…':syncStatus==='ok'?'Synced':IS_SUPABASE&&session?'Offline':'Local only';
+  const initials=displayName?displayName.trim().split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase():session?'●':'WP';
 
   const editor=editId!==undefined&&<TaskEditor initial={editId===null?null:tasks.find(x=>x.id===editId)} vibrant={vibrant} dark={dark} onSave={task=>{root.saveTask(task);setEditId(undefined);}} onClose={()=>setEditId(undefined)} onDelete={id=>{root.deleteTask(id);setEditId(undefined);}}/>;
   const catMgr=showCatMgr&&<CategoryManager categories={CATEGORIES} onSave={c=>{root.saveCategories(c);setShowCatMgr(false);}} onClose={()=>setShowCatMgr(false)}/>;
+  const authModal=showAuth&&<AuthModal session={session} displayName={displayName} onSave={setDisplayName} onSignOut={root.signOut} onClose={()=>setShowAuth(false)}/>;
 
   if(!mobile)return<div className={`surface desktop${dark?' dark':''}`} style={{'--accent':accent}}>
     <aside className="sidebar">
@@ -511,9 +554,8 @@ function PlannerSurface({formFactor,tasks,dark,accent,theme,listLayout,subtaskMo
       <div className="nav-label"><span className="nav-label-text">Categories</span><button className="mini-btn" title="Manage categories" onClick={()=>setShowCatMgr(true)}><Icon name="settings" size={14}/></button></div>
       <SidebarCats/>
       <div className="sidebar-foot" style={{marginTop:'auto'}}>
-        <div className="avatar">WP</div>
-        <div style={{flex:1,minWidth:0}}><div style={{fontSize:13,fontWeight:650}}>Work Planner</div><div style={{fontSize:11,color:'var(--ink-3)',display:'flex',alignItems:'center',gap:5,marginTop:2}}><span className={`sync-dot ${syncStatus}`}/>{syncLabel}</div></div>
-        {IS_SUPABASE&&<button className="mini-btn" title="Sign out" onClick={root.signOut}><Icon name="logout" size={16}/></button>}
+        <button className={`avatar${session?' logged-in':''}`} title={session?'Account':'Sign in'} onClick={()=>setShowAuth(true)}>{initials}</button>
+        <div style={{flex:1,minWidth:0}}><div style={{fontSize:13,fontWeight:650}}>{displayName||'Work Planner'}</div><div style={{fontSize:11,color:'var(--ink-3)',display:'flex',alignItems:'center',gap:5,marginTop:2}}><span className={`sync-dot ${syncStatus}`}/>{syncLabel}</div></div>
         <button className="mini-btn" title="Toggle theme" onClick={()=>root.setDark(!dark)}><Icon name={dark?'sun':'moon'} size={17}/></button>
       </div>
     </aside>
@@ -523,7 +565,7 @@ function PlannerSurface({formFactor,tasks,dark,accent,theme,listLayout,subtaskMo
       {tab!=='calendar'&&<div className="toolbar"><Segmented options={[{id:'due',label:'Due date',icon:'calendar'},{id:'priority',label:'Priority',icon:'flag'}]} value={sort} onChange={setSort}/>{tab==='all'&&<button className={`chip-toggle${hideDone?' on':''}`} onClick={()=>setHideDone(h=>!h)}>Hide completed</button>}</div>}
       <div className="content scroll"><div className="content-pad">{tab==='calendar'?<CalendarBlock/>:<TaskList tasks={listTasks} layout={listLayout} sort={sort} vibrant={vibrant} dark={dark} mono={mono} subtaskMode={subtaskMode} handlers={handlers}/>}</div></div>
     </main>
-    {editor}{catMgr}
+    {editor}{catMgr}{authModal}
   </div>;
 
   // mobile
@@ -531,24 +573,27 @@ function PlannerSurface({formFactor,tasks,dark,accent,theme,listLayout,subtaskMo
   const mobileSubs=selectedParentCat?catChildren(selectedParentCat.id):[];
   const mTabs=[TAB_DEF[0],TAB_DEF[1],'fab',TAB_DEF[3],TAB_DEF[2]];
   return<div className={`surface mobile${dark?' dark':''}`} style={{'--accent':accent}}>
-    <div className="m-header"><div><div className="m-title">{titles[tab][0]}</div><div className="m-sub">{titles[tab][1]}</div></div><div className="m-header-spacer"/><button className="icon-btn" style={{border:'none',background:'none'}} onClick={()=>setShowCatMgr(true)}><Icon name="settings" size={18}/></button><button className="icon-btn" style={{border:'none',background:'none'}} onClick={()=>root.setDark(!dark)}><Icon name={dark?'sun':'moon'} size={17}/></button></div>
+    <div className="m-header"><div><div className="m-title">{titles[tab][0]}</div><div className="m-sub">{titles[tab][1]}</div></div><div className="m-header-spacer"/><button className="icon-btn" style={{border:'none',background:'none'}} onClick={()=>setShowCatMgr(true)}><Icon name="settings" size={18}/></button><button className="icon-btn" style={{border:'none',background:'none'}} onClick={()=>root.setDark(!dark)}><Icon name={dark?'sun':'moon'} size={17}/></button><button className={`avatar${session?' logged-in':''}`} style={{width:30,height:30,fontSize:11}} title={session?'Account':'Sign in'} onClick={()=>setShowAuth(true)}>{initials}</button></div>
     {tab!=='calendar'&&<div className="m-search"><Icon name="search" size={16}/><input placeholder="Search tasks…" value={search} onChange={e=>setSearch(e.target.value)}/></div>}
     {tab!=='calendar'&&<div className="m-filters"><button className={`m-chip${!catFilter?' on':''}`} onClick={()=>setCatFilter(null)}>All</button>{topLevelCats.map(c=>{const nAll=tasks.filter(x=>catAllIds(c.id).includes(x.categoryId)&&!taskDone(x)).length;return<button key={c.id} className={`m-chip${catFilter===c.id||catChildren(c.id).some(sc=>sc.id===catFilter)?' on':''}`} onClick={()=>setCatFilter(catFilter===c.id?null:c.id)}><span className="cat-dot" style={{background:catDotColor(c,vibrant,mono)}}/>{c.name}{nAll>0&&<span style={{fontSize:10,opacity:.7}}>{nAll}</span>}</button>;})}</div>}
     {tab!=='calendar'&&mobileSubs.length>0&&<div className="m-subcats"><span style={{fontSize:11,color:'var(--ink-3)',flexShrink:0,paddingTop:5}}>↳</span>{mobileSubs.map(sc=>{const n=tasks.filter(x=>x.categoryId===sc.id&&!taskDone(x)).length;return<button key={sc.id} className={`m-subchip${catFilter===sc.id?' on':''}`} onClick={()=>setCatFilter(catFilter===sc.id?selectedParentCat.id:sc.id)}><span className="cat-dot" style={{background:catDotColor(sc,vibrant,mono),width:7,height:7}}/>{sc.name}</button>;})}</div>}
     {tab==='today'&&<div className="m-stats"><div className="m-stat"><div className="m-stat-num">{stats.today}</div><div className="m-stat-label">Today</div></div><div className="m-stat red"><div className="m-stat-num">{stats.overdue}</div><div className="m-stat-label">Overdue</div></div><div className="m-stat amber"><div className="m-stat-num">{stats.week}</div><div className="m-stat-label">This week</div></div></div>}
     <div className="m-content scroll">{tab==='calendar'?<CalendarBlock/>:<TaskList tasks={listTasks} layout={listLayout} sort={sort} vibrant={vibrant} dark={dark} mono={mono} subtaskMode={subtaskMode} handlers={handlers}/>}</div>
     <nav className="tabbar">{mTabs.map((d,i)=>d==='fab'?<div key="fab" className="fab-wrap"><button className="fab" onClick={()=>setEditId(null)}><Icon name="plus" size={26} strokeWidth={2.4}/></button></div>:<button key={d.id} className={`tab${tab===d.id?' active':''}`} onClick={()=>setTab(d.id)}><Icon name={d.icon} size={23}/>{d.label}</button>)}</nav>
-    {editor}{catMgr}
+    {editor}{catMgr}{authModal}
   </div>;
 }
 
 /* ---- AppRoot ---- */
+const LS_NAME='wp_name';
 function AppRoot(){
   const[dark,setDark]=React.useState(false);const[accent]=React.useState('#708871');const[theme]=React.useState('soft');const[listLayout]=React.useState('cards');const[subtaskMode]=React.useState('inline');const[calendarDefault]=React.useState('month');
   const[tasks,setTasks]=React.useState(()=>lsLoad(LS_TASKS,DEFAULT_SEED));
   const[categories,setCategories]=React.useState(()=>lsLoad(LS_CATS,DEFAULT_CATEGORIES));
   const[session,setSession]=React.useState(null);const[authLoading,setAuthLoading]=React.useState(IS_SUPABASE);
-  const[syncStatus,setSyncStatus]=React.useState(IS_SUPABASE?'off':'off');
+  const[syncStatus,setSyncStatus]=React.useState('off');
+  const[displayName,setDisplayNameState]=React.useState(()=>lsLoad(LS_NAME,'')||'');
+  const[showAuth,setShowAuth]=React.useState(false);
   const syncTimer=React.useRef(null);
   CATEGORIES=categories;
 
@@ -556,18 +601,21 @@ function AppRoot(){
   React.useEffect(()=>{
     if(!IS_SUPABASE){setAuthLoading(false);return;}
     sb.auth.getSession().then(({data:{session}})=>{setSession(session);if(session)loadRemote(session.user.id);else setAuthLoading(false);});
-    const{data:{subscription}}=sb.auth.onAuthStateChange((_,session)=>{setSession(session);if(session)loadRemote(session.user.id);});
+    const{data:{subscription}}=sb.auth.onAuthStateChange((event,session)=>{setSession(session);if(event==='SIGNED_IN')loadRemote(session.user.id);if(event==='SIGNED_OUT')setAuthLoading(false);});
     return()=>subscription.unsubscribe();
   },[]);
 
   const loadRemote=async uid=>{
     setSyncStatus('busy');
-    const{data}=await sb.from('user_data').select('tasks,categories').eq('user_id',uid).maybeSingle();
-    if(data){
-      if(data.tasks?.length){setTasks(data.tasks);lsSave(LS_TASKS,data.tasks);}
-      if(data.categories?.length){setCategories(data.categories);lsSave(LS_CATS,data.categories);}
-    }
-    setSyncStatus('ok');setAuthLoading(false);
+    try{
+      const{data}=await sb.from('user_data').select('tasks,categories').eq('user_id',uid).maybeSingle();
+      if(data){
+        if(data.tasks?.length){setTasks(data.tasks);lsSave(LS_TASKS,data.tasks);}
+        if(data.categories?.length){setCategories(data.categories);lsSave(LS_CATS,data.categories);}
+      }
+      setSyncStatus('ok');
+    }catch{setSyncStatus('off');}
+    finally{setAuthLoading(false);}
   };
 
   const scheduleSync=(newTasks,newCats)=>{
@@ -583,8 +631,11 @@ function AppRoot(){
   const[isMobile,setIsMobile]=React.useState(window.innerWidth<768);
   React.useEffect(()=>{const r=()=>setIsMobile(window.innerWidth<768);window.addEventListener('resize',r);return()=>window.removeEventListener('resize',r);},[]);
 
+  const setDisplayName=name=>{setDisplayNameState(name);lsSave(LS_NAME,name);};
+
   const root=React.useMemo(()=>({
     setDark,
+    openAuth:()=>setShowAuth(true),
     signOut:async()=>{if(IS_SUPABASE)await sb.auth.signOut();setSession(null);},
     toggleTask:id=>setTasks(ts=>{const n=ts.map(x=>{if(x.id!==id)return x;if(x.subtasks&&x.subtasks.length){const all=x.subtasks.every(s=>s.done);return{...x,subtasks:x.subtasks.map(s=>({...s,done:!all})),done:!all};}return{...x,done:!x.done};});lsSave(LS_TASKS,n);scheduleSync(n,CATEGORIES);return n;}),
     toggleSub:(id,sid)=>setTasks(ts=>{const n=ts.map(x=>{if(x.id!==id)return x;const subtasks=x.subtasks.map(s=>s.id===sid?{...s,done:!s.done}:s);return{...x,subtasks,done:subtasks.every(s=>s.done)};});lsSave(LS_TASKS,n);scheduleSync(n,CATEGORIES);return n;}),
@@ -599,9 +650,8 @@ function AppRoot(){
   }),[session,tasks]);
 
   if(authLoading)return<div style={{display:'flex',alignItems:'center',justifyContent:'center',height:'100%',color:'var(--ink-3)',fontFamily:'var(--font)',fontSize:14}}>Loading…</div>;
-  if(IS_SUPABASE&&!session)return<LoginScreen/>;
 
-  return<PlannerSurface formFactor={isMobile?'mobile':'desktop'} tasks={tasks} dark={dark} accent={accent} theme={theme} listLayout={listLayout} subtaskMode={subtaskMode} calendarDefault={calendarDefault} syncStatus={syncStatus} root={root}/>;
+  return<PlannerSurface formFactor={isMobile?'mobile':'desktop'} tasks={tasks} dark={dark} accent={accent} theme={theme} listLayout={listLayout} subtaskMode={subtaskMode} calendarDefault={calendarDefault} syncStatus={syncStatus} session={session} displayName={displayName} showAuth={showAuth} setShowAuth={setShowAuth} setDisplayName={setDisplayName} root={root}/>;
 }
 
 ReactDOM.createRoot(document.getElementById('root')).render(<AppRoot/>);
