@@ -19,7 +19,7 @@ window.APP_CONFIG = {
   //  Supported: 'google', 'apple', 'github', 'discord'
   //  Must match what you have enabled in Supabase → Authentication → Providers
   // ----------------------------------------------------------
-  OAUTH_PROVIDERS: ['google', 'apple'],
+  OAUTH_PROVIDERS: [],
 
   // ----------------------------------------------------------
   //  AI features (future)

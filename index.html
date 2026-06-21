@@ -164,8 +164,13 @@ input,textarea,select{font-family:inherit;font-size:16px}
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script>
+Babel.registerPreset('react-classic', {
+  presets: [[Babel.availablePresets['react'], { runtime: 'classic' }]]
+});
+</script>
 <script src="config.js"></script>
-<script type="text/babel">
+<script type="text/babel" data-presets="react-classic">
 /* ================================================================
    CONFIG — edit config.js to set your credentials.
    Leave SUPABASE_URL blank/unset to run locally without sync.
@@ -173,8 +178,17 @@ input,textarea,select{font-family:inherit;font-size:16px}
 const _cfg = window.APP_CONFIG || {};
 const SUPABASE_URL      = _cfg.SUPABASE_URL      || 'YOUR_SUPABASE_URL';
 const SUPABASE_ANON_KEY = _cfg.SUPABASE_ANON_KEY || 'YOUR_SUPABASE_ANON_KEY';
-const IS_SUPABASE = !SUPABASE_URL.startsWith('YOUR_');
-const sb = IS_SUPABASE ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+let IS_SUPABASE = !SUPABASE_URL.startsWith('YOUR_');
+let sb = null;
+if (IS_SUPABASE) {
+  try {
+    sb = window.supabase?.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) ?? null;
+    if (!sb) IS_SUPABASE = false;
+  } catch(e) {
+    console.warn('Supabase init failed, running in local-only mode:', e);
+    IS_SUPABASE = false;
+  }
+}
 
 /* ---- icons ---- */
 const ICON_PATHS = {
