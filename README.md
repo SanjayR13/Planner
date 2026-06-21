@@ -6,14 +6,21 @@ A personal task planner built as a single HTML file. Works on any device — pho
 
 ## Features
 
-- **Task management** — add, edit, complete, and delete tasks
+- **Task management** — add, edit, complete, and delete tasks; undo accidental deletes with a 5-second toast
+- **Duplicate tasks** — copy any task with one click to reuse it as a template
 - **Subtasks** — break tasks into steps, each with their own due date and completion state
-- **Categories & sub-categories** — collapsible category tree with colour-coded dot indicators
+- **Progress bars** — per-task completion percentage tracked across subtasks
+- **Bulk actions** — select multiple tasks to complete or delete them all at once
+- **Categories & sub-categories** — collapsible 2-level category tree with custom colour-coded dot indicators
 - **Priority flags** — high / medium / low priority with visual indicators
-- **Recurring tasks** — daily, weekly, monthly, or yearly repeats
-- **Attachments** — link files, URLs, and images to tasks
+- **Recurring tasks** — daily, weekly, monthly, or yearly repeat labels
+- **Attachments** — link files, URLs (clickable), and images to tasks
+- **Search** — live filtering across task titles, notes, and subtask text
 - **Calendar view** — month grid, agenda list, and timeline showing tasks by due date
-- **Progress bars** — per-task completion tracking across subtasks
+- **Today view** — summary stats (Due today, Overdue, This week, Completed) plus the day's task list
+- **Upcoming view** — future tasks grouped by This week / Later
+- **Completion streaks** — tracks how many consecutive days you've completed at least one task
+- **Export** — download all your tasks as CSV or JSON for backup or import
 - **Settings panel** — choose default view, reorder nav tabs, pick a theme (Soft / Vibrant / Mono), switch between Cards and Compact rows layout, pick an accent colour, and enable browser reminders
 - **Dark mode** — toggle between light and dark themes
 - **Responsive layout** — full desktop sidebar on wide screens, mobile bottom-nav on phones
