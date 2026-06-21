@@ -12,8 +12,9 @@ A personal task planner built as a single HTML file. Works on any device — pho
 - **Priority flags** — high / medium / low priority with visual indicators
 - **Recurring tasks** — daily, weekly, monthly, or yearly repeats
 - **Attachments** — link files, URLs, and images to tasks
-- **Calendar view** — month grid showing tasks by due date
+- **Calendar view** — month grid, agenda list, and timeline showing tasks by due date
 - **Progress bars** — per-task completion tracking across subtasks
+- **Settings panel** — choose default view, reorder nav tabs, pick a theme (Soft / Vibrant / Mono), switch between Cards and Compact rows layout, pick an accent colour, and enable browser reminders
 - **Dark mode** — toggle between light and dark themes
 - **Responsive layout** — full desktop sidebar on wide screens, mobile bottom-nav on phones
 - **Offline first** — everything saves to localStorage instantly; works with no internet
@@ -60,18 +61,18 @@ create policy "own data" on user_data for all
 
 3. Click **Run** — you should see "Success. No rows returned"
 
-#### 3. Add your credentials to the HTML file
+#### 3. Add your credentials to config.js
 
 1. In Supabase, go to **Settings → API**
 2. Copy the **Project URL** and **anon public** key
-3. Open `index.html` in a text editor and find these two lines near the top of the `<script>` block:
+3. Open `config.js` in a text editor and fill in the two fields:
 
 ```js
-const SUPABASE_URL      = 'YOUR_SUPABASE_URL';
-const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+SUPABASE_URL:      'https://your-project.supabase.co',
+SUPABASE_ANON_KEY: 'your-anon-key',
 ```
 
-4. Replace the placeholder values with your actual URL and key
+4. Save the file — no rebuild needed
 
 #### 4. Create your account
 
@@ -86,12 +87,12 @@ const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
 To access the planner from any device via a URL:
 
 1. Create a new **private** GitHub repository
-2. Name the file `index.html` (GitHub Pages serves this as the default page)
+2. Commit both `index.html` and `config.js` (with your credentials filled in) to the repo
 3. Go to **Settings → Pages**, set source to `main` branch, root folder
 4. Your planner will be live at `https://yourusername.github.io/your-repo-name`
 5. Bookmark it on your phone — add to home screen for an app-like experience
 
-> **Privacy note:** The anon key in the HTML is safe to commit — it only grants access to authenticated users' own data. Row Level Security on Supabase ensures no one can read your tasks, even if they find the URL.
+> **Privacy note:** The anon key in `config.js` is safe to commit to a private repo — it only grants access to authenticated users' own data. Row Level Security on Supabase ensures no one can read your tasks, even if they find the URL.
 
 ---
 
@@ -161,7 +162,17 @@ Changes sync automatically 1.5 seconds after your last edit.
 
 ### Calendar view
 
-Click **Calendar** in the nav to see tasks plotted on a month grid by due date. Click any day to see the tasks due that day. Navigate months with the arrow buttons.
+Click **Calendar** in the nav to see tasks by due date in three sub-views — switch with the tabs at the top right:
+
+- **Month** — month grid; click any day to see that day's tasks
+- **Agenda** — chronological list of upcoming days with tasks
+- **Timeline** — horizontal bar chart showing when tasks fall in the month
+
+Navigate months with the arrow buttons or click **Today** to jump back.
+
+### Today view
+
+The **Today** page opens with four summary cards — Due today, Overdue, This week, and Completed — followed by the task list grouped by Overdue and Today sections.
 
 ### Sorting
 
@@ -171,7 +182,17 @@ Use the sort controls to toggle between:
 
 ### Dark mode & appearance
 
-Use the **moon/sun icon** in the sidebar footer (desktop) or header (mobile) to toggle dark mode. The tweaks panel (palette icon) lets you change the accent colour and visual theme.
+Use the **moon/sun icon** in the sidebar footer (desktop) or header (mobile) to toggle dark mode.
+
+### Settings
+
+Click the **gear icon** (⚙) in the sidebar footer to open Settings:
+- **Default view** — which page loads on startup (All Tasks, Calendar, Today, or Upcoming)
+- **Tab order** — drag the four nav items into any order; on mobile the first two appear in the tab bar
+- **Theme** — Soft (default warm tones), Vibrant (higher contrast), or Mono (greyscale)
+- **Task layout** — Cards (spaced with shadows) or Compact rows (dense list)
+- **Accent colour** — pick from preset swatches or enter a custom hex value
+- **Reminders** — enable browser push notifications for due tasks
 
 ---
 

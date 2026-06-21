@@ -1,0 +1,25 @@
+# Environment & secrets
+.env
+.env.local
+.env.*.local
+
+# Supabase CLI cache
+supabase/.temp
+
+# macOS
+.DS_Store
+
+# Node
+node_modules/
+.npm
+
+# Build output
+dist/
+build/
+.cache/
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
