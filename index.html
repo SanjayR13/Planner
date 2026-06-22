@@ -271,13 +271,12 @@ input,textarea,select{font-family:inherit;font-size:16px}
 .status-row.todo .status-ic{background:var(--red-soft);color:var(--red-ink)}
 .status-row.prog .status-ic{background:var(--amber-soft);color:var(--amber-ink)}
 .status-row.done-row .status-ic{background:var(--green-soft);color:var(--green)}
-.status-txt{flex:1;min-width:0}
-.status-label{font-size:15px;font-weight:650;color:var(--ink)}
-.status-sub{font-size:12.5px;font-weight:500;color:var(--ink-3);margin-top:1px}
-.status-n{font-size:22px;font-weight:700;letter-spacing:-.02em;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.status-txt{flex:1;min-width:0;overflow:hidden}
+.status-label{font-size:14.5px;font-weight:650;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.status-sub{font-size:12px;font-weight:500;color:var(--ink-3);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.status-n{font-size:20px;font-weight:700;letter-spacing:-.02em;color:var(--ink-2);font-variant-numeric:tabular-nums;flex-shrink:0}
 .skin-studio .status-row:hover{transform:translateY(-1px);box-shadow:var(--sh-2)}
 .surface.skin-studio.dark .status-row{border-color:oklch(0.3 0.012 280);box-shadow:0 1px 0 oklch(0.26 0.01 280) inset,0 4px 16px rgba(0,0,0,.55)}
-.desktop.skin-studio .status-list{max-width:560px}
 /* project grid */
 .project-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:12px}
 .project-card{text-align:left;border-radius:var(--r-lg);padding:16px 16px 15px;background:color-mix(in oklab,var(--pc) 14%,var(--surface));border:1px solid color-mix(in oklab,var(--pc) 24%,var(--line));color:var(--ink);box-shadow:var(--sh-1);display:flex;flex-direction:column;gap:12px;transition:transform .1s,box-shadow .14s;min-height:120px}
