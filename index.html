@@ -846,23 +846,23 @@ function aiOverviewLocal(tasks){
   const overdue=tasks.filter(t=>!taskDone(t)&&taskStatus(t)==='overdue');
   const todayT=tasks.filter(t=>!taskDone(t)&&bucketOf(t)==='today');
   const highP=tasks.filter(t=>!taskDone(t)&&t.priority==='high');
-  const pct=total?Math.round((doneT/total)*100):0;
-  let text='';
-  if(overdue.length>0){
-    const names=overdue.slice(0,2).map(t=>`"${t.title}"`).join(' and ');
-    text+=`${overdue.length} task${overdue.length>1?'s are':' is'} overdue — address ${names} to get back on track.`;
-  }else if(todayT.length>0){
-    text+=`You're ${pct}% through your tasks with ${todayT.length} still due today — good progress, keep pushing.`;
-  }else{
-    text+=`You're ${pct}% through your tasks with ${doneT} of ${total} done and nothing overdue — great shape.`;
-  }
-  const sugg=[];
-  if(overdue.length>0)sugg.push(`- "${overdue[0].title}" is overdue — clear it first`);
-  if(todayT.length>0)sugg.push(`- "${todayT[0].title}" needs to be done today`);
-  const nextHigh=highP.find(t=>!overdue.includes(t)&&!todayT.includes(t));
-  if(nextHigh)sugg.push(`- "${nextHigh.title}" is high priority — don't let it drift`);
-  if(sugg.length<2&&doneT>0)sugg.push(`- ${doneT} task${doneT>1?'s':''}  done — maintain the momentum`);
-  return text+(sugg.length?'\n\n'+sugg.slice(0,3).join('\n'):'');
+  // Line 1 — outstanding summary + next priority
+  const highNames=highP.slice(0,2).map(t=>`"${t.title}"`).join(' & ');
+  const nextUp=[...overdue,...todayT,...highP].find(Boolean);
+  const line1=`${total-doneT} task${total-doneT!==1?'s':''} outstanding${highNames?` — high priority: ${highNames}`:''}${nextUp?`; tackle "${nextUp.title}" first`:'.'}.`;
+  // Line 2 — roast if overdue, nudge if not
+  const insults=[
+    `"${overdue[0]?.title}" is overdue — extraordinary commitment to avoidance, honestly.`,
+    `You've somehow let "${overdue[0]?.title}" go overdue. Bold strategy, let's see if it pays off.`,
+    `"${overdue[0]?.title}" is overdue. At this point it's basically a vintage task. Sort it out.`,
+    `Mate, "${overdue[0]?.title}" was due ${overdue[0]?.due} — it's not going to do itself while you're here.`,
+  ];
+  const line2=overdue.length>0
+    ?insults[overdue[0].title.length%insults.length]
+    :highP.length>0?`"${highP[0].title}" is your highest priority — don't let it drift.`
+    :todayT.length>0?`"${todayT[0].title}" is due today — finish strong.`
+    :`Nothing overdue — keep that streak going.`;
+  return line1+'\n'+line2;
 }
 
 function StudioDashboard({tasks,dark,displayName,accent,onToggleDark,onPickCat,onAdd,onPickStatus}){
@@ -880,7 +880,7 @@ function StudioDashboard({tasks,dark,displayName,accent,onToggleDark,onPickCat,o
     setAiOpen(true);setAiLoading(true);setAiText('');
     const cfg=_cfg||{};
     const lines=tasks.map(t=>{const cat=catById(t.categoryId);const st=taskStatus(t);const due=t.due?`due ${t.due}`:'no due date';const pr=t.priority?`, ${t.priority} priority`:'';return`- ${t.title} [${cat?cat.name:'?'}, ${st}, ${due}${pr}]`;}).join('\n');
-    const prompt=`You are a friendly productivity assistant. Today is ${sub}. Here is my task list (${doneCount} of ${total} complete):\n\n${lines}\n\nWrite a short overview in plain text. Begin with one or two sentences on where things stand — call out anything overdue or due soon. Then add 2-4 brief, specific suggestions for what to focus on next, each on its own line starting with "- ". Keep it under 110 words. No markdown headers or bold.`;
+    const prompt=`You are a brutally honest productivity assistant with a sharp sense of humour. Today is ${sub}. Task list (${doneCount} of ${total} complete):\n\n${lines}\n\nWrite exactly 2 lines. Line 1: A punchy one-sentence summary of what is outstanding and next on the to-do list — mention high-priority items by name. Line 2: If anything is overdue, roast the user with a creative funny insult naming the overdue task (e.g. "You absolute legend — X was due yesterday and you're here adding more tasks"). If nothing is overdue, give one sharp motivational nudge about the highest-priority upcoming item. No bullet points, no headers. Exactly 2 lines separated by a newline, 60 words max.`;
     try{
       const geminiKey=cfg.GEMINI_API_KEY;
       const anthropicKey=cfg.ANTHROPIC_API_KEY;
