@@ -19,43 +19,27 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 input,textarea,select{font-family:inherit;font-size:16px}
 .scroll{overflow-y:auto;overflow-x:hidden}.scroll::-webkit-scrollbar{width:10px}.scroll::-webkit-scrollbar-thumb{background:var(--line);border-radius:99px;border:3px solid transparent;background-clip:content-box}.scroll::-webkit-scrollbar-thumb:hover{background:var(--ink-3);background-clip:content-box}
 /* sidebar */
-.desktop .sidebar{width:272px;flex-shrink:0;background:var(--bg);border-right:none;box-shadow:2px 0 16px rgba(160,100,30,.08);display:flex;flex-direction:column;padding:20px 14px 20px;gap:2px;overflow-y:auto}
+.desktop .sidebar{width:256px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--line);display:flex;flex-direction:column;padding:22px 14px 16px;gap:2px}
 .brand{display:flex;align-items:center;gap:11px;padding:2px 10px 18px}
 .brand-mark{width:32px;height:32px;border-radius:9px;background:var(--accent);color:var(--accent-on);display:grid;place-items:center;flex-shrink:0;box-shadow:var(--sh-1)}
 .brand-name{font-weight:700;font-size:17px;letter-spacing:-.02em;white-space:nowrap}
 .brand-sub{font-size:11.5px;color:var(--ink-3);font-weight:500;margin-top:1px;white-space:nowrap}
-/* profile card */
-.profile-card{display:flex;align-items:center;gap:10px;padding:13px 14px;background:var(--surface);border-radius:var(--r-lg);box-shadow:var(--sh-1);margin-bottom:18px;flex-shrink:0}
-.sidebar-avatar{width:42px;height:42px;border-radius:50%;background:var(--accent);color:var(--accent-on);display:grid;place-items:center;font-weight:700;font-size:14px;flex-shrink:0;cursor:pointer;transition:opacity .12s;border:none;box-shadow:0 0 0 3px #F4A7A3,0 0 0 5.5px var(--surface)}
-.surface.dark .sidebar-avatar{box-shadow:0 0 0 3px #8B4A60,0 0 0 5.5px var(--surface)}
-.sidebar-avatar:hover{opacity:.86}
-.profile-name{font-size:13.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ink)}
-.profile-sub{font-size:11px;color:var(--ink-3);display:flex;align-items:center;gap:4px;margin-top:2px;font-weight:500}
-/* status section */
-.status-section{display:flex;flex-direction:column;gap:1px;margin-bottom:4px}
-.status-row{display:flex;align-items:center;gap:11px;padding:8px 11px;border-radius:var(--r-md);transition:background .12s}
-.status-row:hover{background:color-mix(in oklab,var(--surface) 70%,transparent)}
-.status-icon{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;flex-shrink:0}
-.status-info{display:flex;flex-direction:column;gap:1px}
-.status-name{font-size:14px;font-weight:600;color:var(--ink);line-height:1.2}
-.status-cnt{font-size:11px;color:var(--ink-3);font-weight:500}
-/* nav */
-.nav-item{display:flex;align-items:center;gap:11px;padding:9px 12px;border-radius:var(--r-md);font-size:14px;font-weight:600;color:var(--ink-2);text-align:left;width:100%;transition:background .12s,color .12s}
-.nav-item:hover{background:color-mix(in oklab,var(--surface) 70%,transparent);color:var(--ink)}.nav-item.active{background:var(--accent);color:#fff;box-shadow:var(--sh-1)}
-.nav-item.active .count{color:rgba(255,255,255,.8)}.nav-item .count{margin-left:auto;font-size:11.5px;font-weight:700;color:var(--ink-3)}
-.nav-label{font-size:10.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3);padding:14px 11px 6px;display:flex;align-items:center;gap:4px}
+.nav-item{display:flex;align-items:center;gap:12px;padding:9px 12px;border-radius:var(--r-sm);font-size:14px;font-weight:600;color:var(--ink-2);text-align:left;width:100%;transition:background .12s,color .12s}
+.nav-item:hover{background:var(--surface-2);color:var(--ink)}.nav-item.active{background:var(--accent-soft);color:var(--accent-ink)}
+.nav-item.active .count{color:var(--accent-ink)}.nav-item .count{margin-left:auto;font-size:12px;font-weight:600;color:var(--ink-3)}
+.nav-label{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);padding:14px 11px 5px;display:flex;align-items:center;gap:4px}
 .nav-label-text{flex:1}
 .sidebar:hover .nav-label .mini-btn{opacity:1}.nav-label .mini-btn{opacity:0;transition:opacity .12s}
-.cat-row-wrap{display:flex;align-items:center;border-radius:var(--r-md);transition:background .12s}.cat-row-wrap:hover{background:color-mix(in oklab,var(--surface) 70%,transparent)}.cat-row-wrap.active{background:color-mix(in oklab,var(--surface) 70%,transparent)}
+.cat-row-wrap{display:flex;align-items:center;border-radius:var(--r-sm);transition:background .12s}.cat-row-wrap:hover{background:var(--surface-2)}.cat-row-wrap.active{background:var(--surface-2)}
 .cat-chevron-btn{width:24px;min-height:34px;display:flex;align-items:center;justify-content:center;border-radius:var(--r-sm);color:var(--ink-3);flex-shrink:0;padding:0}
 .cat-chevron-btn:hover{background:color-mix(in oklab,var(--line) 50%,transparent)}
-.cat-row-btn{display:flex;align-items:center;gap:9px;padding:7px 8px 7px 2px;font-size:14px;font-weight:600;color:var(--ink-2);flex:1;text-align:left;border-radius:var(--r-sm)}
+.cat-row-btn{display:flex;align-items:center;gap:9px;padding:7px 8px 7px 2px;font-size:14px;font-weight:550;color:var(--ink-2);flex:1;text-align:left;border-radius:var(--r-sm)}
 .cat-row-wrap.active .cat-row-btn{color:var(--ink)}
 .cat-dot{width:10px;height:10px;border-radius:3px;flex-shrink:0}
 .cat-row-btn .count{margin-left:auto;font-size:12px;color:var(--ink-3);font-weight:600}
 .sub-badge{background:var(--accent-soft);color:var(--accent-ink);font-size:10px;font-weight:700;padding:1px 6px;border-radius:99px;margin-left:2px;white-space:nowrap}
-.subcat-row{display:flex;align-items:center;gap:9px;padding:6px 11px 6px 30px;border-radius:var(--r-md);font-size:13.5px;font-weight:500;color:var(--ink-3);width:100%;text-align:left;transition:background .12s}
-.subcat-row:hover{background:color-mix(in oklab,var(--surface) 70%,transparent);color:var(--ink-2)}.subcat-row.active{background:color-mix(in oklab,var(--surface) 70%,transparent);color:var(--ink)}
+.subcat-row{display:flex;align-items:center;gap:9px;padding:6px 11px 6px 30px;border-radius:var(--r-sm);font-size:13.5px;font-weight:500;color:var(--ink-3);width:100%;text-align:left;transition:background .12s}
+.subcat-row:hover{background:var(--surface-2);color:var(--ink-2)}.subcat-row.active{background:var(--surface-2);color:var(--ink)}
 .subcat-row .count{margin-left:auto;font-size:11.5px;color:var(--ink-3);font-weight:600}
 .sidebar-foot{margin-top:auto;display:flex;align-items:center;gap:10px;padding:10px;border-radius:var(--r-md);background:var(--surface-2)}
 .avatar{width:32px;height:32px;border-radius:50%;background:var(--accent);color:var(--accent-on);display:grid;place-items:center;font-weight:700;font-size:13px;flex-shrink:0;cursor:pointer;transition:opacity .12s;border:none}
@@ -214,6 +198,81 @@ input,textarea,select{font-family:inherit;font-size:16px}
 .swatch{width:26px;height:26px;border-radius:8px;cursor:pointer;border:2.5px solid transparent;transition:transform .1s}.swatch:hover{transform:scale(1.12)}.swatch.on{border-color:var(--ink)}
 /* stats 5-col */
 .stats-5{grid-template-columns:repeat(5,1fr)}
+/* ============================================================
+   skin-studio — clean neutral, pill shapes, hero dashboard
+   ============================================================ */
+.surface.skin-studio{--r-xs:9px;--r-sm:12px;--r-md:15px;--r-lg:20px;--r-xl:26px;--sh-1:0 1px 2px rgba(18,24,38,.05),0 1px 3px rgba(18,24,38,.05);--sh-2:0 2px 4px rgba(18,24,38,.04),0 6px 16px rgba(18,24,38,.08);--sh-3:0 12px 32px rgba(18,24,38,.12);--sh-pop:0 24px 60px rgba(18,24,38,.22),0 6px 18px rgba(18,24,38,.12)}
+.surface.skin-studio:not(.dark){--bg:oklch(0.976 0.0015 250);--surface:oklch(1 0 0);--surface-2:oklch(0.965 0.002 250);--line:oklch(0.912 0.003 250);--line-soft:oklch(0.945 0.0025 250);--ink:oklch(0.27 0.012 258);--ink-2:oklch(0.46 0.011 258);--ink-3:oklch(0.62 0.009 258);--accent-soft:color-mix(in oklab,var(--accent) 13%,oklch(0.99 0 0))}
+.surface.skin-studio.dark{--bg:oklch(0.04 0 0);--surface:oklch(0.165 0.006 280);--surface-2:oklch(0.225 0.008 280);--line:oklch(0.32 0.012 280);--line-soft:oklch(0.26 0.01 280);--sh-1:0 1px 2px rgba(0,0,0,.6);--sh-2:0 6px 20px rgba(0,0,0,.7);--sh-3:0 16px 40px rgba(0,0,0,.8)}
+.skin-studio .nav-item{border-radius:99px}.skin-studio .nav-item.active{border-radius:99px;box-shadow:inset 0 0 0 1px color-mix(in oklab,var(--accent) 22%,transparent)}
+.skin-studio .chip,.skin-studio .m-chip,.skin-studio .chip-toggle{border-radius:99px}
+.skin-studio .seg{border-radius:99px}.skin-studio .seg button{border-radius:99px}
+.skin-studio .btn{border-radius:99px}.skin-studio .icon-btn{border-radius:50%}
+.skin-studio .brand-mark{border-radius:12px}.skin-studio .search{box-shadow:var(--sh-1)}
+.skin-studio .task{transition:transform .1s,box-shadow .14s,border-color .14s}.skin-studio .task:hover{transform:translateY(-1px);box-shadow:var(--sh-2)}
+.desktop.skin-studio .sidebar{background:var(--surface);box-shadow:1px 0 0 var(--line-soft);border-right:none}
+.skin-studio .modal-head{border-bottom:none;padding:22px 24px 20px;color:#fff;background:var(--accent)}
+.surface.skin-studio.dark .modal-head{color:oklch(0.97 0.015 150);background:oklch(0.46 0.05 150)}
+.skin-studio .modal-head h3{font-size:22px;font-weight:700}
+.skin-studio .modal-head .mini-btn{color:inherit;background:rgba(255,255,255,.35);border-radius:50%}
+.skin-studio .field-label{text-transform:uppercase;letter-spacing:.05em;font-size:11px;color:var(--ink-3)}
+.skin-studio .opt{border-radius:99px}
+.skin-studio .modal-foot .btn-primary{flex:1;justify-content:center;padding:13px;font-size:15px}
+.skin-studio .modal-foot{gap:12px}
+/* ring */
+.ring{position:relative;display:grid;place-items:center;flex-shrink:0}
+.ring-svg{display:block}
+.ring-label{position:absolute;inset:0;display:grid;place-items:center}
+/* hero card */
+.hero{position:relative;overflow:hidden;border-radius:var(--r-xl);padding:18px 22px;color:#fff;background:var(--accent);box-shadow:var(--sh-2)}
+.hero::after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(130% 150% at 100% 0%,rgba(255,255,255,.16),transparent 55%)}
+.surface.skin-studio.dark .hero{color:oklch(0.97 0.015 150);background:oklch(0.46 0.05 150)}
+.hero-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.hero-eyebrow{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;font-weight:600;opacity:.82}
+.hero-eyebrow svg{width:14px;height:14px}
+.hero-btn{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;color:inherit;background:rgba(255,255,255,.35)}
+.hero-btn:hover{background:rgba(255,255,255,.5)}
+.hero-row{display:flex;align-items:center;justify-content:space-between;gap:16px}
+.hero-id{display:flex;align-items:center;gap:14px;min-width:0}
+.hero-av{width:56px;height:56px;border-radius:50%;flex-shrink:0;display:grid;place-items:center;font-weight:700;font-size:18px;color:#fff;background:rgba(255,255,255,.22);box-shadow:0 0 0 3px rgba(255,255,255,.18)}
+.hero-name{font-size:21px;font-weight:700;line-height:1.1}
+.hero-role{font-size:13px;font-weight:500;opacity:.78;margin-top:2px}
+.hero-pct{font-size:17px;font-weight:700;color:#fff}
+.hero-pct i{font-size:11px;font-style:normal;font-weight:600;opacity:.85}
+.hero-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:16px;padding-top:14px;border-top:1px solid rgba(255,255,255,.32);font-size:13px;font-weight:500}
+.hero-foot b{font-weight:700}
+.hero-add{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:650;color:var(--accent);background:#fff;padding:7px 14px;border-radius:99px}
+.hero-add:hover{background:rgba(255,255,255,.88)}
+.hero-add svg{width:15px;height:15px}
+/* studio dashboard */
+.studio-dash{display:flex;flex-direction:column}
+.dash-sec-head{font-size:12px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3);margin:26px 2px 12px}
+.desktop.skin-studio .hero{max-width:720px}
+/* status list (main content area) */
+.status-list{display:flex;flex-direction:column;gap:10px}
+.status-row{display:flex;align-items:center;gap:14px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:13px 16px;box-shadow:var(--sh-1);transition:box-shadow .14s,transform .08s}
+.status-ic{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;flex-shrink:0}
+.status-row.todo .status-ic{background:var(--red-soft);color:var(--red-ink)}
+.status-row.prog .status-ic{background:var(--amber-soft);color:var(--amber-ink)}
+.status-row.done-row .status-ic{background:var(--green-soft);color:var(--green)}
+.status-txt{flex:1;min-width:0}
+.status-label{font-size:15px;font-weight:650;color:var(--ink)}
+.status-sub{font-size:12.5px;font-weight:500;color:var(--ink-3);margin-top:1px}
+.status-n{font-size:22px;font-weight:700;letter-spacing:-.02em;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.skin-studio .status-row:hover{transform:translateY(-1px);box-shadow:var(--sh-2)}
+.surface.skin-studio.dark .status-row{border-color:oklch(0.3 0.012 280);box-shadow:0 1px 0 oklch(0.26 0.01 280) inset,0 4px 16px rgba(0,0,0,.55)}
+.desktop.skin-studio .status-list{max-width:560px}
+/* project grid */
+.project-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:12px}
+.project-card{text-align:left;border-radius:var(--r-lg);padding:16px 16px 15px;background:color-mix(in oklab,var(--pc) 14%,var(--surface));border:1px solid color-mix(in oklab,var(--pc) 24%,var(--line));color:var(--ink);box-shadow:var(--sh-1);display:flex;flex-direction:column;gap:12px;transition:transform .1s,box-shadow .14s;min-height:120px}
+.project-card:hover{transform:translateY(-2px);box-shadow:var(--sh-2)}
+.proj-pct{font-size:13px;font-weight:700;color:var(--pc-ink)}
+.proj-pct i{font-size:9px;font-style:normal;font-weight:600;opacity:.7}
+.proj-name{font-size:15.5px;font-weight:650;margin-top:auto;color:var(--ink)}
+.proj-meta{font-size:12px;font-weight:500;color:var(--ink-3)}
+.surface.skin-studio.dark .project-card{background:color-mix(in oklab,var(--pc) 26%,oklch(0.2 0.008 280));border-color:color-mix(in oklab,var(--pc) 34%,oklch(0.34 0.01 280))}
+.surface.skin-studio.dark .proj-pct,.surface.skin-studio.dark .proj-name{color:oklch(0.96 0.01 280)}
+.surface.skin-studio.dark .proj-meta{color:oklch(0.74 0.012 280)}
 </style>
 </head>
 <body>
@@ -750,6 +809,81 @@ function WeeklyReview({tasks,onEdit,vibrant,dark,mono}){
   </div>;
 }
 
+/* ---- Ring + StudioDashboard ---- */
+function Ring({value,size=56,stroke=6,color='var(--accent)',track='var(--surface-2)',children}){
+  const r=(size-stroke)/2;const c=2*Math.PI*r;const v=Math.max(0,Math.min(100,value));const off=c*(1-v/100);
+  return<div className="ring" style={{width:size,height:size}}>
+    <svg width={size} height={size} className="ring-svg">
+      <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={track} strokeWidth={stroke}/>
+      <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={color} strokeWidth={stroke}
+        strokeDasharray={c} strokeDashoffset={off} strokeLinecap="round"
+        transform={`rotate(-90 ${size/2} ${size/2})`} style={{transition:'stroke-dashoffset .6s cubic-bezier(.4,0,.2,1)'}}/>
+    </svg>
+    {children!=null&&<div className="ring-label">{children}</div>}
+  </div>;
+}
+
+function StudioDashboard({tasks,dark,displayName,accent,onToggleDark,onPickCat,onAdd}){
+  const total=tasks.length;
+  const doneCount=tasks.filter(taskDone).length;
+  const inprog=tasks.filter(t=>!taskDone(t)&&taskProgress(t)>0).length;
+  const todo=tasks.filter(t=>!taskDone(t)&&taskProgress(t)===0).length;
+  const overall=total?Math.round((doneCount/total)*100):0;
+  const initials=displayName?displayName.trim().split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase():'WP';
+  const sub=`${WD_FULL[TODAY.getDay()]}, ${MONTHS[TODAY.getMonth()]} ${TODAY.getDate()}`;
+  const statusItems=[
+    {key:'todo',label:'To Do',icon:'clock',tone:'todo',n:todo,sub:`${todo} task${todo!==1?'s':''} to start`},
+    {key:'prog',label:'In Progress',icon:'zap',tone:'prog',n:inprog,sub:`${inprog} underway`},
+    {key:'done',label:'Done',icon:'check',tone:'done-row',n:doneCount,sub:`${doneCount} completed`},
+  ];
+  const projects=CATEGORIES.filter(c=>!c.parentId).map(c=>{
+    const items=tasks.filter(t=>t.categoryId===c.id);
+    const d=items.filter(taskDone).length;
+    return{...c,total:items.length,done:d,pct:items.length?Math.round((d/items.length)*100):0};
+  }).filter(p=>p.total>0);
+  return<div className="studio-dash">
+    <div className="hero">
+      <div className="hero-top">
+        <span className="hero-eyebrow"><Icon name="today" size={14}/>{sub}</span>
+        <button className="hero-btn" onClick={onToggleDark} title="Toggle dark mode"><Icon name={dark?'sun':'moon'} size={17}/></button>
+      </div>
+      <div className="hero-row">
+        <div className="hero-id">
+          <div className="hero-av">{initials}</div>
+          <div><div className="hero-name">{displayName||'Work Planner'}</div><div className="hero-role">Productive day ahead</div></div>
+        </div>
+        <Ring value={overall} size={66} stroke={7} color="#fff" track="rgba(255,255,255,0.35)">
+          <span className="hero-pct">{overall}<i>%</i></span>
+        </Ring>
+      </div>
+      <div className="hero-foot">
+        <span><b>{doneCount}</b> of <b>{total}</b> tasks complete</span>
+        <button className="hero-add" onClick={onAdd}><Icon name="plus" size={15}/>Add task</button>
+      </div>
+    </div>
+    <div className="dash-sec-head">My tasks</div>
+    <div className="status-list">
+      {statusItems.map(s=><div key={s.key} className={`status-row ${s.tone}`}>
+        <span className="status-ic"><Icon name={s.icon} size={18} strokeWidth={2}/></span>
+        <div className="status-txt"><div className="status-label">{s.label}</div><div className="status-sub">{s.sub}</div></div>
+        <div className="status-n">{s.n}</div>
+      </div>)}
+    </div>
+    <div className="dash-sec-head">Active projects</div>
+    <div className="project-grid">
+      {projects.map(p=><button key={p.id} className="project-card"
+        style={{'--pc':`oklch(0.7 ${Math.min(p.c*0.85,0.1)} ${p.h})`,'--pc-ink':`oklch(0.5 ${Math.min(p.c,0.12)} ${p.h})`}}
+        onClick={()=>onPickCat(p.id)}>
+        <Ring value={p.pct} size={52} stroke={6} color="var(--pc-ink)" track="color-mix(in oklab, var(--pc-ink) 18%, transparent)">
+          <span className="proj-pct">{p.pct}<i>%</i></span>
+        </Ring>
+        <div className="proj-name">{p.name}</div>
+        <div className="proj-meta">{p.done}/{p.total} tasks</div>
+      </button>)}
+    </div>
+  </div>;
+}
+
 /* ---- PlannerSurface ---- */
 const TAB_DEF=[{id:'today',label:'Today',icon:'today'},{id:'upcoming',label:'Upcoming',icon:'clock'},{id:'all',label:'All Tasks',icon:'list'},{id:'calendar',label:'Calendar',icon:'calendar'},{id:'matrix',label:'Matrix',icon:'matrix'},{id:'review',label:'Review',icon:'review'}];
 const LS_SETTINGS='wp_settings';
@@ -783,9 +917,6 @@ function PlannerSurface({formFactor,tasks,dark,streak,undoTask,syncStatus,sessio
 
   const cnt={today:tasks.filter(x=>['overdue','today'].includes(bucketOf(x))).length,upcoming:tasks.filter(x=>['week','later','nodate'].includes(bucketOf(x))&&!taskDone(x)).length,all:tasks.length};
   const stats={today:tasks.filter(x=>bucketOf(x)==='today').length,overdue:tasks.filter(x=>bucketOf(x)==='overdue').length,week:tasks.filter(x=>bucketOf(x)==='week').length,done:tasks.filter(x=>taskDone(x)).length};
-  const todoCount=tasks.filter(t=>!taskDone(t)&&taskProgress(t)===0).length;
-  const inProgressCount=tasks.filter(t=>!taskDone(t)&&taskProgress(t)>0).length;
-  const doneCount=tasks.filter(taskDone).length;
   const handlers={onToggleTask:root.toggleTask,onToggleSub:root.toggleSub,onAddSub:root.addSub,onEdit:id=>setEditId(id),onDelete:root.deleteTask,onDuplicate:root.duplicateTask,onSelect:toggleSelect,selectedIds,bulkMode};
   const titles={today:['Today',`${WD_FULL[TODAY.getDay()]}, ${MONTHS[TODAY.getMonth()]} ${TODAY.getDate()}`],upcoming:['Upcoming','Tasks with a future due date'],all:['All Tasks',`${tasks.length} tasks · ${stats.done} completed`],calendar:['Calendar',`${MONTHS[monthDate.getMonth()]} ${monthDate.getFullYear()}`],matrix:['Matrix','Eisenhower prioritisation'],review:['Weekly Review','Last 7 days']};
 
@@ -847,41 +978,19 @@ function PlannerSurface({formFactor,tasks,dark,streak,undoTask,syncStatus,sessio
     return<TaskList tasks={listTasks} layout={listLayout} sort={sort} vibrant={vibrant} dark={dark} mono={mono} subtaskMode={subtaskMode} handlers={handlers}/>;
   };
 
-  if(!mobile)return<div className={`surface desktop${dark?' dark':''}`} style={{'--accent':accent}}>
+  if(!mobile)return<div className={`surface desktop skin-studio${dark?' dark':''}`} style={{'--accent':accent}}>
     <aside className="sidebar">
-      {/* Profile card */}
-      <div className="profile-card">
-        <button className={`sidebar-avatar${session?' logged-in':''}`} title={session?'Account':'Sign in'} onClick={()=>setShowAuth(true)}>{initials}</button>
-        <div style={{flex:1,minWidth:0}}>
-          <div className="profile-name">{displayName||'Work Planner'}</div>
-          <div className="profile-sub"><span className={`sync-dot ${syncStatus}`}/>{syncLabel}</div>
-        </div>
-        {IS_SUPABASE&&session&&<button className="mini-btn" title="Refresh" onClick={root.refresh}><span style={{display:'flex',animation:syncStatus==='busy'?'spin .7s linear infinite':'none'}}><Icon name="refresh" size={15}/></span></button>}
-        <button className="mini-btn" title="Settings" onClick={()=>setShowSettings(true)}><Icon name="settings" size={15}/></button>
-        <button className="mini-btn" title="Toggle dark mode" onClick={()=>root.setDark(!dark)}><Icon name={dark?'sun':'moon'} size={16}/></button>
-      </div>
-      {/* Navigation */}
-      <div className="nav-label" style={{paddingTop:4}}><span className="nav-label-text">Views</span></div>
-      {orderedTabs.map(d=><button key={d.id} className={`nav-item${tab===d.id?' active':''}`} onClick={()=>setTab(d.id)}><Icon name={d.icon} size={18}/>{d.label}{cnt[d.id]!=null&&<span className="count">{cnt[d.id]}</span>}</button>)}
-      {/* My tasks status */}
-      <div className="nav-label"><span className="nav-label-text">My tasks</span></div>
-      <div className="status-section">
-        <div className="status-row">
-          <div className="status-icon" style={{background:'var(--red-soft)',color:'var(--red-ink)'}}><Icon name="clock" size={16} strokeWidth={2}/></div>
-          <div className="status-info"><span className="status-name">To Do</span><span className="status-cnt">{todoCount} task{todoCount!==1?'s':''}</span></div>
-        </div>
-        <div className="status-row">
-          <div className="status-icon" style={{background:'var(--amber-soft)',color:'var(--amber-ink)'}}><Icon name="zap" size={16} strokeWidth={2}/></div>
-          <div className="status-info"><span className="status-name">In Progress</span><span className="status-cnt">{inProgressCount} task{inProgressCount!==1?'s':''}</span></div>
-        </div>
-        <div className="status-row">
-          <div className="status-icon" style={{background:'var(--green-soft)',color:'var(--green)'}}><Icon name="check" size={16} strokeWidth={2.5}/></div>
-          <div className="status-info"><span className="status-name">Done</span><span className="status-cnt">{doneCount} task{doneCount!==1?'s':''}</span></div>
-        </div>
-      </div>
-      {/* Categories */}
+      <div className="brand"><div className="brand-mark"><Icon name="check" size={19} strokeWidth={2.6}/></div><div><div className="brand-name">Work Planner</div><div className="brand-sub">Plan · Track · Done</div></div></div>
+      {orderedTabs.map(d=><button key={d.id} className={`nav-item${tab===d.id?' active':''}`} onClick={()=>setTab(d.id)}><Icon name={d.icon} size={19}/>{d.label}{cnt[d.id]!=null&&<span className="count">{cnt[d.id]}</span>}</button>)}
       <div className="nav-label"><span className="nav-label-text">Categories</span><button className="mini-btn" title="Manage categories" onClick={()=>setShowCatMgr(true)}><Icon name="settings" size={14}/></button></div>
       <SidebarCats/>
+      <div className="sidebar-foot" style={{marginTop:'auto'}}>
+        <button className={`avatar${session?' logged-in':''}`} title={session?'Account':'Sign in'} onClick={()=>setShowAuth(true)}>{initials}</button>
+        <div style={{flex:1,minWidth:0}}><div style={{fontSize:13,fontWeight:650}}>{displayName||'Work Planner'}</div><div style={{fontSize:11,color:'var(--ink-3)',display:'flex',alignItems:'center',gap:5,marginTop:2}}><span className={`sync-dot ${syncStatus}`}/>{syncLabel}</div></div>
+        {IS_SUPABASE&&session&&<button className="mini-btn" title="Refresh" onClick={root.refresh}><span style={{display:'flex',animation:syncStatus==='busy'?'spin .7s linear infinite':'none'}}><Icon name="refresh" size={16}/></span></button>}
+        <button className="mini-btn" title="Settings" onClick={()=>setShowSettings(true)}><Icon name="settings" size={16}/></button>
+        <button className="mini-btn" title="Toggle dark mode" onClick={()=>root.setDark(!dark)}><Icon name={dark?'sun':'moon'} size={17}/></button>
+      </div>
     </aside>
     <main className="main">
       <div className="topbar"><div><div className="page-title">{titles[tab]?.[0]||tab}{catFilter&&<span style={{color:'var(--ink-3)',fontWeight:600}}> · {catById(catFilter).name}</span>}</div><div className="page-sub">{titles[tab]?.[1]||''}</div></div><div className="topbar-spacer"/>
@@ -890,9 +999,20 @@ function PlannerSurface({formFactor,tasks,dark,streak,undoTask,syncStatus,sessio
         <button className="btn btn-primary" onClick={()=>setEditId(null)}><Icon name="plus" size={16}/>New task</button>
       </div>
       {BulkBar}
-      {tab==='today'&&<div className={`stats${streak.count>0?' stats-5':''}`}><div className="stat"><div className="stat-num">{stats.today}</div><div className="stat-label">Due today</div></div><div className="stat red"><div className="stat-num">{stats.overdue}</div><div className="stat-label">Overdue</div></div><div className="stat amber"><div className="stat-num">{stats.week}</div><div className="stat-label">This week</div></div><div className="stat green"><div className="stat-num">{stats.done}</div><div className="stat-label">Completed</div></div>{streak.count>0&&<div className="stat streak-stat"><div className="stat-num">{streak.count}</div><div className="stat-label">Day streak <Icon name="zap" size={11} style={{verticalAlign:'middle'}}/></div></div>}</div>}
-      {isListTab&&<div className="toolbar"><Segmented options={[{id:'due',label:'Due date',icon:'calendar'},{id:'priority',label:'Priority',icon:'flag'}]} value={sort} onChange={setSort}/>{tab==='all'&&<button className={`chip-toggle${hideDone?' on':''}`} onClick={()=>setHideDone(h=>!h)}>Hide completed</button>}</div>}
-      <div className="content scroll"><div className="content-pad"><MainContent/></div></div>
+      {tab!=='today'&&isListTab&&<div className="toolbar"><Segmented options={[{id:'due',label:'Due date',icon:'calendar'},{id:'priority',label:'Priority',icon:'flag'}]} value={sort} onChange={setSort}/>{tab==='all'&&<button className={`chip-toggle${hideDone?' on':''}`} onClick={()=>setHideDone(h=>!h)}>Hide completed</button>}</div>}
+      <div className="content scroll"><div className="content-pad">
+        {tab==='today'
+          ?<React.Fragment>
+              <StudioDashboard tasks={tasks} dark={dark} displayName={displayName} accent={accent}
+                onToggleDark={()=>root.setDark(!dark)}
+                onPickCat={id=>{setCatFilter(id);setTab('all');}}
+                onAdd={()=>setEditId(null)}/>
+              <div className="dash-sec-head" style={{display:'flex',alignItems:'center',gap:10}}>Today's schedule{streak.count>0&&<span style={{fontSize:11,fontWeight:700,padding:'2px 8px',borderRadius:99,background:'var(--accent-soft)',color:'var(--accent-ink)'}}>🔥 {streak.count} day streak</span>}</div>
+              <div className="toolbar" style={{padding:'0 0 14px'}}><Segmented options={[{id:'due',label:'Due date',icon:'calendar'},{id:'priority',label:'Priority',icon:'flag'}]} value={sort} onChange={setSort}/></div>
+              <MainContent/>
+            </React.Fragment>
+          :<MainContent/>}
+      </div></div>
     </main>
     {editor}{catMgr}{authModal}{settingsModal}
     <UndoToast task={undoTask} onUndo={root.undoDelete} onDismiss={root.dismissUndo}/>
@@ -902,7 +1022,7 @@ function PlannerSurface({formFactor,tasks,dark,streak,undoTask,syncStatus,sessio
   const selectedParentCat=catFilter?CATEGORIES.find(c=>c.id===catFilter&&!c.parentId):null;
   const mobileSubs=selectedParentCat?catChildren(selectedParentCat.id):[];
   const mTabs=[orderedTabs[0],orderedTabs[1],'fab',orderedTabs[2],orderedTabs[3]].filter(Boolean);
-  return<div className={`surface mobile${dark?' dark':''}`} style={{'--accent':accent}}>
+  return<div className={`surface mobile skin-studio${dark?' dark':''}`} style={{'--accent':accent}}>
     <div className="m-header"><div><div className="m-title">{titles[tab]?.[0]||tab}</div><div className="m-sub">{titles[tab]?.[1]||''}</div></div><div className="m-header-spacer"/>{IS_SUPABASE&&session&&<button className="icon-btn" style={{border:'none',background:'none'}} title="Refresh" onClick={root.refresh}><span style={{display:'flex',animation:syncStatus==='busy'?'spin .7s linear infinite':'none'}}><Icon name="refresh" size={18}/></span></button>}<button className="icon-btn" style={{border:'none',background:'none'}} onClick={()=>setShowCatMgr(true)} title="Categories"><Icon name="list" size={18}/></button><button className="icon-btn" style={{border:'none',background:'none'}} onClick={()=>setShowSettings(true)} title="Settings"><Icon name="settings" size={18}/></button><button className="icon-btn" style={{border:'none',background:'none'}} onClick={()=>root.setDark(!dark)}><Icon name={dark?'sun':'moon'} size={17}/></button><button className={`avatar${session?' logged-in':''}`} style={{width:30,height:30,fontSize:11}} title={session?'Account':'Sign in'} onClick={()=>setShowAuth(true)}>{initials}</button></div>
     {isListTab&&<div className="m-search"><Icon name="search" size={16}/><input placeholder="Search tasks…" value={search} onChange={e=>setSearch(e.target.value)}/></div>}
     {BulkBar}
