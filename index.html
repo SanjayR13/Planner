@@ -241,15 +241,31 @@ input,textarea,select{font-family:inherit;font-size:16px}
 .hero-pct i{font-size:11px;font-style:normal;font-weight:600;opacity:.85}
 .hero-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:16px;padding-top:14px;border-top:1px solid rgba(255,255,255,.32);font-size:13px;font-weight:500}
 .hero-foot b{font-weight:700}
+.hero-actions{display:inline-flex;align-items:center;gap:8px}
 .hero-add{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:650;color:var(--accent);background:#fff;padding:7px 14px;border-radius:99px}
 .hero-add:hover{background:rgba(255,255,255,.88)}
 .hero-add svg{width:15px;height:15px}
+.hero-ai{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:650;color:#fff;background:rgba(255,255,255,.22);padding:7px 14px;border-radius:99px;transition:background .12s}
+.hero-ai:hover{background:rgba(255,255,255,.34)}
+.hero-ai[disabled]{opacity:.7;cursor:default}
+.hero-ai svg{width:15px;height:15px}
+.hero-ai-panel{margin-top:14px;padding:14px 16px;border-radius:var(--r-lg);background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.26);color:#fff;font-size:13.5px;line-height:1.55;animation:fade .2s}
+.surface.skin-studio.dark .hero-ai-panel{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.16)}
+.hero-ai-head{display:flex;align-items:center;gap:7px;font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;opacity:.85;margin-bottom:9px}
+.hero-ai-head svg{width:14px;height:14px}
+.hero-ai-close{margin-left:auto;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;color:inherit;background:rgba(255,255,255,.18)}
+.hero-ai-close:hover{background:rgba(255,255,255,.3)}
+.hero-ai-body{white-space:pre-wrap}
+.hero-ai-loading{display:flex;align-items:center;gap:10px;opacity:.9}
+.ai-spinner{width:16px;height:16px;border-radius:50%;border:2px solid rgba(255,255,255,.35);border-top-color:#fff;animation:aispin .7s linear infinite}
+@keyframes aispin{to{transform:rotate(360deg)}}
 /* studio dashboard */
 .studio-dash{display:flex;flex-direction:column}
 .dash-sec-head{font-size:12px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3);margin:26px 2px 12px}
-.desktop.skin-studio .hero{max-width:720px}
+.desktop.skin-studio .hero{max-width:none}
 /* status list (main content area) */
 .status-list{display:flex;flex-direction:column;gap:10px}
+.desktop.skin-studio .status-list{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
 .status-row{display:flex;align-items:center;gap:14px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:13px 16px;box-shadow:var(--sh-1);transition:box-shadow .14s,transform .08s}
 .status-ic{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;flex-shrink:0}
 .status-row.todo .status-ic{background:var(--red-soft);color:var(--red-ink)}
@@ -823,6 +839,31 @@ function Ring({value,size=56,stroke=6,color='var(--accent)',track='var(--surface
   </div>;
 }
 
+function aiOverviewLocal(tasks){
+  const total=tasks.length;
+  const doneT=tasks.filter(taskDone).length;
+  const overdue=tasks.filter(t=>!taskDone(t)&&taskStatus(t)==='overdue');
+  const todayT=tasks.filter(t=>!taskDone(t)&&bucketOf(t)==='today');
+  const highP=tasks.filter(t=>!taskDone(t)&&t.priority==='high');
+  const pct=total?Math.round((doneT/total)*100):0;
+  let text='';
+  if(overdue.length>0){
+    const names=overdue.slice(0,2).map(t=>`"${t.title}"`).join(' and ');
+    text+=`${overdue.length} task${overdue.length>1?'s are':' is'} overdue — address ${names} to get back on track.`;
+  }else if(todayT.length>0){
+    text+=`You're ${pct}% through your tasks with ${todayT.length} still due today — good progress, keep pushing.`;
+  }else{
+    text+=`You're ${pct}% through your tasks with ${doneT} of ${total} done and nothing overdue — great shape.`;
+  }
+  const sugg=[];
+  if(overdue.length>0)sugg.push(`- "${overdue[0].title}" is overdue — clear it first`);
+  if(todayT.length>0)sugg.push(`- "${todayT[0].title}" needs to be done today`);
+  const nextHigh=highP.find(t=>!overdue.includes(t)&&!todayT.includes(t));
+  if(nextHigh)sugg.push(`- "${nextHigh.title}" is high priority — don't let it drift`);
+  if(sugg.length<2&&doneT>0)sugg.push(`- ${doneT} task${doneT>1?'s':''}  done — maintain the momentum`);
+  return text+(sugg.length?'\n\n'+sugg.slice(0,3).join('\n'):'');
+}
+
 function StudioDashboard({tasks,dark,displayName,accent,onToggleDark,onPickCat,onAdd}){
   const total=tasks.length;
   const doneCount=tasks.filter(taskDone).length;
@@ -831,6 +872,26 @@ function StudioDashboard({tasks,dark,displayName,accent,onToggleDark,onPickCat,o
   const overall=total?Math.round((doneCount/total)*100):0;
   const initials=displayName?displayName.trim().split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase():'WP';
   const sub=`${WD_FULL[TODAY.getDay()]}, ${MONTHS[TODAY.getMonth()]} ${TODAY.getDate()}`;
+  const[aiOpen,setAiOpen]=React.useState(false);
+  const[aiLoading,setAiLoading]=React.useState(false);
+  const[aiText,setAiText]=React.useState('');
+  const runAi=async()=>{
+    setAiOpen(true);setAiLoading(true);setAiText('');
+    try{
+      const apiKey=(_cfg||{}).ANTHROPIC_API_KEY;
+      if(apiKey&&!apiKey.startsWith('YOUR_')){
+        const lines=tasks.map(t=>{const cat=catById(t.categoryId);const st=taskStatus(t);const due=t.due?`due ${t.due}`:'no due date';const pr=t.priority?`, ${t.priority} priority`:'';return`- ${t.title} [${cat?cat.name:'?'}, ${st}, ${due}${pr}]`;}).join('\n');
+        const prompt=`You are a friendly productivity assistant. Today is ${sub}. Here is my task list (${doneCount} of ${total} complete):\n\n${lines}\n\nWrite a short overview in plain text. Begin with one or two sentences on where things stand — call out anything overdue or due soon. Then add 2-4 brief, specific suggestions for what to focus on next, each on its own line starting with "- ". Keep it under 110 words. No markdown headers or bold.`;
+        const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01'},body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:200,messages:[{role:'user',content:prompt}]})});
+        const data=await resp.json();
+        setAiText((data.content?.[0]?.text||'').trim()||'No overview available.');
+      }else{
+        await new Promise(r=>setTimeout(r,600));
+        setAiText(aiOverviewLocal(tasks));
+      }
+    }catch(e){setAiText(aiOverviewLocal(tasks));}
+    finally{setAiLoading(false);}
+  };
   const statusItems=[
     {key:'todo',label:'To Do',icon:'clock',tone:'todo',n:todo,sub:`${todo} task${todo!==1?'s':''} to start`},
     {key:'prog',label:'In Progress',icon:'zap',tone:'prog',n:inprog,sub:`${inprog} underway`},
@@ -858,8 +919,22 @@ function StudioDashboard({tasks,dark,displayName,accent,onToggleDark,onPickCat,o
       </div>
       <div className="hero-foot">
         <span><b>{doneCount}</b> of <b>{total}</b> tasks complete</span>
-        <button className="hero-add" onClick={onAdd}><Icon name="plus" size={15}/>Add task</button>
+        <div className="hero-actions">
+          <button className="hero-ai" onClick={runAi} disabled={aiLoading}>
+            <Icon name="spark" size={15}/>{aiLoading?'Thinking…':'AI overview'}
+          </button>
+          <button className="hero-add" onClick={onAdd}><Icon name="plus" size={15}/>Add task</button>
+        </div>
       </div>
+      {aiOpen&&<div className="hero-ai-panel">
+        <div className="hero-ai-head">
+          <Icon name="spark" size={14}/>AI overview
+          <button className="hero-ai-close" onClick={()=>setAiOpen(false)} title="Dismiss"><Icon name="x" size={13}/></button>
+        </div>
+        {aiLoading
+          ?<div className="hero-ai-loading"><span className="ai-spinner"/>Reviewing your tasks…</div>
+          :<div className="hero-ai-body">{aiText}</div>}
+      </div>}
     </div>
     <div className="dash-sec-head">My tasks</div>
     <div className="status-list">
