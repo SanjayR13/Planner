@@ -22,12 +22,13 @@ window.APP_CONFIG = {
   OAUTH_PROVIDERS: [],
 
   // ----------------------------------------------------------
-  //  AI features (future)
-  //  Uncomment and fill in when you add AI functionality
+  //  AI features — powers the "AI overview" button on the Today dashboard
+  //  Add your Gemini key to enable real AI summaries.
+  //  Get one free at https://aistudio.google.com/apikey
   // ----------------------------------------------------------
-  // OPENAI_API_KEY:    '',
-  // ANTHROPIC_API_KEY: '',
-  // AI_MODEL:          'gpt-4o',        // or 'claude-sonnet-4-6'
+  GEMINI_API_KEY:    '',   // ← paste your key here
+
+  // ANTHROPIC_API_KEY: '',   // alternative: Claude (claude-haiku-4-5-20251001)
 
   // ----------------------------------------------------------
   //  Additional database (future)
