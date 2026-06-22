@@ -265,6 +265,7 @@ input,textarea,select{font-family:inherit;font-size:16px}
 .hero-task-hint{font-size:11px;opacity:.72;padding:0 2px}
 .ai-spinner{width:16px;height:16px;border-radius:50%;border:2px solid rgba(255,255,255,.35);border-top-color:#fff;animation:aispin .7s linear infinite}
 @keyframes aispin{to{transform:rotate(360deg)}}
+.mobile .hero-foot{flex-wrap:wrap}.mobile .hero-actions{flex-wrap:wrap;gap:6px}
 /* studio dashboard */
 .studio-dash{display:flex;flex-direction:column}
 .dash-sec-head{font-size:12px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3);margin:26px 2px 12px}
@@ -1196,8 +1197,7 @@ function PlannerSurface({formFactor,tasks,dark,streak,undoTask,syncStatus,sessio
     {BulkBar}
     {isListTab&&<div className="m-filters"><button className={`m-chip${!catFilter?' on':''}`} onClick={()=>setCatFilter(null)}>All</button>{topLevelCats.map(c=>{const nAll=tasks.filter(x=>catAllIds(c.id).includes(x.categoryId)&&!taskDone(x)).length;return<button key={c.id} className={`m-chip${catFilter===c.id||catChildren(c.id).some(sc=>sc.id===catFilter)?' on':''}`} onClick={()=>setCatFilter(catFilter===c.id?null:c.id)}><span className="cat-dot" style={{background:catDotColor(c,vibrant,mono)}}/>{c.name}{nAll>0&&<span style={{fontSize:10,opacity:.7}}>{nAll}</span>}</button>;})}</div>}
     {isListTab&&mobileSubs.length>0&&<div className="m-subcats"><span style={{fontSize:11,color:'var(--ink-3)',flexShrink:0,paddingTop:5}}>↳</span>{mobileSubs.map(sc=>{const n=tasks.filter(x=>x.categoryId===sc.id&&!taskDone(x)).length;return<button key={sc.id} className={`m-subchip${catFilter===sc.id?' on':''}`} onClick={()=>setCatFilter(catFilter===sc.id?selectedParentCat.id:sc.id)}><span className="cat-dot" style={{background:catDotColor(sc,vibrant,mono),width:7,height:7}}/>{sc.name}</button>;})}</div>}
-    {tab==='today'&&<div className="m-stats"><div className="m-stat"><div className="m-stat-num">{stats.today}</div><div className="m-stat-label">Today</div></div><div className="m-stat red"><div className="m-stat-num">{stats.overdue}</div><div className="m-stat-label">Overdue</div></div><div className="m-stat amber"><div className="m-stat-num">{stats.week}</div><div className="m-stat-label">This week</div></div>{streak.count>0&&<div className="m-stat"><div className="m-stat-num" style={{color:'var(--accent-ink)'}}>{streak.count}</div><div className="m-stat-label">Streak</div></div>}</div>}
-    <div className="m-content scroll"><MainContent/></div>
+    <div className="m-content scroll">{tab==='today'&&<StudioDashboard tasks={tasks} dark={dark} displayName={displayName} accent={accent} onToggleDark={()=>root.setDark(!dark)} onPickCat={id=>{setCatFilter(id);setTab('all');}} onAdd={()=>setEditId(null)} onCreateTask={task=>root.saveTask(task)} onPickStatus={key=>{setCatFilter(null);if(key==='done-row'){setHideDone(false);setTab('all');}else if(key==='prog'){setHideDone(false);setTab('today');}else{setHideDone(false);setTab('upcoming');}}}/>}<MainContent/></div>
     <nav className="tabbar">{mTabs.map((d,i)=>d==='fab'?<div key="fab" className="fab-wrap"><button className="fab" onClick={()=>setEditId(null)}><Icon name="plus" size={26} strokeWidth={2.4}/></button></div>:<button key={d.id} className={`tab${tab===d.id?' active':''}`} onClick={()=>setTab(d.id)}><Icon name={d.icon} size={23}/>{d.label}</button>)}</nav>
     {editor}{catMgr}{authModal}{settingsModal}
     <UndoToast task={undoTask} onUndo={root.undoDelete} onDismiss={root.dismissUndo}/>
