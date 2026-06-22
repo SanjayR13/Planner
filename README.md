@@ -1,11 +1,13 @@
 # Work Planner
 
-A personal task planner built as a single HTML file. Works on any device — phone, tablet, or desktop — with optional cross-device sync via Supabase.
+A personal task planner built as a single HTML file. Works on any device — phone, tablet, or desktop — with optional cross-device sync via Supabase and AI-powered features via Gemini.
 
 ---
 
 ## Features
 
+- **AI task creation** — describe a task in plain English and the AI extracts the title, due date, priority, category, and subtasks automatically
+- **AI overview** — a two-line daily briefing: what's outstanding plus a sharp (and occasionally insulting) note about anything overdue
 - **Task management** — add, edit, complete, and delete tasks; undo accidental deletes with a 5-second toast
 - **Duplicate tasks** — copy any task with one click to reuse it as a template
 - **Subtasks** — break tasks into steps, each with their own due date and completion state
@@ -17,11 +19,12 @@ A personal task planner built as a single HTML file. Works on any device — pho
 - **Attachments** — link files, URLs (clickable), and images to tasks
 - **Search** — live filtering across task titles, notes, and subtask text
 - **Calendar view** — month grid, agenda list, and timeline showing tasks by due date
-- **Today view** — summary stats (Due today, Overdue, This week, Completed) plus the day's task list
+- **Today dashboard** — hero card with overall progress ring, My tasks status (To Do / In Progress / Done), Active projects with per-category ring charts, and Today's schedule
 - **Upcoming view** — future tasks grouped by This week / Later
 - **Completion streaks** — tracks how many consecutive days you've completed at least one task
 - **Export** — download all your tasks as CSV or JSON for backup or import
 - **Settings panel** — choose default view, reorder nav tabs, pick a theme (Soft / Vibrant / Mono), switch between Cards and Compact rows layout, pick an accent colour, and enable browser reminders
+- **Demo mode** — unauthenticated visitors always see seed data; nothing writes to storage until signed in
 - **Dark mode** — toggle between light and dark themes
 - **Responsive layout** — full desktop sidebar on wide screens, mobile bottom-nav on phones
 - **Offline first** — everything saves to localStorage instantly; works with no internet
@@ -33,25 +36,21 @@ A personal task planner built as a single HTML file. Works on any device — pho
 
 ### Option A — Local only (no account needed)
 
-1. Open `index.html` in any browser
-2. Start adding tasks — everything saves automatically to your browser's local storage
-3. Data persists between sessions on the same device
+1. Clone the repo or download `index.html`
+2. Run `npm run dev` — this generates `config.js` and serves the app at `http://localhost:3000`
+3. Start adding tasks — data saves to your browser's localStorage
 
 ### Option B — Cross-device sync with Supabase
-
-Follow the steps below to sync your data across phone, laptop, and any other device.
 
 #### 1. Create a Supabase project
 
 1. Go to [supabase.com](https://supabase.com) and create a free account
-2. Click **New project** and give it a name (e.g. "work-planner")
-3. Choose a region close to you and set a database password
-4. Wait ~2 minutes for the project to spin up
+2. Click **New project**, give it a name and set a database password
+3. Wait ~2 minutes for the project to spin up
 
 #### 2. Create the database table
 
-1. In your Supabase project, go to **SQL Editor** (left sidebar)
-2. Click **New query** and paste the following:
+In your Supabase project go to **SQL Editor → New query**, paste and run:
 
 ```sql
 create table if not exists user_data (
@@ -66,140 +65,113 @@ create policy "own data" on user_data for all
   with check (auth.uid() = user_id);
 ```
 
-3. Click **Run** — you should see "Success. No rows returned"
+#### 3. Add your credentials
 
-#### 3. Add your credentials to config.js
+Copy your **Project URL** and **anon public** key from Supabase **Settings → API**.
 
-1. In Supabase, go to **Settings → API**
-2. Copy the **Project URL** and **anon public** key
-3. Open `config.js` in a text editor and fill in the two fields:
+Create a `.env` file in the project root:
 
-```js
-SUPABASE_URL:      'https://your-project.supabase.co',
-SUPABASE_ANON_KEY: 'your-anon-key',
+```
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_ANON_KEY=your-anon-key
+
+# Optional — enables AI features
+GEMINI_API_KEY=your-gemini-key
 ```
 
-4. Save the file — no rebuild needed
+Run `npm run dev` — it reads `.env` and generates `config.js` automatically before starting the server.
 
 #### 4. Create your account
 
-1. Open the file in a browser — the app loads immediately in local mode
-2. Click the **avatar** in the bottom-left of the sidebar (or top-right on mobile)
-3. Enter an optional display name, your email, and a password, then click **Create account**
+1. Open `http://localhost:3000` — the app loads in demo mode
+2. Click your **avatar** in the sidebar footer
+3. Enter your email and a password, then click **Create account**
 4. Check your email for a confirmation link and click it
-5. Sign in via the avatar — you're connected and will stay signed in automatically
+5. Sign in — your session persists automatically
 
-#### 5. Publish to GitHub Pages (optional)
+#### 5. Deploy to GitHub Pages
 
-To access the planner from any device via a URL:
+The repo includes a GitHub Actions workflow (`.github/workflows/deploy.yml`) that deploys automatically on every push to `main`.
 
-1. Create a new **private** GitHub repository
-2. Commit both `index.html` and `config.js` (with your credentials filled in) to the repo
-3. Go to **Settings → Pages**, set source to `main` branch, root folder
-4. Your planner will be live at `https://yourusername.github.io/your-repo-name`
-5. Bookmark it on your phone — add to home screen for an app-like experience
+1. Add secrets in **GitHub → Settings → Secrets → Actions**:
+   - `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `GEMINI_API_KEY`
+2. Go to **Settings → Pages → Source** and set it to **GitHub Actions**
+3. Push to `main` — GitHub Actions builds and deploys the site with your credentials injected
 
-> **Privacy note:** The anon key in `config.js` is safe to commit to a private repo — it only grants access to authenticated users' own data. Row Level Security on Supabase ensures no one can read your tasks, even if they find the URL.
+> **Privacy note:** The Supabase anon key is safe to commit — it only grants access to authenticated users' own data, protected by Row Level Security. The Gemini API key lives in `.env` (gitignored) locally and in GitHub Secrets for deployment.
 
 ---
 
 ## Using the App
 
-### Adding a task
+### Today dashboard
 
-**Desktop:** Click the **+ New task** button in the top-right corner  
+The app opens to the **Today** view, which shows:
+
+- **Hero card** — your name, today's date, an overall progress ring, and two AI buttons
+- **My tasks** — three status cards (To Do / In Progress / Done) that navigate to filtered views when clicked
+- **Active projects** — per-category cards with circular progress rings; click any to filter to that category
+- **Today's schedule** — overdue and today's tasks, with sort controls
+
+### AI features
+
+**AI overview** — click the button in the hero card to get a two-line briefing: what's outstanding and what to tackle next. If anything is overdue, expect a creative insult.
+
+**AI task** — click the **AI task** button and describe your task in plain English:
+- `"Call dentist Thursday, high priority"` → Health task, due Thursday, high priority
+- `"Prep Q3 slides for Friday — subtasks: outline, draft, review"` → Work task, due Friday, 3 subtasks
+- `"Pay electricity bill monthly"` → Finance task, recurring monthly
+
+Press **Enter** or **Create** to submit. The AI extracts title, due date, priority, category, subtasks, and recurrence, then creates the task immediately.
+
+AI features require a `GEMINI_API_KEY` (or `ANTHROPIC_API_KEY`) in `.env`. They fall back gracefully when no key is configured.
+
+### Adding tasks manually
+
+**Desktop:** Click **+ New task** in the top-right corner  
 **Mobile:** Tap the **+** floating button at the bottom-centre
 
-Fill in:
-- **Title** — what needs doing (required)
-- **Notes** — details, context, links
-- **Due date** — when it's due
-- **Repeat** — how often it recurs
-- **Category** — which group it belongs to
-- **Priority** — high, medium, or low
-- **Subtasks** — type and press Enter to add steps
-- **Attachments** — add file names, URLs, or image references
+Fill in title, notes, due date, repeat, category, priority, subtasks, and attachments. Press **Add task** or **⌘ + Enter** to save.
 
-Press **Add task** or hit **⌘ + Enter** to save.
+### Signing out
+
+Click the **red arrow (→)** icon in the sidebar footer to sign out. The app immediately resets to demo seed data — your real tasks reload next time you sign in.
 
 ### Completing tasks
 
-Click or tap the **checkbox** on the left of any task to mark it done. For tasks with subtasks, each subtask has its own checkbox — the progress bar updates as you complete them.
+Click the checkbox on the left of any task. For tasks with subtasks, each subtask has its own checkbox and the progress bar updates as you complete them.
 
 ### Filtering tasks
 
-**Desktop:** Click any category or sub-category in the left sidebar  
-**Mobile:** Use the filter chips that scroll horizontally below the search bar
-
-Select **All tasks** to clear the filter.
-
-### Searching
-
-Type in the search bar (top of the page) to filter tasks by title or notes. Search and category filter work together.
+**Desktop:** Click any category in the left sidebar  
+**Mobile:** Use the filter chips below the search bar
 
 ### Categories
 
-Click the **gear icon** (⚙) next to "Categories" in the sidebar to open the category manager. From there you can:
-- Add new top-level categories
-- Add sub-categories under any existing category
-- Rename categories
-- Change category colours using the colour wheel, hex code input, or preset swatches
-- Delete categories (tasks in deleted categories move to the first available category)
-
-### Sub-categories
-
-Sub-categories sit under their parent in the sidebar. Click the **chevron arrow** (▶) to expand or collapse a parent's sub-categories — the chevron and the category name are separate click targets so you can expand without changing your filter. When collapsed, a badge shows how many tasks in the sub-categories are still outstanding. Clicking a sub-category filters to just that group; clicking the parent shows tasks across the parent and all its sub-categories.
-
-### Account & sync
-
-Click the **avatar** in the bottom-left of the sidebar (or top-right on mobile) to open the account panel:
-- **Not signed in** — enter a display name (optional), email, and password to create an account or sign in
-- **Signed in** — your initials appear in the avatar with a green ring; the panel shows your name, email, and a sign-out button
-
-Once signed in, your session persists automatically — you won't need to sign in again on the same device. Your display name is saved locally and shown in the sidebar footer.
-
-### Sync status
-
-A small dot next to your name in the sidebar footer shows sync state:
-- **Green** — all changes synced
-- **Amber pulsing** — sync in progress
-- **Grey** — local only (Supabase not configured, not signed in, or offline)
-
-Changes sync automatically 1.5 seconds after your last edit.
+Click the **⚙** icon next to "Categories" in the sidebar to open the category manager — add, rename, recolour, or delete categories and sub-categories.
 
 ### Calendar view
 
-Click **Calendar** in the nav to see tasks by due date in three sub-views — switch with the tabs at the top right:
+Three sub-views — switch with the tabs at the top right:
 
-- **Month** — month grid; click any day to see that day's tasks
-- **Agenda** — chronological list of upcoming days with tasks
-- **Timeline** — horizontal bar chart showing when tasks fall in the month
+- **Month** — grid; click any day to see tasks due that day
+- **Agenda** — chronological day-by-day list
+- **Timeline** — horizontal bar chart across the next 14 days
 
-Navigate months with the arrow buttons or click **Today** to jump back.
+### Sync status
 
-### Today view
-
-The **Today** page opens with four summary cards — Due today, Overdue, This week, and Completed — followed by the task list grouped by Overdue and Today sections.
-
-### Sorting
-
-Use the sort controls to toggle between:
-- **Due date** — soonest first
-- **Priority** — high → medium → low, then by date
-
-### Dark mode & appearance
-
-Use the **moon/sun icon** in the sidebar footer (desktop) or header (mobile) to toggle dark mode.
+The dot next to your name in the sidebar footer:
+- **Green** — all changes synced
+- **Amber pulsing** — sync in progress
+- **Grey** — local only / offline
 
 ### Settings
 
-Click the **gear icon** (⚙) in the sidebar footer to open Settings:
-- **Default view** — which page loads on startup (All Tasks, Calendar, Today, or Upcoming)
-- **Tab order** — drag the four nav items into any order; on mobile the first two appear in the tab bar
-- **Theme** — Soft (default warm tones), Vibrant (higher contrast), or Mono (greyscale)
-- **Task layout** — Cards (spaced with shadows) or Compact rows (dense list)
-- **Accent colour** — pick from preset swatches or enter a custom hex value
-- **Reminders** — enable browser push notifications for due tasks
+Click the **⚙** icon in the sidebar footer:
+- **Default view**, **Tab order**, **Theme** (Soft / Vibrant / Mono)
+- **Task layout** — Cards or Compact rows
+- **Accent colour**, **Reminders**
+- **Export** — download tasks as CSV or JSON
 
 ---
 
@@ -208,16 +180,15 @@ Click the **gear icon** (⚙) in the sidebar footer to open Settings:
 | Shortcut | Action |
 |---|---|
 | `⌘ + Enter` | Save task in editor |
-| `Escape` | Close modal / cancel input |
-| `Enter` | Add subtask (when subtask field is focused) |
+| `Escape` | Close modal / dismiss AI panel |
+| `Enter` | Submit AI task / add subtask |
 
 ---
 
 ## Data & Privacy
 
-- All data is stored in your **browser's localStorage** — always available, even offline
+- All data is stored in your **browser's localStorage** — always available offline
 - With Supabase enabled, data is also stored in your **private database** — only your account can access it
-- Sessions persist automatically in localStorage; no cookies are used
+- Unauthenticated visitors always see demo seed data — nothing is saved until signed in
 - No analytics, no tracking, no third-party data sharing
 - The app is entirely self-contained in one HTML file — no server required
-- You can export your data at any time by querying your Supabase table directly or copying the localStorage values
