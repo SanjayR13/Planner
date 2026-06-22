@@ -3,6 +3,8 @@
   "version": "1.0.0",
   "description": "Personal task planner with optional Supabase sync",
   "scripts": {
+    "prestart": "node scripts/env-to-config.js",
+    "predev":   "node scripts/env-to-config.js",
     "start": "npx serve . -l 3000",
     "dev": "npx serve . -l 3000 --no-clipboard"
   },
