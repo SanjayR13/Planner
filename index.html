@@ -1043,7 +1043,8 @@ function PlannerSurface({formFactor,tasks,dark,streak,undoTask,syncStatus,sessio
 
   function CalendarBlock(){return<div>{!mobile&&<div className="cal-head">{calView==='month'&&<React.Fragment><div className="cal-month">{MONTHS[monthDate.getMonth()]} {monthDate.getFullYear()}</div><div className="cal-nav"><button className="icon-btn" onClick={()=>setMonthDate(new Date(monthDate.getFullYear(),monthDate.getMonth()-1,1))}><Icon name="chevronL" size={18}/></button><button className="icon-btn" onClick={()=>setMonthDate(new Date(monthDate.getFullYear(),monthDate.getMonth()+1,1))}><Icon name="chevronR" size={18}/></button><button className="btn btn-ghost" onClick={()=>setMonthDate(new Date(TODAY.getFullYear(),TODAY.getMonth(),1))}>Today</button></div></React.Fragment>}<div className="topbar-spacer"/><Segmented options={CAL_VIEWS} value={calView} onChange={setCalView}/></div>}{mobile&&<div style={{display:'flex',gap:8,padding:'0 0 12px',alignItems:'center'}}><Segmented options={CAL_VIEWS} value={calView} onChange={setCalView}/>{calView==='month'&&<div className="cal-nav" style={{marginLeft:'auto'}}><button className="icon-btn" style={{width:34,height:34}} onClick={()=>setMonthDate(new Date(monthDate.getFullYear(),monthDate.getMonth()-1,1))}><Icon name="chevronL" size={16}/></button><button className="icon-btn" style={{width:34,height:34}} onClick={()=>setMonthDate(new Date(monthDate.getFullYear(),monthDate.getMonth()+1,1))}><Icon name="chevronR" size={16}/></button></div>}</div>}{calView==='month'&&<MonthGrid tasks={base} monthDate={monthDate} onEdit={handlers.onEdit} vibrant={vibrant} mono={mono} mobile={mobile} selected={selDay} setSelected={setSelDay}/>}{calView==='month'&&mobile&&<MobileDayList tasks={base} day={selDay} onEdit={handlers.onEdit} vibrant={vibrant} dark={dark} mono={mono}/>}{calView==='agenda'&&<AgendaView tasks={base} onEdit={handlers.onEdit} vibrant={vibrant} dark={dark} mono={mono}/>}{calView==='timeline'&&<TimelineView tasks={base} onEdit={handlers.onEdit} vibrant={vibrant} dark={dark} mono={mono} mobile={mobile}/>}</div>;}
 
-  const syncLabel=syncStatus==='busy'?'Syncing…':syncStatus==='ok'?'Synced':IS_SUPABASE&&session?'Offline':'Local only';
+  const isDemo=IS_SUPABASE&&!session;
+  const syncLabel=syncStatus==='busy'?'Syncing…':syncStatus==='ok'?'Synced':IS_SUPABASE&&session?'Offline':isDemo?'Demo — sign in to save':'Local only';
   const initials=displayName?displayName.trim().split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase():session?'●':'WP';
 
   const editor=editId!==undefined&&<TaskEditor initial={editId===null?null:tasks.find(x=>x.id===editId)} vibrant={vibrant} dark={dark} onSave={task=>{root.saveTask(task);setEditId(undefined);}} onClose={()=>setEditId(undefined)} onDelete={id=>{root.deleteTask(id);setEditId(undefined);}}/>;
@@ -1081,6 +1082,9 @@ function PlannerSurface({formFactor,tasks,dark,streak,undoTask,syncStatus,sessio
         <div className="search"><Icon name="search" size={16}/><input placeholder="Search tasks…" value={search} onChange={e=>setSearch(e.target.value)}/></div>
         <button className="btn btn-primary" onClick={()=>setEditId(null)}><Icon name="plus" size={16}/>New task</button>
       </div>
+      {isDemo&&<div style={{display:'flex',alignItems:'center',gap:10,padding:'8px 30px',background:'var(--amber-soft)',borderBottom:'1px solid var(--line)',fontSize:13,fontWeight:600,color:'var(--amber-ink)',flexShrink:0}}>
+        <Icon name="spark" size={15}/>Demo mode — tasks reset on refresh. <button style={{marginLeft:4,color:'var(--accent-ink)',fontWeight:700,fontSize:13,textDecoration:'underline'}} onClick={()=>setShowAuth(true)}>Sign in to save your data</button>
+      </div>}
       {BulkBar}
       {tab!=='today'&&isListTab&&<div className="toolbar"><Segmented options={[{id:'due',label:'Due date',icon:'calendar'},{id:'priority',label:'Priority',icon:'flag'}]} value={sort} onChange={setSort}/>{tab==='all'&&<button className={`chip-toggle${hideDone?' on':''}`} onClick={()=>setHideDone(h=>!h)}>Hide completed</button>}</div>}
       <div className="content scroll"><div className="content-pad">
@@ -1123,8 +1127,11 @@ function PlannerSurface({formFactor,tasks,dark,streak,undoTask,syncStatus,sessio
 const LS_NAME='wp_name';
 function AppRoot(){
   const[dark,setDark]=React.useState(()=>lsLoad(LS_DARK,false));
-  const[tasks,setTasks]=React.useState(()=>lsLoad(LS_TASKS,DEFAULT_SEED));
-  const[categories,setCategories]=React.useState(()=>lsLoad(LS_CATS,DEFAULT_CATEGORIES));
+  // When Supabase is configured, always start with demo seed data.
+  // Real data loads only after authentication (loadRemote).
+  // When Supabase is not configured, use localStorage as before.
+  const[tasks,setTasks]=React.useState(()=>IS_SUPABASE?[...DEFAULT_SEED]:lsLoad(LS_TASKS,DEFAULT_SEED));
+  const[categories,setCategories]=React.useState(()=>IS_SUPABASE?[...DEFAULT_CATEGORIES]:lsLoad(LS_CATS,DEFAULT_CATEGORIES));
   const[session,setSession]=React.useState(null);const[authLoading,setAuthLoading]=React.useState(IS_SUPABASE);
   const[syncStatus,setSyncStatus]=React.useState('off');
   const[displayName,setDisplayNameState]=React.useState(()=>lsLoad(LS_NAME,'')||'');
@@ -1168,13 +1175,24 @@ function AppRoot(){
     const{data:{subscription}}=sb.auth.onAuthStateChange((event,session)=>{
       clearTimeout(timeout);
       setSession(session);
-      if(session)loadRemote(session.user.id);
-      else setAuthLoading(false);
+      if(session){
+        loadRemote(session.user.id);
+      }else{
+        // Signed out — wipe real data, restore demo seed
+        setTasks([...DEFAULT_SEED]);
+        setCategories([...DEFAULT_CATEGORIES]);
+        setAuthLoading(false);
+      }
     });
     return()=>{subscription.unsubscribe();clearTimeout(timeout);};
   },[]);
 
   const loadRemote=async uid=>{
+    // Pre-populate from localStorage cache for instant render, Supabase will override
+    const cached=lsLoad(LS_TASKS,null);
+    const cachedCats=lsLoad(LS_CATS,null);
+    if(cached?.length)setTasks(cached);
+    if(cachedCats?.length)setCategories(cachedCats);
     setSyncStatus('busy');
     try{
       const{data:userData}=await sb.auth.getUser();
@@ -1211,6 +1229,15 @@ function AppRoot(){
 
   const refreshStreak=()=>setStreak(bumpStreak());
 
+  // Only write to localStorage when authenticated (or when Supabase is not configured)
+  const persist=(tasks,cats)=>{
+    if(!IS_SUPABASE||sessionRef.current){
+      lsSave(LS_TASKS,tasks);
+      if(cats!==undefined)lsSave(LS_CATS,cats);
+    }
+    scheduleSync(tasks,cats||CATEGORIES);
+  };
+
   const root=React.useMemo(()=>({
     setDark:v=>{setDark(v);lsSave(LS_DARK,v);},
     openAuth:()=>setShowAuth(true),
@@ -1221,7 +1248,6 @@ function AppRoot(){
         if(x.id!==id)return x;
         const hasSubs=x.subtasks&&x.subtasks.length;
         const isDone=hasSubs?x.subtasks.every(s=>s.done):x.done;
-        // completing a recurring task: advance due date, keep active
         if(!isDone&&x.recurring&&x.recurring!=='none'){
           const newDue=nextRecurDate(x.due||TODAY_STR,x.recurring);
           if(hasSubs)return{...x,subtasks:x.subtasks.map(s=>({...s,done:false})),done:false,due:newDue};
@@ -1230,18 +1256,17 @@ function AppRoot(){
         if(hasSubs){const all=x.subtasks.every(s=>s.done);return{...x,subtasks:x.subtasks.map(s=>({...s,done:!all})),done:!all};}
         return{...x,done:!x.done};
       });
-      lsSave(LS_TASKS,n);scheduleSync(n,CATEGORIES);
-      // bump streak if any task just got completed
+      persist(n);
       const wasCompleted=n.some((x,i)=>taskDone(x)&&!taskDone(ts[i]||{}));
       if(wasCompleted)refreshStreak();
       return n;
     }),
-    toggleSub:(id,sid)=>setTasks(ts=>{const n=ts.map(x=>{if(x.id!==id)return x;const subtasks=x.subtasks.map(s=>s.id===sid?{...s,done:!s.done}:s);return{...x,subtasks,done:subtasks.every(s=>s.done)};});lsSave(LS_TASKS,n);scheduleSync(n,CATEGORIES);return n;}),
-    addSub:(id,title)=>setTasks(ts=>{const n=ts.map(x=>x.id===id?{...x,subtasks:[...x.subtasks,{id:uid(),title,due:null,done:false}],done:false}:x);lsSave(LS_TASKS,n);scheduleSync(n,CATEGORIES);return n;}),
+    toggleSub:(id,sid)=>setTasks(ts=>{const n=ts.map(x=>{if(x.id!==id)return x;const subtasks=x.subtasks.map(s=>s.id===sid?{...s,done:!s.done}:s);return{...x,subtasks,done:subtasks.every(s=>s.done)};});persist(n);return n;}),
+    addSub:(id,title)=>setTasks(ts=>{const n=ts.map(x=>x.id===id?{...x,subtasks:[...x.subtasks,{id:uid(),title,due:null,done:false}],done:false}:x);persist(n);return n;}),
     deleteTask:id=>setTasks(ts=>{
       const task=ts.find(x=>x.id===id);
       const n=ts.filter(x=>x.id!==id);
-      lsSave(LS_TASKS,n);scheduleSync(n,CATEGORIES);
+      persist(n);
       if(undoTimer.current)clearTimeout(undoTimer.current);
       setUndoTask(task);
       undoTimer.current=setTimeout(()=>setUndoTask(null),5000);
@@ -1250,19 +1275,20 @@ function AppRoot(){
     undoDelete:()=>{
       const task=undoTaskRef.current;if(!task)return;
       clearTimeout(undoTimer.current);setUndoTask(null);
-      setTasks(ts=>{const n=[task,...ts];lsSave(LS_TASKS,n);scheduleSync(n,CATEGORIES);return n;});
+      setTasks(ts=>{const n=[task,...ts];persist(n);return n;});
     },
     dismissUndo:()=>{clearTimeout(undoTimer.current);setUndoTask(null);},
     duplicateTask:id=>setTasks(ts=>{
       const orig=ts.find(x=>x.id===id);if(!orig)return ts;
       const copy={...orig,id:uid(),title:orig.title+' (copy)',done:false,subtasks:(orig.subtasks||[]).map(s=>({...s,id:uid(),done:false}))};
-      const n=[...ts,copy];lsSave(LS_TASKS,n);scheduleSync(n,CATEGORIES);return n;
+      const n=[...ts,copy];persist(n);return n;
     }),
-    saveTask:task=>setTasks(ts=>{const n=task.id&&ts.some(x=>x.id===task.id)?ts.map(x=>x.id===task.id?task:x):[{...task,id:task.id||uid()},...ts];lsSave(LS_TASKS,n);scheduleSync(n,CATEGORIES);return n;}),
+    saveTask:task=>setTasks(ts=>{const n=task.id&&ts.some(x=>x.id===task.id)?ts.map(x=>x.id===task.id?task:x):[{...task,id:task.id||uid()},...ts];persist(n);return n;}),
     saveCategories:newCats=>{
       const validIds=new Set(newCats.map(c=>c.id));const fallback=newCats.find(c=>!c.parentId)?.id;
-      setTasks(ts=>{const n=ts.map(t=>validIds.has(t.categoryId)?t:{...t,categoryId:fallback});lsSave(LS_TASKS,n);scheduleSync(n,newCats);return n;});
-      setCategories(newCats);lsSave(LS_CATS,newCats);
+      setTasks(ts=>{const n=ts.map(t=>validIds.has(t.categoryId)?t:{...t,categoryId:fallback});persist(n,newCats);return n;});
+      setCategories(newCats);
+      if(!IS_SUPABASE||sessionRef.current)lsSave(LS_CATS,newCats);
     },
   }),[session]);
 
