@@ -302,6 +302,8 @@ Babel.registerPreset('react-classic', {
 });
 </script>
 <script src="config.js"></script>
+<script>/* Load local API key overrides if present — silent no-op on GitHub Pages */
+(function(){var x=new XMLHttpRequest();x.open('GET','config.local.js',false);try{x.send();}catch(e){return;}if(x.status===200)(new Function(x.responseText))();}());</script>
 <script type="text/babel" data-presets="react-classic">
 /* ================================================================
    CONFIG — edit config.js to set your credentials.

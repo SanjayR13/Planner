@@ -3,9 +3,9 @@
 .env.local
 .env.*.local
 
-# config.js is auto-generated from .env by `npm run dev`
-# Commit config.example.js instead, not the real config.js
-config.js
+# config.js is committed (safe public Supabase credentials only)
+# config.local.js is gitignored — generated from .env, holds local API keys (Gemini etc.)
+config.local.js
 
 # Supabase CLI cache
 supabase/.temp

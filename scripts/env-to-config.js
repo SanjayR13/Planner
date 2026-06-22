@@ -1,5 +1,6 @@
 #!/usr/bin/env node
-// Reads .env and writes config.js so the browser can access env vars.
+// Reads .env and writes config.local.js (API keys only).
+// config.js is committed separately with safe public credentials.
 // Run automatically via the predev / prestart npm hooks.
 
 const fs = require('fs');
@@ -9,7 +10,7 @@ const root = path.join(__dirname, '..');
 const envPath = path.join(root, '.env');
 
 if (!fs.existsSync(envPath)) {
-  console.log('[env-to-config] No .env found — skipping config.js generation.');
+  console.log('[env-to-config] No .env found — skipping config.local.js generation.');
   process.exit(0);
 }
 
@@ -26,16 +27,13 @@ fs.readFileSync(envPath, 'utf8').split('\n').forEach(line => {
 
 const get = (k) => (env[k] || '').replace(/'/g, "\\'");
 
-const content = `// Auto-generated from .env — do not edit directly, do not commit.
-window.APP_CONFIG = {
-  SUPABASE_URL:      '${get('SUPABASE_URL')}',
-  SUPABASE_ANON_KEY: '${get('SUPABASE_ANON_KEY')}',
-  OAUTH_PROVIDERS:   [],
-
+const content = `// Auto-generated from .env — do not commit (gitignored).
+// Extends window.APP_CONFIG with local API keys.
+Object.assign(window.APP_CONFIG || {}, {
   GEMINI_API_KEY:    '${get('GEMINI_API_KEY')}',
   ANTHROPIC_API_KEY: '${get('ANTHROPIC_API_KEY')}',
-};
+});
 `;
 
-fs.writeFileSync(path.join(root, 'config.js'), content);
-console.log('[env-to-config] config.js written from .env ✓');
+fs.writeFileSync(path.join(root, 'config.local.js'), content);
+console.log('[env-to-config] config.local.js written from .env ✓');
