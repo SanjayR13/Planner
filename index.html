@@ -863,7 +863,7 @@ function aiOverviewLocal(tasks){
   return text+(sugg.length?'\n\n'+sugg.slice(0,3).join('\n'):'');
 }
 
-function StudioDashboard({tasks,dark,displayName,accent,onToggleDark,onPickCat,onAdd}){
+function StudioDashboard({tasks,dark,displayName,accent,onToggleDark,onPickCat,onAdd,onPickStatus}){
   const total=tasks.length;
   const doneCount=tasks.filter(taskDone).length;
   const inprog=tasks.filter(t=>!taskDone(t)&&taskProgress(t)>0).length;
@@ -944,11 +944,14 @@ function StudioDashboard({tasks,dark,displayName,accent,onToggleDark,onPickCat,o
     </div>
     <div className="dash-sec-head">My tasks</div>
     <div className="status-list">
-      {statusItems.map(s=><div key={s.key} className={`status-row ${s.tone}`}>
+      {statusItems.map(s=><button key={s.key} className={`status-row ${s.tone}`}
+        style={{width:'100%',textAlign:'left',cursor:'pointer'}}
+        onClick={()=>onPickStatus&&onPickStatus(s.key)}
+        title={`View ${s.label} tasks`}>
         <span className="status-ic"><Icon name={s.icon} size={18} strokeWidth={2}/></span>
         <div className="status-txt"><div className="status-label">{s.label}</div><div className="status-sub">{s.sub}</div></div>
         <div className="status-n">{s.n}</div>
-      </div>)}
+      </button>)}
     </div>
     <div className="dash-sec-head">Active projects</div>
     <div className="project-grid">
@@ -1091,8 +1094,17 @@ function PlannerSurface({formFactor,tasks,dark,streak,undoTask,syncStatus,sessio
               <StudioDashboard tasks={tasks} dark={dark} displayName={displayName} accent={accent}
                 onToggleDark={()=>root.setDark(!dark)}
                 onPickCat={id=>{setCatFilter(id);setTab('all');}}
-                onAdd={()=>setEditId(null)}/>
-              <div className="dash-sec-head" style={{display:'flex',alignItems:'center',gap:10}}>Today's schedule{streak.count>0&&<span style={{fontSize:11,fontWeight:700,padding:'2px 8px',borderRadius:99,background:'var(--accent-soft)',color:'var(--accent-ink)'}}>🔥 {streak.count} day streak</span>}</div>
+                onAdd={()=>setEditId(null)}
+                onPickStatus={key=>{
+                  setCatFilter(null);
+                  if(key==='done-row'){setHideDone(false);setTab('all');}
+                  else if(key==='prog'){setHideDone(false);setTab('today');}
+                  else{setHideDone(false);setTab('upcoming');}
+                }}/>
+              <div className="dash-sec-head" style={{display:'flex',alignItems:'center',gap:10}}>
+                {stats.overdue>0?<span>Overdue <span style={{color:'var(--red-ink)'}}>({stats.overdue})</span> &amp; today</span>:"Today's schedule"}
+                {streak.count>0&&<span style={{fontSize:11,fontWeight:700,padding:'2px 8px',borderRadius:99,background:'var(--accent-soft)',color:'var(--accent-ink)'}}>🔥 {streak.count} day streak</span>}
+              </div>
               <div className="toolbar" style={{padding:'0 0 14px'}}><Segmented options={[{id:'due',label:'Due date',icon:'calendar'},{id:'priority',label:'Priority',icon:'flag'}]} value={sort} onChange={setSort}/></div>
               <MainContent/>
             </React.Fragment>
