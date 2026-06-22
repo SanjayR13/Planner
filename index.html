@@ -41,7 +41,7 @@ input,textarea,select{font-family:inherit;font-size:16px}
 .subcat-row{display:flex;align-items:center;gap:9px;padding:6px 11px 6px 30px;border-radius:var(--r-sm);font-size:13.5px;font-weight:500;color:var(--ink-3);width:100%;text-align:left;transition:background .12s}
 .subcat-row:hover{background:var(--surface-2);color:var(--ink-2)}.subcat-row.active{background:var(--surface-2);color:var(--ink)}
 .subcat-row .count{margin-left:auto;font-size:11.5px;color:var(--ink-3);font-weight:600}
-.sidebar-foot{margin-top:auto;display:flex;align-items:center;gap:10px;padding:10px;border-radius:var(--r-md);background:var(--surface-2)}
+.sidebar-foot{margin-top:auto;display:flex;align-items:center;gap:6px;padding:10px;border-radius:var(--r-md);background:var(--surface-2)}
 .avatar{width:32px;height:32px;border-radius:50%;background:var(--accent);color:var(--accent-on);display:grid;place-items:center;font-weight:700;font-size:13px;flex-shrink:0;cursor:pointer;transition:opacity .12s;border:none}
 .avatar:hover{opacity:.82}
 .avatar.logged-in{box-shadow:0 0 0 2px var(--accent),0 0 0 4px var(--surface-2)}
@@ -1074,7 +1074,6 @@ function PlannerSurface({formFactor,tasks,dark,streak,undoTask,syncStatus,sessio
       <div className="sidebar-foot" style={{marginTop:'auto'}}>
         <button className={`avatar${session?' logged-in':''}`} title={session?'Account':'Sign in'} onClick={()=>setShowAuth(true)}>{initials}</button>
         <div style={{flex:1,minWidth:0,overflow:'hidden'}}><div style={{fontSize:13,fontWeight:650,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{displayName||'Work Planner'}</div><div style={{fontSize:11,color:'var(--ink-3)',display:'flex',alignItems:'center',gap:5,marginTop:2,whiteSpace:'nowrap'}}><span className={`sync-dot ${syncStatus}`}/>{syncLabel}</div></div>
-        {IS_SUPABASE&&session&&<button className="mini-btn" title="Refresh" onClick={root.refresh}><span style={{display:'flex',animation:syncStatus==='busy'?'spin .7s linear infinite':'none'}}><Icon name="refresh" size={16}/></span></button>}
         {IS_SUPABASE&&session&&<button className="mini-btn" title="Sign out" onClick={async()=>{await root.signOut();}} style={{color:'var(--red-ink)'}}><Icon name="logout" size={16}/></button>}
         <button className="mini-btn" title="Settings" onClick={()=>setShowSettings(true)}><Icon name="settings" size={16}/></button>
         <button className="mini-btn" title="Toggle dark mode" onClick={()=>root.setDark(!dark)}><Icon name={dark?'sun':'moon'} size={17}/></button>
