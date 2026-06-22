@@ -888,7 +888,7 @@ function StudioDashboard({tasks,dark,displayName,accent,onToggleDark,onPickCat,o
 const TAB_DEF=[{id:'today',label:'Today',icon:'today'},{id:'upcoming',label:'Upcoming',icon:'clock'},{id:'all',label:'All Tasks',icon:'list'},{id:'calendar',label:'Calendar',icon:'calendar'},{id:'matrix',label:'Matrix',icon:'matrix'},{id:'review',label:'Review',icon:'review'}];
 const LS_SETTINGS='wp_settings';
 const LS_DARK='wp_dark';
-const DEFAULT_SETTINGS={defaultTab:'all',tabOrder:['all','calendar','today','upcoming'],theme:'soft',listLayout:'cards',accent:'#708871',subtaskMode:'collapsible',calendarDefault:'month',notificationsEnabled:false};
+const DEFAULT_SETTINGS={defaultTab:'today',tabOrder:['today','upcoming','all','calendar'],theme:'soft',listLayout:'cards',accent:'#708871',subtaskMode:'inline',calendarDefault:'month',notificationsEnabled:false};
 const CAL_VIEWS=[{id:'month',label:'Month',icon:'grid'},{id:'agenda',label:'Agenda',icon:'agenda'},{id:'timeline',label:'Timeline',icon:'timeline'}];
 const matchSearch=(t,q)=>{if(!q)return true;q=q.toLowerCase();return t.title.toLowerCase().includes(q)||(t.notes||'').toLowerCase().includes(q)||(t.subtasks||[]).some(s=>s.title.toLowerCase().includes(q));};
 
@@ -900,7 +900,7 @@ function PlannerSurface({formFactor,tasks,dark,streak,undoTask,syncStatus,sessio
   const subtaskMode=settings.subtaskMode||'collapsible';
   const calendarDefault=settings.calendarDefault||'month';
   const vibrant=theme==='vibrant';const mono=theme==='mono';
-  const[tab,setTab]=React.useState(()=>settings.defaultTab||'all');
+  const[tab,setTab]=React.useState(()=>settings.defaultTab||'today');
   const[showSettings,setShowSettings]=React.useState(false);const[catFilter,setCatFilter]=React.useState(null);const[search,setSearch]=React.useState('');const[sort,setSort]=React.useState('due');const[hideDone,setHideDone]=React.useState(false);const[calView,setCalView]=React.useState(calendarDefault);const[monthDate,setMonthDate]=React.useState(new Date(TODAY.getFullYear(),TODAY.getMonth(),1));const[selDay,setSelDay]=React.useState(TODAY_STR);const[editId,setEditId]=React.useState(undefined);const[showCatMgr,setShowCatMgr]=React.useState(false);const[expandedCats,setExpandedCats]=React.useState({});
   const[selectedIds,setSelectedIds]=React.useState(new Set());const[bulkMode,setBulkMode]=React.useState(false);
   React.useEffect(()=>{setCalView(calendarDefault);},[calendarDefault]);
@@ -1046,7 +1046,15 @@ function AppRoot(){
   const[syncStatus,setSyncStatus]=React.useState('off');
   const[displayName,setDisplayNameState]=React.useState(()=>lsLoad(LS_NAME,'')||'');
   const[showAuth,setShowAuth]=React.useState(false);
-  const[settings,setSettingsState]=React.useState(()=>({...DEFAULT_SETTINGS,...lsLoad(LS_SETTINGS,{})}));
+  const[settings,setSettingsState]=React.useState(()=>{
+    const saved={...DEFAULT_SETTINGS,...lsLoad(LS_SETTINGS,{})};
+    let changed=false;
+    if(saved.defaultTab==='all'){saved.defaultTab='today';changed=true;}
+    if(saved.subtaskMode==='collapsible'){saved.subtaskMode='inline';changed=true;}
+    if(!saved.tabOrder||saved.tabOrder[0]==='all'){saved.tabOrder=['today','upcoming','all','calendar'];changed=true;}
+    if(changed)lsSave(LS_SETTINGS,saved);
+    return saved;
+  });
   const[streak,setStreak]=React.useState(readStreak);
   const[undoTask,setUndoTask]=React.useState(null);
   const undoTaskRef=React.useRef(null);const undoTimer=React.useRef(null);
