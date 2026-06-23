@@ -137,6 +137,7 @@ input,textarea,select{font-family:inherit;font-size:16px}
 .m-subcats{display:flex;gap:6px;padding:0 16px 10px 24px;overflow-x:auto}.m-subcats::-webkit-scrollbar{display:none}
 .m-subchip{padding:5px 11px;border-radius:99px;font-size:12px;font-weight:600;white-space:nowrap;background:var(--surface-2);border:1px solid var(--line-soft);color:var(--ink-3);display:inline-flex;align-items:center;gap:6px;flex-shrink:0}.m-subchip.on{background:var(--accent-soft);color:var(--accent-ink);border-color:transparent}.m-subchip .cat-dot{width:7px;height:7px}
 .m-stats{display:flex;gap:9px;padding:0 16px 14px}.m-stat{flex:1;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:11px 12px;box-shadow:var(--sh-1)}.m-stat-num{font-size:21px;font-weight:700;letter-spacing:-.03em;line-height:1}.m-stat-label{font-size:10.5px;color:var(--ink-3);font-weight:600;margin-top:5px}.m-stat.amber .m-stat-num{color:var(--amber-ink)}.m-stat.red .m-stat-num{color:var(--red-ink)}
+.mobile .hero{margin-bottom:16px;border-radius:var(--r-xl)}.mobile .hero .hero-name{font-size:18px}.mobile .hero .hero-av{width:44px;height:44px;font-size:15px}
 .tabbar{display:flex;padding:8px 14px max(env(safe-area-inset-bottom),14px);background:var(--surface);border-top:1px solid var(--line);gap:4px;position:relative;flex-shrink:0}
 .tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 0;color:var(--ink-3);font-size:10.5px;font-weight:650}.tab svg{width:23px;height:23px}.tab.active{color:var(--accent-ink)}
 .fab-wrap{position:absolute;top:-28px;left:50%;transform:translateX(-50%)}.fab{width:56px;height:56px;border-radius:50%;background:var(--accent);color:var(--accent-on);display:grid;place-items:center;box-shadow:var(--sh-3);transition:transform .1s}.fab:active{transform:scale(.94)}
@@ -1039,6 +1040,121 @@ function StudioDashboard({tasks,dark,displayName,accent,onToggleDark,onPickCat,o
   </div>;
 }
 
+/* ---- MobileHero ---- */
+function MobileHero({tasks,displayName,onCreateTask}){
+  const total=tasks.length;
+  const doneCount=tasks.filter(taskDone).length;
+  const overall=total?Math.round((doneCount/total)*100):0;
+  const initials=displayName?displayName.trim().split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase():'WP';
+  const sub=`${WD_FULL[TODAY.getDay()]}, ${MONTHS[TODAY.getMonth()]} ${TODAY.getDate()}`;
+  const[aiOpen,setAiOpen]=React.useState(false);
+  const[aiLoading,setAiLoading]=React.useState(false);
+  const[aiText,setAiText]=React.useState('');
+  const[aiTaskOpen,setAiTaskOpen]=React.useState(false);
+  const[aiTaskInput,setAiTaskInput]=React.useState('');
+  const[aiTaskLoading,setAiTaskLoading]=React.useState(false);
+  const[aiTaskFeedback,setAiTaskFeedback]=React.useState('');
+  const runAi=async()=>{
+    setAiOpen(true);setAiLoading(true);setAiText('');
+    const cfg=_cfg||{};
+    const lines=tasks.map(t=>{const cat=catById(t.categoryId);const st=taskStatus(t);const due=t.due?`due ${t.due}`:'no due date';const pr=t.priority?`, ${t.priority} priority`:'';return`- ${t.title} [${cat?cat.name:'?'}, ${st}, ${due}${pr}]`;}).join('\n');
+    const prompt=`You are a brutally honest productivity assistant with a sharp sense of humour. Today is ${sub}. Task list (${doneCount} of ${total} complete):\n\n${lines}\n\nWrite exactly 2 lines. Line 1: A punchy one-sentence summary of what is outstanding and next on the to-do list — mention high-priority items by name. Line 2: If anything is overdue, roast the user with a creative funny insult naming the overdue task. If nothing is overdue, give one sharp motivational nudge about the highest-priority upcoming item. No bullet points, no headers. Exactly 2 lines separated by a newline, 60 words max.`;
+    try{
+      const geminiKey=cfg.GEMINI_API_KEY;const anthropicKey=cfg.ANTHROPIC_API_KEY;
+      if(geminiKey&&geminiKey.length>10){
+        const resp=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiKey}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{maxOutputTokens:220,temperature:0.7}})});
+        const data=await resp.json();
+        if(!resp.ok){throw new Error(`Gemini ${resp.status}`);}
+        const text=data.candidates?.[0]?.content?.parts?.[0]?.text||'';
+        setAiText(text.trim()||aiOverviewLocal(tasks));
+      }else if(anthropicKey&&!anthropicKey.startsWith('YOUR_')){
+        const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':anthropicKey,'anthropic-version':'2023-06-01'},body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:220,messages:[{role:'user',content:prompt}]})});
+        const data=await resp.json();
+        setAiText((data.content?.[0]?.text||'').trim()||'No overview available.');
+      }else{
+        await new Promise(r=>setTimeout(r,700));
+        setAiText(aiOverviewLocal(tasks));
+      }
+    }catch(e){setAiText(aiOverviewLocal(tasks));}
+    finally{setAiLoading(false);}
+  };
+  const runAiTask=async()=>{
+    const input=aiTaskInput.trim();if(!input)return;
+    setAiTaskLoading(true);setAiTaskFeedback('');
+    const cfg=_cfg||{};
+    const catList=CATEGORIES.filter(c=>!c.parentId).map(c=>`${c.name} (id:${c.id})`).join(', ');
+    const tomorrow=ymd(addDays(TODAY,1));
+    const nextFriday=ymd(addDays(TODAY,(5-TODAY.getDay()+7)%7||7));
+    const nextWeek=ymd(addDays(TODAY,7));
+    const prompt=`Today is ${sub} (${TODAY_STR}). Parse this task description and return ONLY a valid JSON object, no explanation:\n\n"${input}"\n\nAvailable categories: ${catList}\nDate references: tomorrow=${tomorrow}, Friday=${nextFriday}, next week=${nextWeek}\n\nReturn JSON with exactly these fields:\n{\n  "title": "concise task name",\n  "notes": "any extra context, empty string if none",\n  "due": "YYYY-MM-DD or null",\n  "priority": "high" | "med" | "low",\n  "categoryId": "one of the ids above",\n  "subtasks": ["subtask title 1", "subtask title 2"],\n  "recurring": "none" | "daily" | "weekly" | "monthly"\n}\n\nInfer category, priority and dates from context. Return ONLY the JSON.`;
+    try{
+      const geminiKey=cfg.GEMINI_API_KEY;const anthropicKey=cfg.ANTHROPIC_API_KEY;
+      let text='';
+      if(geminiKey&&geminiKey.length>10){
+        const resp=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiKey}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{maxOutputTokens:400,temperature:0.2}})});
+        if(!resp.ok)throw new Error(`Gemini ${resp.status}`);
+        const data=await resp.json();
+        text=data.candidates?.[0]?.content?.parts?.[0]?.text||'';
+      }else if(anthropicKey&&!anthropicKey.startsWith('YOUR_')){
+        const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':anthropicKey,'anthropic-version':'2023-06-01'},body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:400,messages:[{role:'user',content:prompt}]})});
+        const data=await resp.json();
+        text=data.content?.[0]?.text||'';
+      }
+      const jsonMatch=text.match(/\{[\s\S]*?\}/);
+      if(!jsonMatch)throw new Error('no json');
+      const p=JSON.parse(jsonMatch[0]);
+      const validCatId=CATEGORIES.find(c=>c.id===p.categoryId)?.id||CATEGORIES.find(c=>!c.parentId)?.id||'work';
+      const task={id:null,title:(p.title||input).trim(),notes:p.notes||'',categoryId:validCatId,priority:['high','med','low'].includes(p.priority)?p.priority:'med',due:p.due||null,recurring:['none','daily','weekly','monthly'].includes(p.recurring)?p.recurring:'none',done:false,subtasks:(Array.isArray(p.subtasks)?p.subtasks:[]).slice(0,8).map(s=>({id:uid(),title:String(s).trim(),due:null,done:false})),attachments:[]};
+      onCreateTask(task);
+      setAiTaskFeedback(`✓ Created "${task.title}"${task.subtasks.length>0?` with ${task.subtasks.length} subtasks`:''}`);
+      setAiTaskInput('');
+      setTimeout(()=>{setAiTaskOpen(false);setAiTaskFeedback('');},1800);
+    }catch(e){
+      const task={id:null,title:input,notes:'',categoryId:CATEGORIES.find(c=>!c.parentId)?.id||'work',priority:'med',due:null,recurring:'none',done:false,subtasks:[],attachments:[]};
+      onCreateTask(task);
+      setAiTaskFeedback(`✓ Created "${input}"`);
+      setAiTaskInput('');
+      setTimeout(()=>{setAiTaskOpen(false);setAiTaskFeedback('');},1800);
+    }finally{setAiTaskLoading(false);}
+  };
+  return<div className="hero" style={{marginBottom:16}}>
+    <div className="hero-top"><span className="hero-eyebrow"><Icon name="today" size={14}/>{sub}</span></div>
+    <div className="hero-row">
+      <div className="hero-id">
+        <div className="hero-av">{initials}</div>
+        <div><div className="hero-name">{displayName||'Work Planner'}</div><div className="hero-role">Productive day ahead</div></div>
+      </div>
+      <Ring value={overall} size={56} stroke={6} color="#fff" track="rgba(255,255,255,0.35)">
+        <span className="hero-pct">{overall}<i>%</i></span>
+      </Ring>
+    </div>
+    <div className="hero-foot" style={{flexWrap:'wrap',gap:'8px 12px'}}>
+      <span><b>{doneCount}</b> of <b>{total}</b> tasks complete</span>
+      <div className="hero-actions" style={{flexWrap:'wrap',gap:6}}>
+        <button className="hero-ai" onClick={runAi} disabled={aiLoading}><Icon name="spark" size={15}/>{aiLoading?'Thinking…':'AI overview'}</button>
+        <button className="hero-ai" onClick={()=>{setAiTaskOpen(o=>!o);setAiTaskFeedback('');}} disabled={aiTaskLoading}><Icon name="plus" size={15}/>AI task</button>
+      </div>
+    </div>
+    {aiTaskOpen&&<div className="hero-task-panel">
+      <div className="hero-task-row">
+        <input className="hero-task-input" autoFocus placeholder='e.g. "Call dentist Thursday, high priority"'
+          value={aiTaskInput} onChange={e=>setAiTaskInput(e.target.value)}
+          onKeyDown={e=>{if(e.key==='Enter')runAiTask();if(e.key==='Escape'){setAiTaskOpen(false);setAiTaskInput('');}}}
+          disabled={aiTaskLoading}/>
+        <button className="hero-ai" onClick={runAiTask} disabled={aiTaskLoading||!aiTaskInput.trim()}>
+          {aiTaskLoading?<><span className="ai-spinner"/>Creating…</>:<><Icon name="check" size={15}/>Create</>}
+        </button>
+      </div>
+      {aiTaskFeedback&&<div style={{fontSize:12.5,opacity:.9,paddingLeft:2}}>{aiTaskFeedback}</div>}
+      {!aiTaskFeedback&&<div className="hero-task-hint">Describe your task naturally — AI will extract the title, due date, priority, category and subtasks.</div>}
+    </div>}
+    {aiOpen&&<div className="hero-ai-panel">
+      <div className="hero-ai-head"><Icon name="spark" size={14}/>AI overview<button className="hero-ai-close" onClick={()=>setAiOpen(false)} title="Dismiss"><Icon name="x" size={13}/></button></div>
+      {aiLoading?<div className="hero-ai-loading"><span className="ai-spinner"/>Reviewing your tasks…</div>:<div className="hero-ai-body">{aiText}</div>}
+    </div>}
+  </div>;
+}
+
 /* ---- PlannerSurface ---- */
 const TAB_DEF=[{id:'today',label:'Today',icon:'today'},{id:'upcoming',label:'Upcoming',icon:'clock'},{id:'all',label:'All Tasks',icon:'list'},{id:'calendar',label:'Calendar',icon:'calendar'},{id:'matrix',label:'Matrix',icon:'matrix'},{id:'review',label:'Review',icon:'review'}];
 const LS_SETTINGS='wp_settings';
@@ -1197,7 +1313,10 @@ function PlannerSurface({formFactor,tasks,dark,streak,undoTask,syncStatus,sessio
     {BulkBar}
     {isListTab&&<div className="m-filters"><button className={`m-chip${!catFilter?' on':''}`} onClick={()=>setCatFilter(null)}>All</button>{topLevelCats.map(c=>{const nAll=tasks.filter(x=>catAllIds(c.id).includes(x.categoryId)&&!taskDone(x)).length;return<button key={c.id} className={`m-chip${catFilter===c.id||catChildren(c.id).some(sc=>sc.id===catFilter)?' on':''}`} onClick={()=>setCatFilter(catFilter===c.id?null:c.id)}><span className="cat-dot" style={{background:catDotColor(c,vibrant,mono)}}/>{c.name}{nAll>0&&<span style={{fontSize:10,opacity:.7}}>{nAll}</span>}</button>;})}</div>}
     {isListTab&&mobileSubs.length>0&&<div className="m-subcats"><span style={{fontSize:11,color:'var(--ink-3)',flexShrink:0,paddingTop:5}}>↳</span>{mobileSubs.map(sc=>{const n=tasks.filter(x=>x.categoryId===sc.id&&!taskDone(x)).length;return<button key={sc.id} className={`m-subchip${catFilter===sc.id?' on':''}`} onClick={()=>setCatFilter(catFilter===sc.id?selectedParentCat.id:sc.id)}><span className="cat-dot" style={{background:catDotColor(sc,vibrant,mono),width:7,height:7}}/>{sc.name}</button>;})}</div>}
-    <div className="m-content scroll">{tab==='today'&&<StudioDashboard tasks={tasks} dark={dark} displayName={displayName} accent={accent} onToggleDark={()=>root.setDark(!dark)} onPickCat={id=>{setCatFilter(id);setTab('all');}} onAdd={()=>setEditId(null)} onCreateTask={task=>root.saveTask(task)} onPickStatus={key=>{setCatFilter(null);if(key==='done-row'){setHideDone(false);setTab('all');}else if(key==='prog'){setHideDone(false);setTab('today');}else{setHideDone(false);setTab('upcoming');}}}/>}<MainContent/></div>
+    <div className="m-content scroll">
+      {tab==='today'&&<MobileHero tasks={tasks} displayName={displayName} onCreateTask={task=>root.saveTask(task)}/>}
+      <MainContent/>
+    </div>
     <nav className="tabbar">{mTabs.map((d,i)=>d==='fab'?<div key="fab" className="fab-wrap"><button className="fab" onClick={()=>setEditId(null)}><Icon name="plus" size={26} strokeWidth={2.4}/></button></div>:<button key={d.id} className={`tab${tab===d.id?' active':''}`} onClick={()=>setTab(d.id)}><Icon name={d.icon} size={23}/>{d.label}</button>)}</nav>
     {editor}{catMgr}{authModal}{settingsModal}
     <UndoToast task={undoTask} onUndo={root.undoDelete} onDismiss={root.dismissUndo}/>
