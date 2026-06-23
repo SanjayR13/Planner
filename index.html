@@ -885,16 +885,29 @@ function extractJsonObj(text){
   return null;
 }
 function aiTaskLocal(input){
-  let title=input,due=null,priority='med';
-  if(/\b(high priority|urgent|asap|critical)\b/i.test(input)){
-    priority='high';title=title.replace(/[,\s]*(high priority|urgent|asap|critical)[,\s]*/gi,' ').trim();
-  }else if(/\b(low priority|not urgent)\b/i.test(input)){
-    priority='low';title=title.replace(/[,\s]*(low priority|not urgent)[,\s]*/gi,' ').trim();
+  let text=input,due=null,priority='med',catGuess=null;
+  // Priority
+  if(/\b(high priority|urgent|asap|critical)\b/i.test(text)){
+    priority='high';text=text.replace(/[,\s]*(high priority|urgent|asap|critical)[,\s]*/gi,' ');
+  }else if(/\b(low priority|not urgent)\b/i.test(text)){
+    priority='low';text=text.replace(/[,\s]*(low priority|not urgent)[,\s]*/gi,' ');
   }
-  const words=title.split(/\s+/);
-  outer:for(let len=3;len>=1;len--){for(let s=words.length-len;s>=0;s--){const phrase=words.slice(s,s+len).join(' ');const d=parseNatural(phrase);if(d){due=d;title=[...words.slice(0,s),...words.slice(s+len)].join(' ').replace(/[,\s]+$/,'').trim();break outer;}}}
-  const lc=title.toLowerCase();
-  const catGuess=CATEGORIES.find(c=>!c.parentId&&lc.includes(c.name.toLowerCase()));
+  // "due date of X" / "with a due date of X" / "due X" / "by X"
+  text=text.replace(/\b(?:with\s+a\s+)?due\s+(?:date\s+)?(?:of\s+)?([a-z][a-z\s]{0,25}?)(?=[,.]|\s{2}|$)/i,(m,g1)=>{const d=parseNatural(g1.trim());if(d){due=d;return ' ';}return m;});
+  // "categorise as X" / "category X" / "put it in X" / "under X"
+  text=text.replace(/\b(?:categori[sz]e?\s+(?:as\s+|it\s+as\s+|under\s+)?|category:?\s*|add\s+(?:it\s+)?(?:to|under)\s+|put\s+(?:it\s+)?(?:in|under)\s+)([^,.]+?)(?=[,.]|$)/i,(m,g1)=>{
+    const name=g1.trim();
+    catGuess=CATEGORIES.find(c=>!c.parentId&&(c.name.toLowerCase()===name.toLowerCase()||name.toLowerCase().includes(c.name.toLowerCase())||c.name.toLowerCase().includes(name.toLowerCase())));
+    return ' ';
+  });
+  // Scan remaining words for date tokens (strips punctuation first)
+  if(!due){
+    const words=text.replace(/[,.:!?]/g,' ').split(/\s+/);
+    outer:for(let len=3;len>=1;len--){for(let s=0;s<=words.length-len;s++){const phrase=words.slice(s,s+len).join(' ');const d=parseNatural(phrase);if(d){due=d;const re=new RegExp('\\b'+words.slice(s,s+len).map(w=>w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('[\\s,]+')+'\\b','i');text=text.replace(re,' ');break outer;}}}
+  }
+  // Clean up common connector words left over
+  let title=text.replace(/\bwith\s+a\b/gi,' ').replace(/\bfor\s+a\b/gi,' ').replace(/[,\s]+$/,'').replace(/^[,\s]+/,'').replace(/\s{2,}/g,' ').trim();
+  if(!catGuess){const lc=title.toLowerCase();catGuess=CATEGORIES.find(c=>!c.parentId&&lc.includes(c.name.toLowerCase()));}
   return{title:title||input,notes:'',due,priority,categoryId:catGuess?.id||CATEGORIES.find(c=>!c.parentId)?.id||'work',subtasks:[],recurring:'none'};
 }
 function StudioDashboard({tasks,dark,displayName,accent,onToggleDark,onPickCat,onAdd,onPickStatus,onCreateTask}){
@@ -949,20 +962,27 @@ function StudioDashboard({tasks,dark,displayName,accent,onToggleDark,onPickCat,o
     try{
       const geminiKey=cfg.GEMINI_API_KEY;
       const anthropicKey=cfg.ANTHROPIC_API_KEY;
-      let p=null;
+      let p=null,usedApi=false;
       if(geminiKey&&geminiKey.length>10){
         const resp=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiKey}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{maxOutputTokens:400,temperature:0.2}})});
-        if(!resp.ok)throw new Error(`Gemini ${resp.status}`);
+        if(!resp.ok){const err=await resp.text();throw new Error(`Gemini ${resp.status}: ${err.slice(0,200)}`);}
         const data=await resp.json();
-        const jsonStr=extractJsonObj(data.candidates?.[0]?.content?.parts?.[0]?.text||'');
-        if(!jsonStr)throw new Error('no json');
+        const rawText=data.candidates?.[0]?.content?.parts?.[0]?.text||'';
+        const jsonStr=extractJsonObj(rawText);
+        if(!jsonStr)throw new Error(`Gemini: no JSON in response: ${rawText.slice(0,200)}`);
         p=JSON.parse(jsonStr);
+        if(!p.title)throw new Error(`Gemini: missing title field in: ${jsonStr.slice(0,200)}`);
+        usedApi=true;
       }else if(anthropicKey&&!anthropicKey.startsWith('YOUR_')){
         const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':anthropicKey,'anthropic-version':'2023-06-01'},body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:400,messages:[{role:'user',content:prompt}]})});
+        if(!resp.ok){const err=await resp.text();throw new Error(`Anthropic ${resp.status}: ${err.slice(0,200)}`);}
         const data=await resp.json();
-        const jsonStr=extractJsonObj(data.content?.[0]?.text||'');
-        if(!jsonStr)throw new Error('no json');
+        const rawText=data.content?.[0]?.text||'';
+        const jsonStr=extractJsonObj(rawText);
+        if(!jsonStr)throw new Error(`Anthropic: no JSON in response: ${rawText.slice(0,200)}`);
         p=JSON.parse(jsonStr);
+        if(!p.title)throw new Error(`Anthropic: missing title field in: ${jsonStr.slice(0,200)}`);
+        usedApi=true;
       }else{
         p=aiTaskLocal(input);
       }
@@ -970,16 +990,18 @@ function StudioDashboard({tasks,dark,displayName,accent,onToggleDark,onPickCat,o
       const subtasks=(Array.isArray(p.subtasks)?p.subtasks:[]).slice(0,8).map(s=>({id:uid(),title:(typeof s==='string'?s:s?.title||'').trim(),due:null,done:false})).filter(s=>s.title);
       const task={id:null,title:(p.title||input).trim(),notes:p.notes||'',categoryId:validCatId,priority:['high','med','low'].includes(p.priority)?p.priority:'med',due:p.due||null,recurring:['none','daily','weekly','monthly'].includes(p.recurring)?p.recurring:'none',done:false,subtasks,attachments:[]};
       onCreateTask(task);
-      setAiTaskFeedback(`✓ Created "${task.title}"${task.subtasks.length>0?` with ${task.subtasks.length} subtasks`:''}`);
+      const label=usedApi?'AI':'local';
+      setAiTaskFeedback(`✓ [${label}] Created "${task.title}"${task.subtasks.length>0?` with ${task.subtasks.length} subtasks`:''}`);
       setAiTaskInput('');
-      setTimeout(()=>{setAiTaskOpen(false);setAiTaskFeedback('');},1800);
+      setTimeout(()=>{setAiTaskOpen(false);setAiTaskFeedback('');},2200);
     }catch(e){
+      console.error('[AI task] failed, falling back to local parser:', e.message);
       const fb=aiTaskLocal(input);
       const task={id:null,...fb,done:false,subtasks:[],attachments:[]};
       onCreateTask(task);
-      setAiTaskFeedback(`✓ Created "${task.title}"${task.due?` · due ${task.due}`:''}${task.priority!=='med'?` · ${task.priority} priority`:''}`);
+      setAiTaskFeedback(`✓ [local] Created "${task.title}"${task.due?` · due ${task.due}`:''}${task.priority!=='med'?` · ${task.priority} priority`:''}`);
       setAiTaskInput('');
-      setTimeout(()=>{setAiTaskOpen(false);setAiTaskFeedback('');},1800);
+      setTimeout(()=>{setAiTaskOpen(false);setAiTaskFeedback('');},2200);
     }finally{setAiTaskLoading(false);}
   };
   const statusItems=[
@@ -1117,20 +1139,27 @@ function MobileHero({tasks,displayName,onCreateTask}){
     const prompt=`Today is ${sub} (${TODAY_STR}). Parse this task description and return ONLY a valid JSON object, no explanation:\n\n"${input}"\n\nAvailable categories: ${catList}\nDate references: tomorrow=${tomorrow}, Friday=${nextFriday}, next week=${nextWeek}\n\nReturn JSON with exactly these fields:\n{\n  "title": "concise task name",\n  "notes": "any extra context, empty string if none",\n  "due": "YYYY-MM-DD or null",\n  "priority": "high" | "med" | "low",\n  "categoryId": "one of the ids above",\n  "subtasks": ["subtask title 1", "subtask title 2"],\n  "recurring": "none" | "daily" | "weekly" | "monthly"\n}\n\nInfer category, priority and dates from context. Return ONLY the JSON.`;
     try{
       const geminiKey=cfg.GEMINI_API_KEY;const anthropicKey=cfg.ANTHROPIC_API_KEY;
-      let p=null;
+      let p=null,usedApi=false;
       if(geminiKey&&geminiKey.length>10){
         const resp=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiKey}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{maxOutputTokens:400,temperature:0.2}})});
-        if(!resp.ok)throw new Error(`Gemini ${resp.status}`);
+        if(!resp.ok){const err=await resp.text();throw new Error(`Gemini ${resp.status}: ${err.slice(0,200)}`);}
         const data=await resp.json();
-        const jsonStr=extractJsonObj(data.candidates?.[0]?.content?.parts?.[0]?.text||'');
-        if(!jsonStr)throw new Error('no json');
+        const rawText=data.candidates?.[0]?.content?.parts?.[0]?.text||'';
+        const jsonStr=extractJsonObj(rawText);
+        if(!jsonStr)throw new Error(`Gemini: no JSON in response: ${rawText.slice(0,200)}`);
         p=JSON.parse(jsonStr);
+        if(!p.title)throw new Error(`Gemini: missing title field in: ${jsonStr.slice(0,200)}`);
+        usedApi=true;
       }else if(anthropicKey&&!anthropicKey.startsWith('YOUR_')){
         const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':anthropicKey,'anthropic-version':'2023-06-01'},body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:400,messages:[{role:'user',content:prompt}]})});
+        if(!resp.ok){const err=await resp.text();throw new Error(`Anthropic ${resp.status}: ${err.slice(0,200)}`);}
         const data=await resp.json();
-        const jsonStr=extractJsonObj(data.content?.[0]?.text||'');
-        if(!jsonStr)throw new Error('no json');
+        const rawText=data.content?.[0]?.text||'';
+        const jsonStr=extractJsonObj(rawText);
+        if(!jsonStr)throw new Error(`Anthropic: no JSON in response: ${rawText.slice(0,200)}`);
         p=JSON.parse(jsonStr);
+        if(!p.title)throw new Error(`Anthropic: missing title field in: ${jsonStr.slice(0,200)}`);
+        usedApi=true;
       }else{
         p=aiTaskLocal(input);
       }
@@ -1138,16 +1167,18 @@ function MobileHero({tasks,displayName,onCreateTask}){
       const subtasks=(Array.isArray(p.subtasks)?p.subtasks:[]).slice(0,8).map(s=>({id:uid(),title:(typeof s==='string'?s:s?.title||'').trim(),due:null,done:false})).filter(s=>s.title);
       const task={id:null,title:(p.title||input).trim(),notes:p.notes||'',categoryId:validCatId,priority:['high','med','low'].includes(p.priority)?p.priority:'med',due:p.due||null,recurring:['none','daily','weekly','monthly'].includes(p.recurring)?p.recurring:'none',done:false,subtasks,attachments:[]};
       onCreateTask(task);
-      setAiTaskFeedback(`✓ Created "${task.title}"${task.subtasks.length>0?` with ${task.subtasks.length} subtasks`:''}`);
+      const label=usedApi?'AI':'local';
+      setAiTaskFeedback(`✓ [${label}] Created "${task.title}"${task.subtasks.length>0?` with ${task.subtasks.length} subtasks`:''}`);
       setAiTaskInput('');
-      setTimeout(()=>{setAiTaskOpen(false);setAiTaskFeedback('');},1800);
+      setTimeout(()=>{setAiTaskOpen(false);setAiTaskFeedback('');},2200);
     }catch(e){
+      console.error('[AI task] failed, falling back to local parser:', e.message);
       const fb=aiTaskLocal(input);
       const task={id:null,...fb,done:false,subtasks:[],attachments:[]};
       onCreateTask(task);
-      setAiTaskFeedback(`✓ Created "${task.title}"${task.due?` · due ${task.due}`:''}${task.priority!=='med'?` · ${task.priority} priority`:''}`);
+      setAiTaskFeedback(`✓ [local] Created "${task.title}"${task.due?` · due ${task.due}`:''}${task.priority!=='med'?` · ${task.priority} priority`:''}`);
       setAiTaskInput('');
-      setTimeout(()=>{setAiTaskOpen(false);setAiTaskFeedback('');},1800);
+      setTimeout(()=>{setAiTaskOpen(false);setAiTaskFeedback('');},2200);
     }finally{setAiTaskLoading(false);}
   };
   return<div className="hero" style={{marginBottom:16}}>
