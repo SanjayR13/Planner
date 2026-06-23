@@ -26,7 +26,7 @@ Both commands run `scripts/env-to-config.js` first (via `predev`/`prestart` hook
 ```
 SUPABASE_URL=...
 SUPABASE_ANON_KEY=...
-GEMINI_API_KEY=...        # AI overview + AI task creation
+GEMINI_API_KEY=...        # AI overview + AI task creation + smart reschedule
 ANTHROPIC_API_KEY=...     # optional alternative
 ```
 
@@ -48,14 +48,14 @@ const browser = await chromium.launch({
 });
 ```
 
-Always check `page.on('pageerror', ...)` after any UI change. Clear localStorage with `page.evaluate(() => localStorage.clear())` before testing default state.
+For mobile testing use `viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true`. Always check `page.on('pageerror', ...)` after any UI change.
 
 ## Architecture
 
 **Zero-build, single-file React app.** Everything lives in `index.html`:
 
-- **`<style>` block** (lines ~12–320) — all CSS, using CSS custom properties
-- **`<script type="text/babel">` block** (lines ~330–end) — all JSX compiled at runtime
+- **`<style>` block** (lines ~12–330) — all CSS, using CSS custom properties
+- **`<script type="text/babel">` block** (lines ~340–end) — all JSX compiled at runtime
 
 CDN dependencies: `@supabase/supabase-js@2`, `react@18`, `react-dom@18`, `@babel/standalone`.
 
@@ -64,21 +64,21 @@ CDN dependencies: `@supabase/supabase-js@2`, `react@18`, `react-dom@18`, `@babel
 ## Component reading order (top to bottom in the script block)
 
 1. **Config + Supabase init** — reads `window.APP_CONFIG`; falls back to local-only if init fails
-2. **`ICON_PATHS`** — SVG path map; add new icons here
+2. **`ICON_PATHS`** — SVG path map; add new icons here (`lock`, `at` added recently)
 3. **Data helpers** — `fmtDate`, `parseYmd`, `ymd`, `dateStatus`, `bucketOf`, `sortTasks`
 4. **`DEFAULT_CATEGORIES` + `CATEGORIES` global** — mutable global kept in sync via `useEffect` in `AppRoot`
 5. **`catStyle` / `catDotColor`** — derive per-category colours from `{h, c, hex}` fields
 6. **`aiOverviewLocal`** — local 2-line task summary (no API needed); used as fallback
 7. **`Ring`** — SVG circular progress ring used in the hero card and project cards
-8. **`StudioDashboard`** — Desktop Today/All tab dashboard: hero card (with AI overview + AI task panels), 3-col My tasks status rows, Active projects grid
-9. **`MobileHero`** — Mobile-only hero card shown on Today and All Tasks tabs; has its own AI overview + AI task creation, separate from `StudioDashboard`
+8. **`StudioDashboard`** — Desktop Today/All tab dashboard: hero card (with AI overview, AI task, smart reschedule), 3-col My tasks status rows, Active projects grid
+9. **`MobileHero`** — Mobile-only hero card shown on Today and All Tasks tabs; has its own AI overview, AI task creation, and smart reschedule — separate from `StudioDashboard`
 10. **Calendar components** — `MonthGrid`, `AgendaView`, `TimelineView`, `MobileDayList`
-11. **`TaskItem`** — single task card (subtasks inline, progress bar, actions)
-12. **`TaskList`** — groups tasks by time bucket or category
-13. **`TaskEditor`** — new/edit modal (title, notes, NL date, repeat, category, priority, subtasks, attachments)
+11. **`TaskItem`** — single task card (subtasks inline, progress bar, context chips, blocked badge, actions)
+12. **`TaskList`** — groups tasks by time bucket or category; passes `allTasks` to `TaskItem` for blocked-by resolution
+13. **`TaskEditor`** — new/edit modal (title, notes, NL date, repeat, category, priority, contexts, blocked-by, subtasks, attachments)
 14. **`CategoryManager`**, **`SettingsModal`**, **`AuthModal`** — management modals
 15. **`EisenhowerView`**, **`WeeklyReview`** — additional view components
-16. **`PlannerSurface`** — layout; owns all UI state (`tab`, `sort`, `search`, `catFilter`, `bulkMode`, etc.)
+16. **`PlannerSurface`** — layout; owns all UI state (`tab`, `sort`, `search`, `catFilter`, `contextFilter`, `bulkMode`, reschedule state, etc.)
 17. **`AppRoot`** — owns all data state; wires Supabase auth, `persist()` helper, streak, undo
 
 ## Mobile layout
@@ -89,9 +89,23 @@ Mobile uses a 4-tab bottom nav: the first 3 tabs from `orderedTabs` plus a fixed
 const mTabs = [...orderedTabs.slice(0, 3), 'add'];
 ```
 
-The `'add'` entry renders as an accent-coloured tab icon (plus sign) that opens `TaskEditor`. There is no floating action button on mobile — the old `.fab-wrap` / `.fab` CSS is unused.
+The `'add'` entry renders as an accent-coloured tab icon that opens `TaskEditor`. There is no floating action button — `.fab-wrap` / `.fab` CSS is unused.
 
 Available tab IDs (`TAB_DEF`): `today`, `all`, `calendar`, `matrix`, `review`. Desktop shows all tabs in `orderedTabs`; mobile shows only the first 3.
+
+**Mobile keyboard / viewport stability:**
+- `body { position: fixed; overflow: hidden; width: 100% }` — prevents iOS Safari from scrolling the viewport when a keyboard appears
+- Inline `<script>` in `<head>` sets `--app-h` to `window.innerHeight` on load, only updating on width changes (orientation), never on height-only changes (keyboard). `.mobile` uses `height: var(--app-h)` so it never resizes when the keyboard opens.
+- `interactive-widget=resizes-visual` in the viewport meta — Chrome 108+ lets the keyboard resize only the visual viewport, not the layout.
+- All inputs/textareas/selects inside `.mobile` are forced to `font-size: 16px !important` — iOS Safari auto-zooms on any input with `font-size < 16px`.
+
+**Mobile-specific CSS overrides (all scoped to `.mobile`):**
+- `.mobile .field-row { flex-direction: column }` — stacks Due Date and Repeat vertically in TaskEditor
+- `.mobile .hero-foot { flex-direction: column; align-items: flex-start }` — hero count + actions stack instead of fighting for one row
+- `.mobile .hero-ai { padding: 6px 10px; font-size: 12px }` — all 3 hero buttons fit on one row
+- `.mobile .seg button { padding: 5px 9px; font-size: 12px }` — Month/Agenda/Timeline all fit in calendar header
+- `.mobile .subtask-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis }` — subtask titles truncate instead of wrapping
+- `.mobile .task-actions button[title="Duplicate"] { display: none }` — duplicate hidden to save horizontal space
 
 ## Design system (`skin-studio`)
 
@@ -125,6 +139,31 @@ scheduleSync(tasks, cats) — debounced 1.5s Supabase upsert, already gated on s
 **Demo mode** (IS_SUPABASE configured, no session): tasks/categories always init from `DEFAULT_SEED`/`DEFAULT_CATEGORIES`. Nothing writes to localStorage. Sign-out resets state to seed. Amber banner shown.
 
 **Local-only mode** (IS_SUPABASE not configured): localStorage used unconditionally.
+
+### Task schema
+
+Every task has these fields (`blankTask()` provides defaults for new tasks):
+
+| Field | Type | Notes |
+|---|---|---|
+| `id` | string | `uid()` generated |
+| `title` | string | |
+| `notes` | string | |
+| `categoryId` | string | references a category id |
+| `priority` | `'high'`\|`'med'`\|`'low'`\|null | |
+| `due` | `'YYYY-MM-DD'`\|null | |
+| `recurring` | `'none'`\|`'daily'`\|`'weekly'`\|`'monthly'` | |
+| `done` | boolean | |
+| `subtasks` | `{id,title,due,done}[]` | |
+| `attachments` | `{id,type,name,meta}[]` | type: `'file'`\|`'link'`\|`'image'` |
+| `blockedBy` | string[] | IDs of tasks that must complete first |
+| `contexts` | string[] | e.g. `['home','laptop']` — from `CONTEXT_PRESETS` |
+
+`sortTasks(arr, sort, allTasks?)` — the optional `allTasks` param is used to push blocked tasks to the bottom of each group. `matchSearch` includes `contexts` in its search (supports `@tag` prefix).
+
+### Context tags
+
+`CONTEXT_PRESETS = ['home','work','laptop','calls','errands','online']`. Picker in `TaskEditor`; chips shown on task cards; filter row on mobile (below category chips) and sidebar section on desktop. `contextFilter` state lives in `PlannerSurface` and filters `base` tasks.
 
 ### localStorage keys
 
@@ -164,16 +203,21 @@ create policy "own data" on user_data for all
 
 ## AI features
 
-Both AI features live in `StudioDashboard` and share the same API priority chain:
-1. **Gemini** (`GEMINI_API_KEY`) — `gemini-2.0-flash` via REST
+All AI features use the same priority chain:
+1. **Gemini** (`GEMINI_API_KEY`) — `gemini-2.5-flash` via REST
 2. **Anthropic** (`ANTHROPIC_API_KEY`) — `claude-haiku-4-5-20251001`
 3. **Local fallback** — always works, no key required
+
+AI features exist in both `StudioDashboard` (desktop) and `MobileHero` (mobile) — the logic is duplicated between them, not shared.
 
 ### AI overview (`runAi`)
 Returns exactly 2 lines: outstanding summary + funny roast if overdue, motivational nudge if not. Falls back to `aiOverviewLocal` on any API error.
 
 ### AI task creation (`runAiTask`)
-User types a natural-language description. A structured prompt sends today's date, relative date mappings, and the available category list to the AI. The AI returns JSON with: `title`, `notes`, `due`, `priority`, `categoryId`, `subtasks[]`, `recurring`. The task is created immediately via `onCreateTask` prop (wired to `root.saveTask`). Falls back to a bare title-only task if parsing fails.
+User types a natural-language description. AI returns JSON: `title`, `notes`, `due`, `priority`, `categoryId`, `subtasks[]`, `recurring`. Task created immediately via `onCreateTask`. Falls back to a bare title-only task if parsing fails.
+
+### Smart reschedule (`handleReschedule` in `PlannerSurface`)
+Appears in the hero card when overdue tasks exist. Sends overdue tasks to the AI which returns `[{id, due}]` with suggested new dates. Fallback (no API key): high priority → today, medium → tomorrow, low → +3 days. Passed as `onReschedule` prop to both `StudioDashboard` and `MobileHero`.
 
 ## Supabase local dev
 

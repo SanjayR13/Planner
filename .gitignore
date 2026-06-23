@@ -27,3 +27,7 @@ build/
 .idea/
 *.swp
 *.swo
+
+# Local backups
+*.backup-*
+*.bak
