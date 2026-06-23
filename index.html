@@ -130,7 +130,7 @@ input,textarea,select{font-family:inherit;font-size:16px}
 .attach-list{display:flex;flex-direction:column;gap:8px}.attach{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:var(--r-md);background:var(--surface-2);border:1px solid var(--line)}.attach-ic{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;flex-shrink:0}.attach-ic.file{background:var(--accent-soft);color:var(--accent-ink)}.attach-ic.link{background:var(--green-soft);color:var(--green)}.attach-ic.image{background:var(--amber-soft);color:var(--amber-ink)}.attach-ic svg{width:17px;height:17px}.attach-name{font-size:13.5px;font-weight:600;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.attach-meta{font-size:11.5px;color:var(--ink-3)}.add-attach-row{display:flex;gap:8px}
 /* mobile */
 .mobile{flex-direction:column;background:var(--bg)}.m-header{padding:max(env(safe-area-inset-top),18px) 18px 10px;display:flex;align-items:flex-end;gap:10px}.m-title{font-size:28px;font-weight:700;letter-spacing:-.03em;line-height:1.05;white-space:nowrap}.m-sub{font-size:12.5px;color:var(--ink-3);font-weight:500;margin-top:3px;white-space:nowrap}.m-header-spacer{flex:1}
-.m-content{flex:1;min-height:0;padding:0 16px 40px}
+.m-content{flex:1;min-height:0;padding:0 16px 12px}
 .m-search{display:flex;align-items:center;gap:9px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:10px 13px;margin:0 16px 12px;color:var(--ink-3)}.m-search input{border:none;background:none;outline:none;flex:1;font-size:14px;color:var(--ink);min-width:0}
 .m-filters{display:flex;gap:8px;padding:0 16px 8px;overflow-x:auto}.m-filters::-webkit-scrollbar{display:none}
 .m-chip{padding:7px 14px;border-radius:99px;font-size:13px;font-weight:600;white-space:nowrap;background:var(--surface);border:1px solid var(--line);color:var(--ink-2);display:inline-flex;align-items:center;gap:7px;flex-shrink:0}.m-chip.on{background:var(--accent-soft);color:var(--accent-ink);border-color:transparent}.m-chip .cat-dot{width:9px;height:9px}
@@ -1327,7 +1327,7 @@ function PlannerSurface({formFactor,tasks,dark,streak,undoTask,syncStatus,sessio
   // mobile
   const selectedParentCat=catFilter?CATEGORIES.find(c=>c.id===catFilter&&!c.parentId):null;
   const mobileSubs=selectedParentCat?catChildren(selectedParentCat.id):[];
-  const mTabs=[orderedTabs[0],orderedTabs[1],'fab',orderedTabs[2],orderedTabs[3]].filter(Boolean);
+  const mTabs=[...orderedTabs.slice(0,3),'add'];
   return<div className={`surface mobile skin-studio${dark?' dark':''}`} style={{'--accent':accent}}>
     <div className="m-header"><div><div className="m-title">{titles[tab]?.[0]||tab}</div><div className="m-sub">{titles[tab]?.[1]||''}</div></div><div className="m-header-spacer"/>{IS_SUPABASE&&session&&<button className="icon-btn" style={{border:'none',background:'none'}} title="Refresh" onClick={root.refresh}><span style={{display:'flex',animation:syncStatus==='busy'?'spin .7s linear infinite':'none'}}><Icon name="refresh" size={18}/></span></button>}<button className="icon-btn" style={{border:'none',background:'none'}} onClick={()=>setShowCatMgr(true)} title="Categories"><Icon name="list" size={18}/></button><button className="icon-btn" style={{border:'none',background:'none'}} onClick={()=>setShowSettings(true)} title="Settings"><Icon name="settings" size={18}/></button><button className="icon-btn" style={{border:'none',background:'none'}} onClick={()=>root.setDark(!dark)}><Icon name={dark?'sun':'moon'} size={17}/></button><button className={`avatar${session?' logged-in':''}`} style={{width:30,height:30,fontSize:11}} title={session?'Account':'Sign in'} onClick={()=>setShowAuth(true)}>{initials}</button></div>
     {isListTab&&<div className="m-search"><Icon name="search" size={16}/><input placeholder="Search tasks…" value={search} onChange={e=>setSearch(e.target.value)}/></div>}
@@ -1338,7 +1338,7 @@ function PlannerSurface({formFactor,tasks,dark,streak,undoTask,syncStatus,sessio
       {(tab==='today'||tab==='all')&&<MobileHero tasks={tasks} displayName={displayName} onCreateTask={task=>root.saveTask(task)}/>}
       <MainContent/>
     </div>
-    <nav className="tabbar">{mTabs.map((d,i)=>d==='fab'?<React.Fragment key="fab"><div style={{flex:1}}/><div className="fab-wrap"><button className="fab" onClick={()=>setEditId(null)}><Icon name="plus" size={26} strokeWidth={2.4}/></button></div></React.Fragment>:<button key={d.id} className={`tab${tab===d.id?' active':''}`} onClick={()=>setTab(d.id)}><Icon name={d.icon} size={23}/>{d.label}</button>)}</nav>
+    <nav className="tabbar">{mTabs.map((d,i)=>d==='add'?<button key="add" className="tab" style={{color:'var(--accent-ink)'}} onClick={()=>setEditId(null)}><Icon name="plus" size={23}/><span>Add</span></button>:<button key={d.id} className={`tab${tab===d.id?' active':''}`} onClick={()=>setTab(d.id)}><Icon name={d.icon} size={23}/>{d.label}</button>)}</nav>
     {editor}{catMgr}{authModal}{settingsModal}
     <UndoToast task={undoTask} onUndo={root.undoDelete} onDismiss={root.dismissUndo}/>
   </div>;
