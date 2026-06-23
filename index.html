@@ -896,8 +896,10 @@ function aiTaskLocal(input){
   text=text.replace(/\b(?:with\s+a\s+)?due\s+(?:date\s+)?(?:of\s+)?([a-z][a-z\s]{0,25}?)(?=[,.]|\s{2}|$)/i,(m,g1)=>{const d=parseNatural(g1.trim());if(d){due=d;return ' ';}return m;});
   // "categorise as X" / "category X" / "put it in X" / "under X"
   text=text.replace(/\b(?:categori[sz]e?\s+(?:as\s+|it\s+as\s+|under\s+)?|category:?\s*|add\s+(?:it\s+)?(?:to|under)\s+|put\s+(?:it\s+)?(?:in|under)\s+)([^,.]+?)(?=[,.]|$)/i,(m,g1)=>{
-    const name=g1.trim();
-    catGuess=CATEGORIES.find(c=>!c.parentId&&(c.name.toLowerCase()===name.toLowerCase()||name.toLowerCase().includes(c.name.toLowerCase())||c.name.toLowerCase().includes(name.toLowerCase())));
+    const name=g1.trim().toLowerCase();
+    catGuess=CATEGORIES.find(c=>c.name.toLowerCase()===name)
+      ||CATEGORIES.find(c=>name.includes(c.name.toLowerCase()))
+      ||CATEGORIES.find(c=>c.name.toLowerCase().includes(name));
     return ' ';
   });
   // Scan remaining words for date tokens (strips punctuation first)
@@ -907,7 +909,7 @@ function aiTaskLocal(input){
   }
   // Clean up common connector words left over
   let title=text.replace(/\bwith\s+a\b/gi,' ').replace(/\bfor\s+a\b/gi,' ').replace(/[,\s]+$/,'').replace(/^[,\s]+/,'').replace(/\s{2,}/g,' ').trim();
-  if(!catGuess){const lc=title.toLowerCase();catGuess=CATEGORIES.find(c=>!c.parentId&&lc.includes(c.name.toLowerCase()));}
+  if(!catGuess){const lc=title.toLowerCase();catGuess=CATEGORIES.find(c=>lc.includes(c.name.toLowerCase()));}
   return{title:title||input,notes:'',due,priority,categoryId:catGuess?.id||CATEGORIES.find(c=>!c.parentId)?.id||'work',subtasks:[],recurring:'none'};
 }
 function StudioDashboard({tasks,dark,displayName,accent,onToggleDark,onPickCat,onAdd,onPickStatus,onCreateTask}){
@@ -954,7 +956,7 @@ function StudioDashboard({tasks,dark,displayName,accent,onToggleDark,onPickCat,o
     const input=aiTaskInput.trim();if(!input)return;
     setAiTaskLoading(true);setAiTaskFeedback('');
     const cfg=_cfg||{};
-    const catList=CATEGORIES.filter(c=>!c.parentId).map(c=>`${c.name} (id:${c.id})`).join(', ');
+    const catList=CATEGORIES.map(c=>`${c.name} (id:${c.id})`).join(', ');
     const tomorrow=ymd(addDays(TODAY,1));
     const nextFriday=ymd(addDays(TODAY,(5-TODAY.getDay()+7)%7||7));
     const nextWeek=ymd(addDays(TODAY,7));
@@ -964,7 +966,7 @@ function StudioDashboard({tasks,dark,displayName,accent,onToggleDark,onPickCat,o
       const anthropicKey=cfg.ANTHROPIC_API_KEY;
       let p=null,usedApi=false;
       if(geminiKey&&geminiKey.length>10){
-        const resp=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiKey}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{maxOutputTokens:1024,temperature:0.2}})});
+        const resp=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{maxOutputTokens:2048,temperature:0.2},thinkingConfig:{thinkingBudget:0}})});
         if(!resp.ok){const err=await resp.text();throw new Error(`Gemini ${resp.status}: ${err.slice(0,200)}`);}
         const data=await resp.json();
         const rawText=data.candidates?.[0]?.content?.parts?.[0]?.text||'';
@@ -1132,7 +1134,7 @@ function MobileHero({tasks,displayName,onCreateTask}){
     const input=aiTaskInput.trim();if(!input)return;
     setAiTaskLoading(true);setAiTaskFeedback('');
     const cfg=_cfg||{};
-    const catList=CATEGORIES.filter(c=>!c.parentId).map(c=>`${c.name} (id:${c.id})`).join(', ');
+    const catList=CATEGORIES.map(c=>`${c.name} (id:${c.id})`).join(', ');
     const tomorrow=ymd(addDays(TODAY,1));
     const nextFriday=ymd(addDays(TODAY,(5-TODAY.getDay()+7)%7||7));
     const nextWeek=ymd(addDays(TODAY,7));
@@ -1141,7 +1143,7 @@ function MobileHero({tasks,displayName,onCreateTask}){
       const geminiKey=cfg.GEMINI_API_KEY;const anthropicKey=cfg.ANTHROPIC_API_KEY;
       let p=null,usedApi=false;
       if(geminiKey&&geminiKey.length>10){
-        const resp=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiKey}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{maxOutputTokens:1024,temperature:0.2}})});
+        const resp=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{maxOutputTokens:2048,temperature:0.2},thinkingConfig:{thinkingBudget:0}})});
         if(!resp.ok){const err=await resp.text();throw new Error(`Gemini ${resp.status}: ${err.slice(0,200)}`);}
         const data=await resp.json();
         const rawText=data.candidates?.[0]?.content?.parts?.[0]?.text||'';
