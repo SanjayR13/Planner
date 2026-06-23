@@ -262,6 +262,12 @@ input,textarea,select{font-family:inherit;font-size:16px}
 .hero-task-input::placeholder{color:rgba(255,255,255,.55)}
 .hero-task-input:focus{background:rgba(255,255,255,.26);border-color:rgba(255,255,255,.6)}
 .hero-task-hint{font-size:11px;opacity:.72;padding:0 2px}
+.hero-search-row{display:flex;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,.32);align-items:center}
+.hero-search{flex:1;display:flex;align-items:center;gap:9px;background:rgba(255,255,255,.18);border:1.5px solid rgba(255,255,255,.35);border-radius:99px;padding:8px 14px;min-width:0}
+.hero-search input{border:none;background:none;outline:none;flex:1;font-size:13.5px;color:#fff;font-family:var(--font);min-width:0}
+.hero-search input::placeholder{color:rgba(255,255,255,.55)}
+.hero-search-clear{color:rgba(255,255,255,.6);display:grid;place-items:center;flex-shrink:0}.hero-search-clear:hover{color:#fff}
+.hero-ai.on{background:rgba(255,255,255,.42)}
 .ai-spinner{width:16px;height:16px;border-radius:50%;border:2px solid rgba(255,255,255,.35);border-top-color:#fff;animation:aispin .7s linear infinite}
 @keyframes aispin{to{transform:rotate(360deg)}}
 .mobile .hero-foot{flex-wrap:wrap}.mobile .hero-actions{flex-wrap:wrap;gap:6px}
@@ -950,7 +956,7 @@ async function createTaskFromAI(input,onCreateTask,setFeedback,setLoading,setOpe
     finish({id:null,...fb,done:false,subtasks:[],attachments:[]},'local');
   }finally{setLoading(false);}
 }
-function StudioDashboard({tasks,dark,displayName,accent,onToggleDark,onPickCat,onAdd,onPickStatus,onCreateTask}){
+function StudioDashboard({tasks,dark,displayName,accent,onToggleDark,onPickCat,onAdd,onPickStatus,onCreateTask,search,onSearch,bulkMode,onBulkToggle,heroRole}){
   const total=tasks.length;
   const doneCount=tasks.filter(taskDone).length;
   const inprog=tasks.filter(t=>!taskDone(t)&&taskProgress(t)>0).length;
@@ -1010,7 +1016,7 @@ function StudioDashboard({tasks,dark,displayName,accent,onToggleDark,onPickCat,o
       <div className="hero-row">
         <div className="hero-id">
           <div className="hero-av">{initials}</div>
-          <div><div className="hero-name">{displayName||'Work Planner'}</div><div className="hero-role">Productive day ahead</div></div>
+          <div><div className="hero-name">{displayName||'Work Planner'}</div><div className="hero-role">{heroRole||'Productive day ahead'}</div></div>
         </div>
         <Ring value={overall} size={66} stroke={7} color="#fff" track="rgba(255,255,255,0.35)">
           <span className="hero-pct">{overall}<i>%</i></span>
@@ -1022,10 +1028,10 @@ function StudioDashboard({tasks,dark,displayName,accent,onToggleDark,onPickCat,o
           <button className="hero-ai" onClick={runAi} disabled={aiLoading}>
             <Icon name="spark" size={15}/>{aiLoading?'Thinking…':'AI overview'}
           </button>
-          <button className="hero-ai" onClick={()=>{setAiTaskOpen(o=>!o);setAiTaskFeedback('');}} disabled={aiTaskLoading} title="Create task from natural language">
+          <button className="hero-ai" onClick={()=>{setAiTaskOpen(o=>!o);setAiTaskFeedback('');}} disabled={aiTaskLoading}>
             <Icon name="plus" size={15}/>AI task
           </button>
-          <button className="hero-add" onClick={onAdd}><Icon name="plus" size={15}/>Add task</button>
+          {onBulkToggle&&<button className={`hero-ai${bulkMode?' on':''}`} onClick={onBulkToggle} title="Select mode"><Icon name="checkSq" size={15}/>Select</button>}
         </div>
       </div>
       {aiTaskOpen&&<div className="hero-task-panel">
@@ -1050,6 +1056,14 @@ function StudioDashboard({tasks,dark,displayName,accent,onToggleDark,onPickCat,o
         {aiLoading
           ?<div className="hero-ai-loading"><span className="ai-spinner"/>Reviewing your tasks…</div>
           :<div className="hero-ai-body">{aiText}</div>}
+      </div>}
+      {onSearch!==undefined&&<div className="hero-search-row">
+        <div className="hero-search">
+          <Icon name="search" size={16}/>
+          <input placeholder="Search tasks…" value={search||''} onChange={e=>onSearch(e.target.value)}/>
+          {search&&<button className="hero-search-clear" onClick={()=>onSearch('')}><Icon name="x" size={14}/></button>}
+        </div>
+        <button className="hero-add" onClick={onAdd}><Icon name="plus" size={15}/>New task</button>
       </div>}
     </div>
     <div className="dash-sec-head">My tasks</div>
@@ -1157,10 +1171,10 @@ function MobileHero({tasks,displayName,onCreateTask}){
 }
 
 /* ---- PlannerSurface ---- */
-const TAB_DEF=[{id:'today',label:'Today',icon:'today'},{id:'upcoming',label:'Upcoming',icon:'clock'},{id:'all',label:'All Tasks',icon:'list'},{id:'calendar',label:'Calendar',icon:'calendar'},{id:'matrix',label:'Matrix',icon:'matrix'},{id:'review',label:'Review',icon:'review'}];
+const TAB_DEF=[{id:'today',label:'Today',icon:'today'},{id:'all',label:'All Tasks',icon:'list'},{id:'calendar',label:'Calendar',icon:'calendar'},{id:'matrix',label:'Matrix',icon:'matrix'},{id:'review',label:'Review',icon:'review'}];
 const LS_SETTINGS='wp_settings';
 const LS_DARK='wp_dark';
-const DEFAULT_SETTINGS={defaultTab:'today',tabOrder:['today','upcoming','all','calendar'],theme:'soft',listLayout:'cards',accent:'#708871',subtaskMode:'inline',calendarDefault:'month',notificationsEnabled:false};
+const DEFAULT_SETTINGS={defaultTab:'today',tabOrder:['today','all','calendar'],theme:'soft',listLayout:'cards',accent:'#708871',subtaskMode:'inline',calendarDefault:'month',notificationsEnabled:false};
 const CAL_VIEWS=[{id:'month',label:'Month',icon:'grid'},{id:'agenda',label:'Agenda',icon:'agenda'},{id:'timeline',label:'Timeline',icon:'timeline'}];
 const matchSearch=(t,q)=>{if(!q)return true;q=q.toLowerCase();return t.title.toLowerCase().includes(q)||(t.notes||'').toLowerCase().includes(q)||(t.subtasks||[]).some(s=>s.title.toLowerCase().includes(q));};
 
@@ -1184,13 +1198,12 @@ function PlannerSurface({formFactor,tasks,dark,streak,undoTask,syncStatus,sessio
   const base=tasks.filter(x=>(!filterIds||filterIds.includes(x.categoryId))&&matchSearch(x,search));
   let listTasks=base;
   if(tab==='today')listTasks=base.filter(x=>['overdue','today'].includes(bucketOf(x)));
-  else if(tab==='upcoming')listTasks=base.filter(x=>['week','later','nodate'].includes(bucketOf(x))&&!taskDone(x));
   else if(tab==='all'&&hideDone)listTasks=base.filter(x=>!taskDone(x));
 
-  const cnt={today:tasks.filter(x=>['overdue','today'].includes(bucketOf(x))).length,upcoming:tasks.filter(x=>['week','later','nodate'].includes(bucketOf(x))&&!taskDone(x)).length,all:tasks.length};
+  const cnt={today:tasks.filter(x=>['overdue','today'].includes(bucketOf(x))).length,all:tasks.length};
   const stats={today:tasks.filter(x=>bucketOf(x)==='today').length,overdue:tasks.filter(x=>bucketOf(x)==='overdue').length,week:tasks.filter(x=>bucketOf(x)==='week').length,done:tasks.filter(x=>taskDone(x)).length};
   const handlers={onToggleTask:root.toggleTask,onToggleSub:root.toggleSub,onAddSub:root.addSub,onEdit:id=>setEditId(id),onDelete:root.deleteTask,onDuplicate:root.duplicateTask,onSelect:toggleSelect,selectedIds,bulkMode};
-  const titles={today:['Today',TODAY_LABEL],upcoming:['Upcoming','Tasks with a future due date'],all:['All Tasks',`${tasks.length} tasks · ${stats.done} completed`],calendar:['Calendar',`${MONTHS[monthDate.getMonth()]} ${monthDate.getFullYear()}`],matrix:['Matrix','Eisenhower prioritisation'],review:['Weekly Review','Last 7 days']};
+  const titles={calendar:['Calendar',`${MONTHS[monthDate.getMonth()]} ${monthDate.getFullYear()}`],matrix:['Matrix','Eisenhower prioritisation'],review:['Weekly Review','Last 7 days']};
 
   const toggleExpand=id=>setExpandedCats(prev=>({...prev,[id]:!prev[id]}));
 
@@ -1251,6 +1264,7 @@ function PlannerSurface({formFactor,tasks,dark,streak,undoTask,syncStatus,sessio
     return<TaskList tasks={listTasks} layout={listLayout} sort={sort} vibrant={vibrant} dark={dark} mono={mono} subtaskMode={subtaskMode} handlers={handlers}/>;
   };
 
+  const isHeroTab=tab==='today'||tab==='all';
   if(!mobile)return<div className={`surface desktop skin-studio${dark?' dark':''}`} style={{'--accent':accent}}>
     <aside className="sidebar">
       <div className="brand"><div className="brand-mark"><Icon name="check" size={19} strokeWidth={2.6}/></div><div><div className="brand-name">Work Planner</div><div className="brand-sub">Plan · Track · Done</div></div></div>
@@ -1266,35 +1280,40 @@ function PlannerSurface({formFactor,tasks,dark,streak,undoTask,syncStatus,sessio
       </div>
     </aside>
     <main className="main">
-      <div className="topbar"><div><div className="page-title">{titles[tab]?.[0]||tab}{catFilter&&<span style={{color:'var(--ink-3)',fontWeight:600}}> · {catById(catFilter).name}</span>}</div><div className="page-sub">{titles[tab]?.[1]||''}</div></div><div className="topbar-spacer"/>
-        {isListTab&&<button className={`icon-btn${bulkMode?' on':''}`} title="Select mode" onClick={()=>{setBulkMode(b=>!b);setSelectedIds(new Set());}} style={{marginRight:4,background:bulkMode?'var(--accent-soft)':undefined,borderColor:bulkMode?'var(--accent)':undefined}}><Icon name="checkSq" size={17}/></button>}
-        <div className="search"><Icon name="search" size={16}/><input placeholder="Search tasks…" value={search} onChange={e=>setSearch(e.target.value)}/></div>
-        <button className="btn btn-primary" onClick={()=>setEditId(null)}><Icon name="plus" size={16}/>New task</button>
-      </div>
+      {!isHeroTab&&<div className="topbar"><div><div className="page-title">{titles[tab]?.[0]||tab}</div><div className="page-sub">{titles[tab]?.[1]||''}</div></div><div className="topbar-spacer"/><button className="btn btn-primary" onClick={()=>setEditId(null)}><Icon name="plus" size={16}/>New task</button></div>}
       {isDemo&&<div style={{display:'flex',alignItems:'center',gap:10,padding:'8px 30px',background:'var(--amber-soft)',borderBottom:'1px solid var(--line)',fontSize:13,fontWeight:600,color:'var(--amber-ink)',flexShrink:0}}>
         <Icon name="spark" size={15}/>Demo mode — tasks reset on refresh. <button style={{marginLeft:4,color:'var(--accent-ink)',fontWeight:700,fontSize:13,textDecoration:'underline'}} onClick={()=>setShowAuth(true)}>Sign in to save your data</button>
       </div>}
       {BulkBar}
-      {tab!=='today'&&isListTab&&<div className="toolbar"><Segmented options={[{id:'due',label:'Due date',icon:'calendar'},{id:'priority',label:'Priority',icon:'flag'}]} value={sort} onChange={setSort}/>{tab==='all'&&<button className={`chip-toggle${hideDone?' on':''}`} onClick={()=>setHideDone(h=>!h)}>Hide completed</button>}</div>}
       <div className="content scroll"><div className="content-pad">
-        {tab==='today'
+        {isHeroTab
           ?<React.Fragment>
               <StudioDashboard tasks={tasks} dark={dark} displayName={displayName} accent={accent}
                 onToggleDark={()=>root.setDark(!dark)}
                 onPickCat={id=>{setCatFilter(id);setTab('all');}}
                 onAdd={()=>setEditId(null)}
                 onCreateTask={task=>root.saveTask(task)}
+                search={search} onSearch={setSearch}
+                bulkMode={bulkMode} onBulkToggle={()=>{setBulkMode(b=>!b);setSelectedIds(new Set());}}
+                heroRole={tab==='all'?'All tasks at a glance':'Productive day ahead'}
                 onPickStatus={key=>{
-                  setCatFilter(null);
-                  if(key==='done-row'){setHideDone(false);setTab('all');}
-                  else if(key==='prog'){setHideDone(false);setTab('today');}
-                  else{setHideDone(false);setTab('upcoming');}
+                  setCatFilter(null);setHideDone(false);
+                  if(key==='done-row')setTab('all');
+                  else if(key==='prog')setTab('today');
+                  else setTab('all');
                 }}/>
               <div className="dash-sec-head" style={{display:'flex',alignItems:'center',gap:10}}>
-                {stats.overdue>0?<span>Overdue <span style={{color:'var(--red-ink)'}}>({stats.overdue})</span> &amp; today</span>:"Today's schedule"}
-                {streak.count>0&&<span style={{fontSize:11,fontWeight:700,padding:'2px 8px',borderRadius:99,background:'var(--accent-soft)',color:'var(--accent-ink)'}}>🔥 {streak.count} day streak</span>}
+                {tab==='today'
+                  ?<React.Fragment>
+                    <span>{stats.overdue>0?<React.Fragment>Overdue <span style={{color:'var(--red-ink)'}}>({stats.overdue})</span> &amp; today</React.Fragment>:"Today's schedule"}</span>
+                    {streak.count>0&&<span style={{fontSize:11,fontWeight:700,padding:'2px 8px',borderRadius:99,background:'var(--accent-soft)',color:'var(--accent-ink)'}}>🔥 {streak.count} day streak</span>}
+                  </React.Fragment>
+                  :<span>All tasks{catFilter&&<span style={{color:'var(--ink-3)',fontWeight:500}}> · {catById(catFilter).name}</span>}</span>}
               </div>
-              <div className="toolbar" style={{padding:'0 0 14px'}}><Segmented options={[{id:'due',label:'Due date',icon:'calendar'},{id:'priority',label:'Priority',icon:'flag'}]} value={sort} onChange={setSort}/></div>
+              <div className="toolbar" style={{padding:'0 0 14px'}}>
+                <Segmented options={[{id:'due',label:'Due date',icon:'calendar'},{id:'priority',label:'Priority',icon:'flag'}]} value={sort} onChange={setSort}/>
+                {tab==='all'&&<button className={`chip-toggle${hideDone?' on':''}`} onClick={()=>setHideDone(h=>!h)}>Hide completed</button>}
+              </div>
               <MainContent/>
             </React.Fragment>
           :<MainContent/>}
@@ -1342,7 +1361,9 @@ function AppRoot(){
     let changed=false;
     if(saved.defaultTab==='all'){saved.defaultTab='today';changed=true;}
     if(saved.subtaskMode==='collapsible'){saved.subtaskMode='inline';changed=true;}
-    if(!saved.tabOrder||saved.tabOrder[0]==='all'){saved.tabOrder=['today','upcoming','all','calendar'];changed=true;}
+    if(!saved.tabOrder||saved.tabOrder[0]==='all'){saved.tabOrder=DEFAULT_SETTINGS.tabOrder;changed=true;}
+    const validIds=new Set(TAB_DEF.map(t=>t.id));
+    if(saved.tabOrder.some(id=>!validIds.has(id))){saved.tabOrder=saved.tabOrder.filter(id=>validIds.has(id));if(!saved.tabOrder.length)saved.tabOrder=DEFAULT_SETTINGS.tabOrder;changed=true;}
     if(changed)lsSave(LS_SETTINGS,saved);
     return saved;
   });
