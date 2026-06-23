@@ -70,15 +70,28 @@ CDN dependencies: `@supabase/supabase-js@2`, `react@18`, `react-dom@18`, `@babel
 5. **`catStyle` / `catDotColor`** — derive per-category colours from `{h, c, hex}` fields
 6. **`aiOverviewLocal`** — local 2-line task summary (no API needed); used as fallback
 7. **`Ring`** — SVG circular progress ring used in the hero card and project cards
-8. **`StudioDashboard`** — Today tab dashboard: hero card (with AI overview + AI task panels), 3-col My tasks status rows, Active projects grid. Props: `tasks`, `dark`, `displayName`, `accent`, `onToggleDark`, `onPickCat`, `onAdd`, `onPickStatus`, `onCreateTask`
-9. **Calendar components** — `MonthGrid`, `AgendaView`, `TimelineView`, `MobileDayList`
-10. **`TaskItem`** — single task card (subtasks inline, progress bar, actions)
-11. **`TaskList`** — groups tasks by time bucket or category
-12. **`TaskEditor`** — new/edit modal (title, notes, NL date, repeat, category, priority, subtasks, attachments)
-13. **`CategoryManager`**, **`SettingsModal`**, **`AuthModal`** — management modals
-14. **`EisenhowerView`**, **`WeeklyReview`** — additional view components
-15. **`PlannerSurface`** — layout; owns all UI state (`tab`, `sort`, `search`, `catFilter`, `bulkMode`, etc.)
-16. **`AppRoot`** — owns all data state; wires Supabase auth, `persist()` helper, streak, undo
+8. **`StudioDashboard`** — Desktop Today/All tab dashboard: hero card (with AI overview + AI task panels), 3-col My tasks status rows, Active projects grid
+9. **`MobileHero`** — Mobile-only hero card shown on Today and All Tasks tabs; has its own AI overview + AI task creation, separate from `StudioDashboard`
+10. **Calendar components** — `MonthGrid`, `AgendaView`, `TimelineView`, `MobileDayList`
+11. **`TaskItem`** — single task card (subtasks inline, progress bar, actions)
+12. **`TaskList`** — groups tasks by time bucket or category
+13. **`TaskEditor`** — new/edit modal (title, notes, NL date, repeat, category, priority, subtasks, attachments)
+14. **`CategoryManager`**, **`SettingsModal`**, **`AuthModal`** — management modals
+15. **`EisenhowerView`**, **`WeeklyReview`** — additional view components
+16. **`PlannerSurface`** — layout; owns all UI state (`tab`, `sort`, `search`, `catFilter`, `bulkMode`, etc.)
+17. **`AppRoot`** — owns all data state; wires Supabase auth, `persist()` helper, streak, undo
+
+## Mobile layout
+
+Mobile uses a 4-tab bottom nav: the first 3 tabs from `orderedTabs` plus a fixed **Add** button:
+
+```js
+const mTabs = [...orderedTabs.slice(0, 3), 'add'];
+```
+
+The `'add'` entry renders as an accent-coloured tab icon (plus sign) that opens `TaskEditor`. There is no floating action button on mobile — the old `.fab-wrap` / `.fab` CSS is unused.
+
+Available tab IDs (`TAB_DEF`): `today`, `all`, `calendar`, `matrix`, `review`. Desktop shows all tabs in `orderedTabs`; mobile shows only the first 3.
 
 ## Design system (`skin-studio`)
 
@@ -127,12 +140,12 @@ scheduleSync(tasks, cats) — debounced 1.5s Supabase upsert, already gated on s
 ### Settings defaults (`DEFAULT_SETTINGS`)
 
 ```js
-{ defaultTab:'today', tabOrder:['today','upcoming','all','calendar'],
+{ defaultTab:'today', tabOrder:['today','all','calendar'],
   theme:'soft', listLayout:'cards', accent:'#708871',
   subtaskMode:'inline', calendarDefault:'month', notificationsEnabled:false }
 ```
 
-`AppRoot` runs a one-time migration on init: upgrades old defaults (`defaultTab:'all'`, `subtaskMode:'collapsible'`, `tabOrder[0]==='all'`) and re-saves.
+`AppRoot` runs a one-time migration on init: resets `defaultTab:'all'` → `'today'`, strips any tab IDs not in `TAB_DEF`, and resets `tabOrder` to default if the first entry was `'all'`.
 
 ### Supabase schema
 
