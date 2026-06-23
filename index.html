@@ -135,9 +135,7 @@ input,textarea,select{font-family:inherit;font-size:16px}
 .m-filters{display:flex;gap:8px;padding:0 16px 8px;overflow-x:auto}.m-filters::-webkit-scrollbar{display:none}
 .m-chip{padding:7px 14px;border-radius:99px;font-size:13px;font-weight:600;white-space:nowrap;background:var(--surface);border:1px solid var(--line);color:var(--ink-2);display:inline-flex;align-items:center;gap:7px;flex-shrink:0}.m-chip.on{background:var(--accent-soft);color:var(--accent-ink);border-color:transparent}.m-chip .cat-dot{width:9px;height:9px}
 .m-subcats{display:flex;gap:6px;padding:0 16px 10px 24px;overflow-x:auto}.m-subcats::-webkit-scrollbar{display:none}
-.m-subchip{padding:5px 11px;border-radius:99px;font-size:12px;font-weight:600;white-space:nowrap;background:var(--surface-2);border:1px solid var(--line-soft);color:var(--ink-3);display:inline-flex;align-items:center;gap:6px;flex-shrink:0}.m-subchip.on{background:var(--accent-soft);color:var(--accent-ink);border-color:transparent}.m-subchip .cat-dot{width:7px;height:7px}
-.m-stats{display:flex;gap:9px;padding:0 16px 14px}.m-stat{flex:1;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:11px 12px;box-shadow:var(--sh-1)}.m-stat-num{font-size:21px;font-weight:700;letter-spacing:-.03em;line-height:1}.m-stat-label{font-size:10.5px;color:var(--ink-3);font-weight:600;margin-top:5px}.m-stat.amber .m-stat-num{color:var(--amber-ink)}.m-stat.red .m-stat-num{color:var(--red-ink)}
-.mobile .hero{margin-bottom:16px;border-radius:var(--r-xl)}.mobile .hero .hero-name{font-size:18px}.mobile .hero .hero-av{width:44px;height:44px;font-size:15px}
+.m-subchip{padding:5px 11px;border-radius:99px;font-size:12px;font-weight:600;white-space:nowrap;background:var(--surface-2);border:1px solid var(--line-soft);color:var(--ink-3);display:inline-flex;align-items:center;gap:6px;flex-shrink:0}.m-subchip.on{background:var(--accent-soft);color:var(--accent-ink);border-color:transparent}.m-subchip .cat-dot{width:7px;height:7px}.mobile .hero{margin-bottom:16px;border-radius:var(--r-xl)}.mobile .hero .hero-name{font-size:18px}.mobile .hero .hero-av{width:44px;height:44px;font-size:15px}
 .tabbar{display:flex;padding:8px 14px max(env(safe-area-inset-bottom),14px);background:var(--surface);border-top:1px solid var(--line);gap:4px;position:relative;flex-shrink:0}
 .tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 0;color:var(--ink-3);font-size:10.5px;font-weight:650}.tab svg{width:23px;height:23px}.tab.active{color:var(--accent-ink)}
 .fab-wrap{position:absolute;top:-28px;left:50%;transform:translateX(-50%)}.fab{width:56px;height:56px;border-radius:50%;background:var(--accent);color:var(--accent-on);display:grid;place-items:center;box-shadow:var(--sh-3);transition:transform .1s}.fab:active{transform:scale(.94)}
@@ -390,6 +388,9 @@ const PRIORITIES=[{id:'high',name:'High'},{id:'med',name:'Medium'},{id:'low',nam
 const RECUR=[{id:'none',name:'Does not repeat'},{id:'daily',name:'Daily'},{id:'weekly',name:'Weekly'},{id:'monthly',name:'Monthly'}];
 const HUE_PRESETS=[{h:22,label:'Red'},{h:45,label:'Orange'},{h:58,label:'Peach'},{h:90,label:'Lime'},{h:150,label:'Mint'},{h:185,label:'Teal'},{h:220,label:'Blue'},{h:264,label:'Periwinkle'},{h:290,label:'Violet'},{h:322,label:'Pink'}];
 
+const TODAY_LABEL=`${WD_FULL[TODAY.getDay()]}, ${MONTHS[TODAY.getMonth()]} ${TODAY.getDate()}`;
+const defaultCatId=()=>CATEGORIES.find(c=>!c.parentId)?.id||'work';
+
 const DEFAULT_CATEGORIES=[
   {id:'work',     name:'Work',     parentId:null,h:264,c:0.13,hex:'#7B8FD4'},
   {id:'personal', name:'Personal', parentId:null,h:322,c:0.12,hex:'#C87DB0'},
@@ -399,7 +400,7 @@ const DEFAULT_CATEGORIES=[
 ];
 let CATEGORIES=[...DEFAULT_CATEGORIES];
 
-const catById=id=>CATEGORIES.find(c=>c.id===id)||CATEGORIES[0]||{id:'_',name:'?',h:220,c:0.11,parentId:null};
+const catById=id=>CATEGORIES.find(c=>c.id===id)||CATEGORIES[0];
 const catChildren=id=>CATEGORIES.filter(c=>c.parentId===id);
 const catAllIds=id=>[id,...catChildren(id).map(c=>c.id)]; // id + direct children
 const catStyle=(cat,{vibrant=false,dark=false,mono=false}={})=>{
@@ -418,7 +419,7 @@ const sortTasks=(arr,sort)=>{const a=[...arr];if(sort==='priority')a.sort((x,y)=
 const nextRecurDate=(due,recur)=>{const d=parseYmd(due||TODAY_STR);if(!d)return due;if(recur==='daily')return ymd(addDays(d,1));if(recur==='weekly')return ymd(addDays(d,7));if(recur==='monthly'){const n=new Date(d);n.setMonth(n.getMonth()+1);return ymd(n);}return due;};
 
 /* ---- natural language date ---- */
-const parseNatural=s=>{if(!s)return null;const t=s.toLowerCase().trim();const now=new Date();now.setHours(0,0,0,0);if(t==='today')return ymd(now);if(t==='tomorrow'||t==='tmr')return ymd(addDays(now,1));if(t==='yesterday')return ymd(addDays(now,-1));if(t==='next week')return ymd(addDays(now,7));const inN=t.match(/^in (\d+) days?$/);if(inN)return ymd(addDays(now,parseInt(inN[1])));const DAYS=['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];const short=['sun','mon','tue','wed','thu','fri','sat'];let name=t.replace(/^next\s+/,'');let idx=DAYS.indexOf(name);if(idx<0)idx=short.indexOf(name);if(idx>=0){let diff=idx-now.getDay();if(diff<=0)diff+=7;return ymd(addDays(now,diff));}return null;};
+const parseNatural=s=>{if(!s)return null;const t=s.toLowerCase().trim();if(t==='today')return ymd(TODAY);if(t==='tomorrow'||t==='tmr')return ymd(addDays(TODAY,1));if(t==='yesterday')return ymd(addDays(TODAY,-1));if(t==='next week')return ymd(addDays(TODAY,7));const inN=t.match(/^in (\d+) days?$/);if(inN)return ymd(addDays(TODAY,parseInt(inN[1])));const DAYS=['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];const short=['sun','mon','tue','wed','thu','fri','sat'];let name=t.replace(/^next\s+/,'');let idx=DAYS.indexOf(name);if(idx<0)idx=short.indexOf(name);if(idx>=0){let diff=idx-TODAY.getDay();if(diff<=0)diff+=7;return ymd(addDays(TODAY,diff));}return null;};
 
 /* ---- streak helpers ---- */
 const LS_STREAK='wp_streak';
@@ -524,7 +525,7 @@ function TaskList({tasks,layout,sort,vibrant,dark,mono,subtaskMode,handlers}){
 }
 
 /* ---- TaskEditor ---- */
-function blankTask(){return{id:null,title:'',notes:'',categoryId:CATEGORIES.find(c=>!c.parentId)?.id||'work',priority:'med',due:TODAY_STR,recurring:'none',done:false,subtasks:[],attachments:[]};}
+function blankTask(){return{id:null,title:'',notes:'',categoryId:defaultCatId(),priority:'med',due:TODAY_STR,recurring:'none',done:false,subtasks:[],attachments:[]};}
 
 function TaskEditor({initial,vibrant,dark,onSave,onClose,onDelete}){
   const[t,setT]=React.useState(()=>initial?JSON.parse(JSON.stringify(initial)):blankTask());
@@ -910,7 +911,44 @@ function aiTaskLocal(input){
   // Clean up common connector words left over
   let title=text.replace(/\bwith\s+a\b/gi,' ').replace(/\bfor\s+a\b/gi,' ').replace(/[,\s]+$/,'').replace(/^[,\s]+/,'').replace(/\s{2,}/g,' ').trim();
   if(!catGuess){const lc=title.toLowerCase();catGuess=CATEGORIES.find(c=>lc.includes(c.name.toLowerCase()));}
-  return{title:title||input,notes:'',due,priority,categoryId:catGuess?.id||CATEGORIES.find(c=>!c.parentId)?.id||'work',subtasks:[],recurring:'none'};
+  return{title:title||input,notes:'',due,priority,categoryId:catGuess?.id||defaultCatId(),subtasks:[],recurring:'none'};
+}
+async function createTaskFromAI(input,onCreateTask,setFeedback,setLoading,setOpen,setInput){
+  setLoading(true);setFeedback('');
+  const cfg=_cfg||{};
+  const catList=CATEGORIES.map(c=>`${c.name} (id:${c.id})`).join(', ');
+  const tomorrow=ymd(addDays(TODAY,1));
+  const nextFriday=ymd(addDays(TODAY,(5-TODAY.getDay()+7)%7||7));
+  const nextWeek=ymd(addDays(TODAY,7));
+  const prompt=`Today is ${TODAY_LABEL} (${TODAY_STR}). Parse this natural language task description into a JSON object.\n\nInput: "${input}"\n\nAvailable categories: ${catList}\nDate references: tomorrow=${tomorrow}, Friday=${nextFriday}, next week=${nextWeek}\n\nRules:\n- title: the core task name only — strip out any date, category, or priority instructions the user included\n- notes: genuine task notes only, empty string if none — NEVER put category instructions or date instructions here\n- due: extract from phrases like "due date of X", "by X", "on X", "due X" — use YYYY-MM-DD or null\n- categoryId: if user says "categorise as X", "category X", "put in X", "under X" — match to the closest available category id\n- priority: high/med/low inferred from urgency words (urgent/asap/critical=high, low priority=low)\n- subtasks: [] unless user explicitly lists sub-tasks\n- recurring: none unless user says daily/weekly/monthly\n\nReturn ONLY this JSON, no explanation:\n{"title":"...","notes":"...","due":"YYYY-MM-DD or null","priority":"high|med|low","categoryId":"one of the ids above","subtasks":["..."],"recurring":"none|daily|weekly|monthly"}`;
+  const finish=(task,label)=>{onCreateTask(task);setFeedback(`✓ [${label}] Created "${task.title}"${task.subtasks?.length?` with ${task.subtasks.length} subtasks`:task.due?` · due ${task.due}`:''}${task.priority&&task.priority!=='med'?` · ${task.priority} priority`:''}`);setInput('');setTimeout(()=>{setOpen(false);setFeedback('');},2200);};
+  try{
+    const geminiKey=cfg.GEMINI_API_KEY;const anthropicKey=cfg.ANTHROPIC_API_KEY;
+    let p=null,usedApi=false;
+    if(geminiKey&&geminiKey.length>10){
+      const resp=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{maxOutputTokens:8192,temperature:0.2}})});
+      if(!resp.ok){const err=await resp.text();throw new Error(`Gemini ${resp.status}: ${err.slice(0,200)}`);}
+      const data=await resp.json();const rawText=data.candidates?.[0]?.content?.parts?.[0]?.text||'';
+      const jsonStr=extractJsonObj(rawText);if(!jsonStr)throw new Error(`Gemini: no JSON in response: ${rawText.slice(0,200)}`);
+      p=JSON.parse(jsonStr);if(!p.title)throw new Error(`Gemini: missing title field in: ${jsonStr.slice(0,200)}`);
+      usedApi=true;
+    }else if(anthropicKey&&!anthropicKey.startsWith('YOUR_')){
+      const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':anthropicKey,'anthropic-version':'2023-06-01'},body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:1024,messages:[{role:'user',content:prompt}]})});
+      if(!resp.ok){const err=await resp.text();throw new Error(`Anthropic ${resp.status}: ${err.slice(0,200)}`);}
+      const data=await resp.json();const rawText=data.content?.[0]?.text||'';
+      const jsonStr=extractJsonObj(rawText);if(!jsonStr)throw new Error(`Anthropic: no JSON in response: ${rawText.slice(0,200)}`);
+      p=JSON.parse(jsonStr);if(!p.title)throw new Error(`Anthropic: missing title field in: ${jsonStr.slice(0,200)}`);
+      usedApi=true;
+    }else{p=aiTaskLocal(input);}
+    const validCatId=CATEGORIES.find(c=>c.id===p.categoryId)?.id||defaultCatId();
+    const subtasks=(Array.isArray(p.subtasks)?p.subtasks:[]).slice(0,8).map(s=>({id:uid(),title:(typeof s==='string'?s:s?.title||'').trim(),due:null,done:false})).filter(s=>s.title);
+    const task={id:null,title:(p.title||input).trim(),notes:p.notes||'',categoryId:validCatId,priority:['high','med','low'].includes(p.priority)?p.priority:'med',due:p.due||null,recurring:['none','daily','weekly','monthly'].includes(p.recurring)?p.recurring:'none',done:false,subtasks,attachments:[]};
+    finish(task,usedApi?'AI':'local');
+  }catch(e){
+    console.error('[AI task] failed, falling back to local parser:',e.message);
+    const fb=aiTaskLocal(input);
+    finish({id:null,...fb,done:false,subtasks:[],attachments:[]},'local');
+  }finally{setLoading(false);}
 }
 function StudioDashboard({tasks,dark,displayName,accent,onToggleDark,onPickCat,onAdd,onPickStatus,onCreateTask}){
   const total=tasks.length;
@@ -919,7 +957,7 @@ function StudioDashboard({tasks,dark,displayName,accent,onToggleDark,onPickCat,o
   const todo=tasks.filter(t=>!taskDone(t)&&taskProgress(t)===0).length;
   const overall=total?Math.round((doneCount/total)*100):0;
   const initials=displayName?displayName.trim().split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase():'WP';
-  const sub=`${WD_FULL[TODAY.getDay()]}, ${MONTHS[TODAY.getMonth()]} ${TODAY.getDate()}`;
+  const sub=TODAY_LABEL;
   const[aiOpen,setAiOpen]=React.useState(false);
   const[aiLoading,setAiLoading]=React.useState(false);
   const[aiText,setAiText]=React.useState('');
@@ -943,8 +981,9 @@ function StudioDashboard({tasks,dark,displayName,accent,onToggleDark,onPickCat,o
         setAiText(text.trim()||aiOverviewLocal(tasks));
       }else if(anthropicKey&&!anthropicKey.startsWith('YOUR_')){
         const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':anthropicKey,'anthropic-version':'2023-06-01'},body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:512,messages:[{role:'user',content:prompt}]})});
+        if(!resp.ok){throw new Error(`Anthropic ${resp.status}`);}
         const data=await resp.json();
-        setAiText((data.content?.[0]?.text||'').trim()||'No overview available.');
+        setAiText((data.content?.[0]?.text||'').trim()||aiOverviewLocal(tasks));
       }else{
         await new Promise(r=>setTimeout(r,700));
         setAiText(aiOverviewLocal(tasks));
@@ -952,60 +991,7 @@ function StudioDashboard({tasks,dark,displayName,accent,onToggleDark,onPickCat,o
     }catch(e){setAiText(aiOverviewLocal(tasks));}
     finally{setAiLoading(false);}
   };
-  const runAiTask=async()=>{
-    const input=aiTaskInput.trim();if(!input)return;
-    setAiTaskLoading(true);setAiTaskFeedback('');
-    const cfg=_cfg||{};
-    const catList=CATEGORIES.map(c=>`${c.name} (id:${c.id})`).join(', ');
-    const tomorrow=ymd(addDays(TODAY,1));
-    const nextFriday=ymd(addDays(TODAY,(5-TODAY.getDay()+7)%7||7));
-    const nextWeek=ymd(addDays(TODAY,7));
-    const prompt=`Today is ${sub} (${TODAY_STR}). Parse this natural language task description into a JSON object.\n\nInput: "${input}"\n\nAvailable categories: ${catList}\nDate references: tomorrow=${tomorrow}, Friday=${nextFriday}, next week=${nextWeek}\n\nRules:\n- title: the core task name only — strip out any date, category, or priority instructions the user included\n- notes: genuine task notes only, empty string if none — NEVER put category instructions or date instructions here\n- due: extract from phrases like "due date of X", "by X", "on X", "due X" — use YYYY-MM-DD or null\n- categoryId: if user says "categorise as X", "category X", "put in X", "under X" — match to the closest available category id\n- priority: high/med/low inferred from urgency words (urgent/asap/critical=high, low priority=low)\n- subtasks: [] unless user explicitly lists sub-tasks\n- recurring: none unless user says daily/weekly/monthly\n\nReturn ONLY this JSON, no explanation:\n{"title":"...","notes":"...","due":"YYYY-MM-DD or null","priority":"high|med|low","categoryId":"one of the ids above","subtasks":["..."],"recurring":"none|daily|weekly|monthly"}`;
-    try{
-      const geminiKey=cfg.GEMINI_API_KEY;
-      const anthropicKey=cfg.ANTHROPIC_API_KEY;
-      let p=null,usedApi=false;
-      if(geminiKey&&geminiKey.length>10){
-        const resp=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{maxOutputTokens:8192,temperature:0.2}})});
-        if(!resp.ok){const err=await resp.text();throw new Error(`Gemini ${resp.status}: ${err.slice(0,200)}`);}
-        const data=await resp.json();
-        const rawText=data.candidates?.[0]?.content?.parts?.[0]?.text||'';
-        const jsonStr=extractJsonObj(rawText);
-        if(!jsonStr)throw new Error(`Gemini: no JSON in response: ${rawText.slice(0,200)}`);
-        p=JSON.parse(jsonStr);
-        if(!p.title)throw new Error(`Gemini: missing title field in: ${jsonStr.slice(0,200)}`);
-        usedApi=true;
-      }else if(anthropicKey&&!anthropicKey.startsWith('YOUR_')){
-        const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':anthropicKey,'anthropic-version':'2023-06-01'},body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:1024,messages:[{role:'user',content:prompt}]})});
-        if(!resp.ok){const err=await resp.text();throw new Error(`Anthropic ${resp.status}: ${err.slice(0,200)}`);}
-        const data=await resp.json();
-        const rawText=data.content?.[0]?.text||'';
-        const jsonStr=extractJsonObj(rawText);
-        if(!jsonStr)throw new Error(`Anthropic: no JSON in response: ${rawText.slice(0,200)}`);
-        p=JSON.parse(jsonStr);
-        if(!p.title)throw new Error(`Anthropic: missing title field in: ${jsonStr.slice(0,200)}`);
-        usedApi=true;
-      }else{
-        p=aiTaskLocal(input);
-      }
-      const validCatId=CATEGORIES.find(c=>c.id===p.categoryId)?.id||CATEGORIES.find(c=>!c.parentId)?.id||'work';
-      const subtasks=(Array.isArray(p.subtasks)?p.subtasks:[]).slice(0,8).map(s=>({id:uid(),title:(typeof s==='string'?s:s?.title||'').trim(),due:null,done:false})).filter(s=>s.title);
-      const task={id:null,title:(p.title||input).trim(),notes:p.notes||'',categoryId:validCatId,priority:['high','med','low'].includes(p.priority)?p.priority:'med',due:p.due||null,recurring:['none','daily','weekly','monthly'].includes(p.recurring)?p.recurring:'none',done:false,subtasks,attachments:[]};
-      onCreateTask(task);
-      const label=usedApi?'AI':'local';
-      setAiTaskFeedback(`✓ [${label}] Created "${task.title}"${task.subtasks.length>0?` with ${task.subtasks.length} subtasks`:''}`);
-      setAiTaskInput('');
-      setTimeout(()=>{setAiTaskOpen(false);setAiTaskFeedback('');},2200);
-    }catch(e){
-      console.error('[AI task] failed, falling back to local parser:', e.message);
-      const fb=aiTaskLocal(input);
-      const task={id:null,...fb,done:false,subtasks:[],attachments:[]};
-      onCreateTask(task);
-      setAiTaskFeedback(`✓ [local] Created "${task.title}"${task.due?` · due ${task.due}`:''}${task.priority!=='med'?` · ${task.priority} priority`:''}`);
-      setAiTaskInput('');
-      setTimeout(()=>{setAiTaskOpen(false);setAiTaskFeedback('');},2200);
-    }finally{setAiTaskLoading(false);}
-  };
+  const runAiTask=()=>{const input=aiTaskInput.trim();if(input)createTaskFromAI(input,onCreateTask,setAiTaskFeedback,setAiTaskLoading,setAiTaskOpen,setAiTaskInput);};
   const statusItems=[
     {key:'todo',label:'To Do',icon:'clock',tone:'todo',n:todo,sub:`${todo} task${todo!==1?'s':''} to start`},
     {key:'prog',label:'In Progress',icon:'zap',tone:'prog',n:inprog,sub:`${inprog} underway`},
@@ -1098,7 +1084,7 @@ function MobileHero({tasks,displayName,onCreateTask}){
   const doneCount=tasks.filter(taskDone).length;
   const overall=total?Math.round((doneCount/total)*100):0;
   const initials=displayName?displayName.trim().split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase():'WP';
-  const sub=`${WD_FULL[TODAY.getDay()]}, ${MONTHS[TODAY.getMonth()]} ${TODAY.getDate()}`;
+  const sub=TODAY_LABEL;
   const[aiOpen,setAiOpen]=React.useState(false);
   const[aiLoading,setAiLoading]=React.useState(false);
   const[aiText,setAiText]=React.useState('');
@@ -1121,8 +1107,9 @@ function MobileHero({tasks,displayName,onCreateTask}){
         setAiText(text.trim()||aiOverviewLocal(tasks));
       }else if(anthropicKey&&!anthropicKey.startsWith('YOUR_')){
         const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':anthropicKey,'anthropic-version':'2023-06-01'},body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:512,messages:[{role:'user',content:prompt}]})});
+        if(!resp.ok){throw new Error(`Anthropic ${resp.status}`);}
         const data=await resp.json();
-        setAiText((data.content?.[0]?.text||'').trim()||'No overview available.');
+        setAiText((data.content?.[0]?.text||'').trim()||aiOverviewLocal(tasks));
       }else{
         await new Promise(r=>setTimeout(r,700));
         setAiText(aiOverviewLocal(tasks));
@@ -1130,59 +1117,7 @@ function MobileHero({tasks,displayName,onCreateTask}){
     }catch(e){setAiText(aiOverviewLocal(tasks));}
     finally{setAiLoading(false);}
   };
-  const runAiTask=async()=>{
-    const input=aiTaskInput.trim();if(!input)return;
-    setAiTaskLoading(true);setAiTaskFeedback('');
-    const cfg=_cfg||{};
-    const catList=CATEGORIES.map(c=>`${c.name} (id:${c.id})`).join(', ');
-    const tomorrow=ymd(addDays(TODAY,1));
-    const nextFriday=ymd(addDays(TODAY,(5-TODAY.getDay()+7)%7||7));
-    const nextWeek=ymd(addDays(TODAY,7));
-    const prompt=`Today is ${sub} (${TODAY_STR}). Parse this natural language task description into a JSON object.\n\nInput: "${input}"\n\nAvailable categories: ${catList}\nDate references: tomorrow=${tomorrow}, Friday=${nextFriday}, next week=${nextWeek}\n\nRules:\n- title: the core task name only — strip out any date, category, or priority instructions the user included\n- notes: genuine task notes only, empty string if none — NEVER put category instructions or date instructions here\n- due: extract from phrases like "due date of X", "by X", "on X", "due X" — use YYYY-MM-DD or null\n- categoryId: if user says "categorise as X", "category X", "put in X", "under X" — match to the closest available category id\n- priority: high/med/low inferred from urgency words (urgent/asap/critical=high, low priority=low)\n- subtasks: [] unless user explicitly lists sub-tasks\n- recurring: none unless user says daily/weekly/monthly\n\nReturn ONLY this JSON, no explanation:\n{"title":"...","notes":"...","due":"YYYY-MM-DD or null","priority":"high|med|low","categoryId":"one of the ids above","subtasks":["..."],"recurring":"none|daily|weekly|monthly"}`;
-    try{
-      const geminiKey=cfg.GEMINI_API_KEY;const anthropicKey=cfg.ANTHROPIC_API_KEY;
-      let p=null,usedApi=false;
-      if(geminiKey&&geminiKey.length>10){
-        const resp=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{maxOutputTokens:8192,temperature:0.2}})});
-        if(!resp.ok){const err=await resp.text();throw new Error(`Gemini ${resp.status}: ${err.slice(0,200)}`);}
-        const data=await resp.json();
-        const rawText=data.candidates?.[0]?.content?.parts?.[0]?.text||'';
-        const jsonStr=extractJsonObj(rawText);
-        if(!jsonStr)throw new Error(`Gemini: no JSON in response: ${rawText.slice(0,200)}`);
-        p=JSON.parse(jsonStr);
-        if(!p.title)throw new Error(`Gemini: missing title field in: ${jsonStr.slice(0,200)}`);
-        usedApi=true;
-      }else if(anthropicKey&&!anthropicKey.startsWith('YOUR_')){
-        const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':anthropicKey,'anthropic-version':'2023-06-01'},body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:1024,messages:[{role:'user',content:prompt}]})});
-        if(!resp.ok){const err=await resp.text();throw new Error(`Anthropic ${resp.status}: ${err.slice(0,200)}`);}
-        const data=await resp.json();
-        const rawText=data.content?.[0]?.text||'';
-        const jsonStr=extractJsonObj(rawText);
-        if(!jsonStr)throw new Error(`Anthropic: no JSON in response: ${rawText.slice(0,200)}`);
-        p=JSON.parse(jsonStr);
-        if(!p.title)throw new Error(`Anthropic: missing title field in: ${jsonStr.slice(0,200)}`);
-        usedApi=true;
-      }else{
-        p=aiTaskLocal(input);
-      }
-      const validCatId=CATEGORIES.find(c=>c.id===p.categoryId)?.id||CATEGORIES.find(c=>!c.parentId)?.id||'work';
-      const subtasks=(Array.isArray(p.subtasks)?p.subtasks:[]).slice(0,8).map(s=>({id:uid(),title:(typeof s==='string'?s:s?.title||'').trim(),due:null,done:false})).filter(s=>s.title);
-      const task={id:null,title:(p.title||input).trim(),notes:p.notes||'',categoryId:validCatId,priority:['high','med','low'].includes(p.priority)?p.priority:'med',due:p.due||null,recurring:['none','daily','weekly','monthly'].includes(p.recurring)?p.recurring:'none',done:false,subtasks,attachments:[]};
-      onCreateTask(task);
-      const label=usedApi?'AI':'local';
-      setAiTaskFeedback(`✓ [${label}] Created "${task.title}"${task.subtasks.length>0?` with ${task.subtasks.length} subtasks`:''}`);
-      setAiTaskInput('');
-      setTimeout(()=>{setAiTaskOpen(false);setAiTaskFeedback('');},2200);
-    }catch(e){
-      console.error('[AI task] failed, falling back to local parser:', e.message);
-      const fb=aiTaskLocal(input);
-      const task={id:null,...fb,done:false,subtasks:[],attachments:[]};
-      onCreateTask(task);
-      setAiTaskFeedback(`✓ [local] Created "${task.title}"${task.due?` · due ${task.due}`:''}${task.priority!=='med'?` · ${task.priority} priority`:''}`);
-      setAiTaskInput('');
-      setTimeout(()=>{setAiTaskOpen(false);setAiTaskFeedback('');},2200);
-    }finally{setAiTaskLoading(false);}
-  };
+  const runAiTask=()=>{const input=aiTaskInput.trim();if(input)createTaskFromAI(input,onCreateTask,setAiTaskFeedback,setAiTaskLoading,setAiTaskOpen,setAiTaskInput);};
   return<div className="hero" style={{marginBottom:16}}>
     <div className="hero-top"><span className="hero-eyebrow"><Icon name="today" size={14}/>{sub}</span></div>
     <div className="hero-row">
@@ -1255,7 +1190,7 @@ function PlannerSurface({formFactor,tasks,dark,streak,undoTask,syncStatus,sessio
   const cnt={today:tasks.filter(x=>['overdue','today'].includes(bucketOf(x))).length,upcoming:tasks.filter(x=>['week','later','nodate'].includes(bucketOf(x))&&!taskDone(x)).length,all:tasks.length};
   const stats={today:tasks.filter(x=>bucketOf(x)==='today').length,overdue:tasks.filter(x=>bucketOf(x)==='overdue').length,week:tasks.filter(x=>bucketOf(x)==='week').length,done:tasks.filter(x=>taskDone(x)).length};
   const handlers={onToggleTask:root.toggleTask,onToggleSub:root.toggleSub,onAddSub:root.addSub,onEdit:id=>setEditId(id),onDelete:root.deleteTask,onDuplicate:root.duplicateTask,onSelect:toggleSelect,selectedIds,bulkMode};
-  const titles={today:['Today',`${WD_FULL[TODAY.getDay()]}, ${MONTHS[TODAY.getMonth()]} ${TODAY.getDate()}`],upcoming:['Upcoming','Tasks with a future due date'],all:['All Tasks',`${tasks.length} tasks · ${stats.done} completed`],calendar:['Calendar',`${MONTHS[monthDate.getMonth()]} ${monthDate.getFullYear()}`],matrix:['Matrix','Eisenhower prioritisation'],review:['Weekly Review','Last 7 days']};
+  const titles={today:['Today',TODAY_LABEL],upcoming:['Upcoming','Tasks with a future due date'],all:['All Tasks',`${tasks.length} tasks · ${stats.done} completed`],calendar:['Calendar',`${MONTHS[monthDate.getMonth()]} ${monthDate.getFullYear()}`],matrix:['Matrix','Eisenhower prioritisation'],review:['Weekly Review','Last 7 days']};
 
   const toggleExpand=id=>setExpandedCats(prev=>({...prev,[id]:!prev[id]}));
 
@@ -1510,22 +1445,26 @@ function AppRoot(){
     refresh:()=>{if(IS_SUPABASE&&sessionRef.current)loadRemote(sessionRef.current.user.id);},
     signOut:async()=>{if(IS_SUPABASE)await sb.auth.signOut();setSession(null);},
     toggleTask:id=>setTasks(ts=>{
+      let spawned=null;
       const n=ts.map(x=>{
         if(x.id!==id)return x;
         const hasSubs=x.subtasks&&x.subtasks.length;
         const isDone=hasSubs?x.subtasks.every(s=>s.done):x.done;
         if(!isDone&&x.recurring&&x.recurring!=='none'){
+          // Mark current instance done, spawn next occurrence
           const newDue=nextRecurDate(x.due||TODAY_STR,x.recurring);
-          if(hasSubs)return{...x,subtasks:x.subtasks.map(s=>({...s,done:false})),done:false,due:newDue};
-          return{...x,done:false,due:newDue};
+          spawned={...x,id:uid(),done:false,due:newDue,subtasks:(x.subtasks||[]).map(s=>({...s,id:uid(),done:false}))};
+          if(hasSubs)return{...x,subtasks:x.subtasks.map(s=>({...s,done:true})),done:true};
+          return{...x,done:true};
         }
         if(hasSubs){const all=x.subtasks.every(s=>s.done);return{...x,subtasks:x.subtasks.map(s=>({...s,done:!all})),done:!all};}
         return{...x,done:!x.done};
       });
-      persist(n);
-      const wasCompleted=n.some((x,i)=>taskDone(x)&&!taskDone(ts[i]||{}));
+      const final=spawned?[...n,spawned]:n;
+      persist(final);
+      const wasCompleted=final.some((x,i)=>taskDone(x)&&!taskDone(ts[i]||{}));
       if(wasCompleted)refreshStreak();
-      return n;
+      return final;
     }),
     toggleSub:(id,sid)=>setTasks(ts=>{const n=ts.map(x=>{if(x.id!==id)return x;const subtasks=x.subtasks.map(s=>s.id===sid?{...s,done:!s.done}:s);return{...x,subtasks,done:subtasks.every(s=>s.done)};});persist(n);return n;}),
     addSub:(id,title)=>setTasks(ts=>{const n=ts.map(x=>x.id===id?{...x,subtasks:[...x.subtasks,{id:uid(),title,due:null,done:false}],done:false}:x);persist(n);return n;}),
