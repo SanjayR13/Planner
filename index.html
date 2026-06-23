@@ -934,13 +934,13 @@ function StudioDashboard({tasks,dark,displayName,accent,onToggleDark,onPickCat,o
       const geminiKey=cfg.GEMINI_API_KEY;
       const anthropicKey=cfg.ANTHROPIC_API_KEY;
       if(geminiKey&&geminiKey.length>10){
-        const resp=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{maxOutputTokens:220,temperature:0.7}})});
+        const resp=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{maxOutputTokens:512,temperature:0.7}})});
         const data=await resp.json();
         if(!resp.ok){throw new Error(`Gemini ${resp.status}`);}
         const text=data.candidates?.[0]?.content?.parts?.[0]?.text||'';
         setAiText(text.trim()||aiOverviewLocal(tasks));
       }else if(anthropicKey&&!anthropicKey.startsWith('YOUR_')){
-        const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':anthropicKey,'anthropic-version':'2023-06-01'},body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:220,messages:[{role:'user',content:prompt}]})});
+        const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':anthropicKey,'anthropic-version':'2023-06-01'},body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:512,messages:[{role:'user',content:prompt}]})});
         const data=await resp.json();
         setAiText((data.content?.[0]?.text||'').trim()||'No overview available.');
       }else{
@@ -964,7 +964,7 @@ function StudioDashboard({tasks,dark,displayName,accent,onToggleDark,onPickCat,o
       const anthropicKey=cfg.ANTHROPIC_API_KEY;
       let p=null,usedApi=false;
       if(geminiKey&&geminiKey.length>10){
-        const resp=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{maxOutputTokens:400,temperature:0.2}})});
+        const resp=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{maxOutputTokens:1024,temperature:0.2,thinkingConfig:{thinkingBudget:0}}})});
         if(!resp.ok){const err=await resp.text();throw new Error(`Gemini ${resp.status}: ${err.slice(0,200)}`);}
         const data=await resp.json();
         const rawText=data.candidates?.[0]?.content?.parts?.[0]?.text||'';
@@ -974,7 +974,7 @@ function StudioDashboard({tasks,dark,displayName,accent,onToggleDark,onPickCat,o
         if(!p.title)throw new Error(`Gemini: missing title field in: ${jsonStr.slice(0,200)}`);
         usedApi=true;
       }else if(anthropicKey&&!anthropicKey.startsWith('YOUR_')){
-        const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':anthropicKey,'anthropic-version':'2023-06-01'},body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:400,messages:[{role:'user',content:prompt}]})});
+        const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':anthropicKey,'anthropic-version':'2023-06-01'},body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:1024,messages:[{role:'user',content:prompt}]})});
         if(!resp.ok){const err=await resp.text();throw new Error(`Anthropic ${resp.status}: ${err.slice(0,200)}`);}
         const data=await resp.json();
         const rawText=data.content?.[0]?.text||'';
@@ -1112,13 +1112,13 @@ function MobileHero({tasks,displayName,onCreateTask}){
     try{
       const geminiKey=cfg.GEMINI_API_KEY;const anthropicKey=cfg.ANTHROPIC_API_KEY;
       if(geminiKey&&geminiKey.length>10){
-        const resp=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{maxOutputTokens:220,temperature:0.7}})});
+        const resp=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{maxOutputTokens:512,temperature:0.7}})});
         const data=await resp.json();
         if(!resp.ok){throw new Error(`Gemini ${resp.status}`);}
         const text=data.candidates?.[0]?.content?.parts?.[0]?.text||'';
         setAiText(text.trim()||aiOverviewLocal(tasks));
       }else if(anthropicKey&&!anthropicKey.startsWith('YOUR_')){
-        const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':anthropicKey,'anthropic-version':'2023-06-01'},body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:220,messages:[{role:'user',content:prompt}]})});
+        const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':anthropicKey,'anthropic-version':'2023-06-01'},body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:512,messages:[{role:'user',content:prompt}]})});
         const data=await resp.json();
         setAiText((data.content?.[0]?.text||'').trim()||'No overview available.');
       }else{
@@ -1141,7 +1141,7 @@ function MobileHero({tasks,displayName,onCreateTask}){
       const geminiKey=cfg.GEMINI_API_KEY;const anthropicKey=cfg.ANTHROPIC_API_KEY;
       let p=null,usedApi=false;
       if(geminiKey&&geminiKey.length>10){
-        const resp=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{maxOutputTokens:400,temperature:0.2}})});
+        const resp=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{maxOutputTokens:1024,temperature:0.2,thinkingConfig:{thinkingBudget:0}}})});
         if(!resp.ok){const err=await resp.text();throw new Error(`Gemini ${resp.status}: ${err.slice(0,200)}`);}
         const data=await resp.json();
         const rawText=data.candidates?.[0]?.content?.parts?.[0]?.text||'';
@@ -1151,7 +1151,7 @@ function MobileHero({tasks,displayName,onCreateTask}){
         if(!p.title)throw new Error(`Gemini: missing title field in: ${jsonStr.slice(0,200)}`);
         usedApi=true;
       }else if(anthropicKey&&!anthropicKey.startsWith('YOUR_')){
-        const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':anthropicKey,'anthropic-version':'2023-06-01'},body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:400,messages:[{role:'user',content:prompt}]})});
+        const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':anthropicKey,'anthropic-version':'2023-06-01'},body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:1024,messages:[{role:'user',content:prompt}]})});
         if(!resp.ok){const err=await resp.text();throw new Error(`Anthropic ${resp.status}: ${err.slice(0,200)}`);}
         const data=await resp.json();
         const rawText=data.content?.[0]?.text||'';
