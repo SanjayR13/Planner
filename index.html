@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-visual"/>
-<script>(function(){function lockH(){document.documentElement.style.setProperty('--app-h',window.innerHeight+'px');}var lw=window.innerWidth;lockH();window.addEventListener('resize',function(){if(window.innerWidth!==lw){lw=window.innerWidth;lockH();}});}());</script>
+<script>(function(){function lockH(){document.documentElement.style.setProperty('--app-h',window.innerHeight+'px');}var lw=window.innerWidth;lockH();window.addEventListener('resize',function(){if(window.innerWidth!==lw){lw=window.innerWidth;lockH();}});})();</script>
 <link rel="icon" type="image/png" href="icon.png"/>
 <link rel="apple-touch-icon" href="icon.png"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
@@ -13,7 +13,7 @@
 <style>
 :root{--font:"Poppins",-apple-system,system-ui,sans-serif;--bg:#FDECD0;--surface:#FFFFFF;--surface-2:#FEF5E4;--line:#F0D8B0;--line-soft:#F7E8CC;--ink:#1A1A2E;--ink-2:#6A6A8A;--ink-3:#9E9EBB;--accent:#1B6B5C;--accent-ink:color-mix(in oklab,var(--accent),black 12%);--accent-soft:color-mix(in oklab,var(--accent) 14%,#FEF5E4);--accent-on:#fff;--amber:#F5A623;--amber-ink:#B07015;--amber-soft:#FEF0D0;--red:#E8543A;--red-ink:#C03020;--red-soft:#FDE8E4;--green:#2BAB7C;--green-soft:#CFF2E6;--blue:#5B7ED4;--blue-soft:#E8EDFA;--r-xs:8px;--r-sm:12px;--r-md:16px;--r-lg:24px;--r-xl:32px;--sh-1:0 2px 8px rgba(160,100,30,.09),0 1px 3px rgba(160,100,30,.05);--sh-2:0 6px 20px rgba(160,100,30,.13),0 2px 8px rgba(160,100,30,.07);--sh-3:0 12px 36px rgba(160,100,30,.18),0 4px 14px rgba(160,100,30,.1);--sh-pop:0 24px 64px rgba(80,45,10,.24),0 8px 24px rgba(80,45,10,.14)}
 .surface.dark{--bg:#1E1A14;--surface:#2A2318;--surface-2:#332B1C;--line:#4A3C2A;--line-soft:#3D3120;--ink:oklch(0.95 0.012 78);--ink-2:oklch(0.74 0.02 75);--ink-3:oklch(0.57 0.02 75);--accent-soft:color-mix(in oklab,var(--accent) 22%,var(--surface));--accent-ink:color-mix(in oklab,var(--accent),white 36%);--amber-soft:#3A2C10;--red-soft:#3A1814;--green-soft:#143020;--blue-soft:#1C2440;--sh-1:0 2px 8px rgba(0,0,0,.35);--sh-2:0 6px 20px rgba(0,0,0,.5);--sh-3:0 14px 38px rgba(0,0,0,.65);--sh-pop:0 30px 72px rgba(0,0,0,.75)}
-*{box-sizing:border-box;margin:0;padding:0}html,body,#root{height:100%}body{background:oklch(0.976 0.0015 250)}body.dark{background:oklch(0.04 0 0)}
+*{box-sizing:border-box;margin:0;padding:0}html,body,#root{height:100%;overflow:hidden}body{background:oklch(0.976 0.0015 250);position:fixed;width:100%}body.dark{background:oklch(0.04 0 0)}
 .surface{font-family:var(--font);color:var(--ink);background:var(--bg);height:100%;width:100%;display:flex;-webkit-font-smoothing:antialiased;position:relative;overflow:hidden}
 .surface,.surface *{font-family:var(--font)}
 button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
