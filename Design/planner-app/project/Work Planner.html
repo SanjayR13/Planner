@@ -1,0 +1,2823 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Work Planner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700;800&family=Poppins:wght@400;500;600;700;800&family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600;1,700&family=Space+Grotesk:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet" />
+<style>
+/* ============================================================
+   Planner — design tokens & component styles
+   Clean & modern, subtle pastels. Light + dark.
+   ============================================================ */
+
+:root {
+  /* type */
+  --font: "Roboto", -apple-system, system-ui, sans-serif;
+
+  /* neutral ramp — warm beige, pastel */
+  --bg:        oklch(0.955 0.013 79);
+  --surface:   oklch(0.99 0.007 80);
+  --surface-2: oklch(0.945 0.014 78);
+  --line:      oklch(0.885 0.016 76);
+  --line-soft: oklch(0.915 0.014 77);
+  --ink:       oklch(0.32 0.022 72);
+  --ink-2:     oklch(0.49 0.022 72);
+  --ink-3:     oklch(0.63 0.02 73);
+
+  /* accent — only --accent is set at runtime; rest derived */
+  --accent:      #6C72E0;
+  --accent-ink:  color-mix(in oklab, var(--accent), black 26%);
+  --accent-soft: color-mix(in oklab, var(--accent) 16%, oklch(0.975 0.012 82));
+  --accent-on:   #fff;
+
+  /* status */
+  --amber:       oklch(0.78 0.115 70);
+  --amber-ink:   oklch(0.54 0.11 58);
+  --amber-soft:  oklch(0.93 0.055 78);
+  --red:         oklch(0.66 0.16 22);
+  --red-ink:     oklch(0.54 0.17 22);
+  --red-soft:    oklch(0.93 0.045 26);
+  --green:       oklch(0.7 0.1 150);
+  --green-soft:  oklch(0.93 0.05 150);
+
+  /* radii */
+  --r-xs: 7px;
+  --r-sm: 10px;
+  --r-md: 14px;
+  --r-lg: 20px;
+  --r-xl: 26px;
+
+  /* shadow */
+  --sh-1: 0 1px 2px rgba(30,32,60,0.05), 0 1px 3px rgba(30,32,60,0.04);
+  --sh-2: 0 2px 6px rgba(30,32,60,0.06), 0 6px 18px rgba(30,32,60,0.06);
+  --sh-3: 0 12px 30px rgba(30,32,60,0.12), 0 4px 10px rgba(30,32,60,0.06);
+  --sh-pop: 0 24px 60px rgba(20,22,50,0.22), 0 6px 16px rgba(20,22,50,0.12);
+}
+
+.surface.dark {
+  --bg:        oklch(0.21 0.012 275);
+  --surface:   oklch(0.255 0.014 275);
+  --surface-2: oklch(0.29 0.014 275);
+  --line:      oklch(0.34 0.014 275);
+  --line-soft: oklch(0.31 0.012 275);
+  --ink:       oklch(0.95 0.01 275);
+  --ink-2:     oklch(0.76 0.015 275);
+  --ink-3:     oklch(0.6 0.015 275);
+  --accent-soft: color-mix(in oklab, var(--accent) 24%, var(--surface));
+  --accent-ink:  color-mix(in oklab, var(--accent), white 38%);
+  --amber-soft:  oklch(0.36 0.06 75);
+  --red-soft:    oklch(0.35 0.08 25);
+  --green-soft:  oklch(0.34 0.05 155);
+  --sh-1: 0 1px 2px rgba(0,0,0,0.3);
+  --sh-2: 0 2px 8px rgba(0,0,0,0.35);
+  --sh-3: 0 14px 34px rgba(0,0,0,0.5);
+  --sh-pop: 0 30px 70px rgba(0,0,0,0.6);
+}
+
+* { box-sizing: border-box; }
+
+.surface {
+  font-family: var(--font);
+  color: var(--ink);
+  background: var(--bg);
+  height: 100%;
+  width: 100%;
+  display: flex;
+  -webkit-font-smoothing: antialiased;
+  position: relative;
+  overflow: hidden;
+}
+.surface, .surface * { font-family: var(--font); }
+
+button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+input, textarea, select { font-family: inherit; }
+
+/* ---------- scrollbars ---------- */
+.scroll { overflow-y: auto; overflow-x: hidden; }
+.scroll::-webkit-scrollbar { width: 10px; height: 10px; }
+.scroll::-webkit-scrollbar-thumb { background: var(--line); border-radius: 99px; border: 3px solid transparent; background-clip: content-box; }
+.scroll::-webkit-scrollbar-thumb:hover { background: var(--ink-3); background-clip: content-box; }
+
+/* ============================================================
+   DESKTOP shell — sidebar + main
+   ============================================================ */
+.desktop .sidebar {
+  width: 248px;
+  flex-shrink: 0;
+  background: var(--surface);
+  border-right: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  padding: 22px 14px 16px;
+  gap: 4px;
+}
+.brand { display: flex; align-items: center; gap: 11px; padding: 2px 10px 18px; }
+.brand-mark {
+  width: 32px; height: 32px; border-radius: 9px;
+  background: var(--accent); color: var(--accent-on);
+  display: grid; place-items: center; flex-shrink: 0;
+  box-shadow: var(--sh-1);
+}
+.brand-name { font-weight: 700; font-size: 17px; letter-spacing: -0.02em; white-space: nowrap; }
+.brand-sub { font-size: 11.5px; color: var(--ink-3); font-weight: 500; margin-top: 1px; white-space: nowrap; }
+
+.nav-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 9px 11px; border-radius: var(--r-sm);
+  font-size: 14.5px; font-weight: 550; color: var(--ink-2);
+  text-align: left; width: 100%; transition: background .12s, color .12s;
+}
+.nav-item svg { width: 19px; height: 19px; }
+.nav-item:hover { background: var(--surface-2); color: var(--ink); }
+.nav-item.active { background: var(--accent-soft); color: var(--accent-ink); }
+.nav-item .count { margin-left: auto; font-size: 12px; font-weight: 600; color: var(--ink-3); }
+.nav-item.active .count { color: var(--accent-ink); }
+
+.nav-label { font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-3); padding: 16px 11px 6px; }
+
+.cat-row { display: flex; align-items: center; gap: 11px; padding: 8px 11px; border-radius: var(--r-sm); font-size: 14px; font-weight: 550; color: var(--ink-2); width: 100%; text-align: left; }
+.cat-row:hover { background: var(--surface-2); }
+.cat-row.active { background: var(--surface-2); color: var(--ink); }
+.cat-dot { width: 11px; height: 11px; border-radius: 4px; flex-shrink: 0; }
+.cat-row .count { margin-left: auto; font-size: 12px; color: var(--ink-3); font-weight: 600; }
+
+.sidebar-foot { margin-top: auto; display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: var(--r-md); background: var(--surface-2); }
+.avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--accent); color: var(--accent-on); display: grid; place-items: center; font-weight: 700; font-size: 13px; flex-shrink: 0; }
+
+.main { flex: 1; min-width: 0; display: flex; flex-direction: column; background: var(--bg); }
+
+/* ---------- topbar ---------- */
+.topbar { display: flex; align-items: center; gap: 14px; padding: 20px 30px 14px; }
+.page-title { font-size: 25px; font-weight: 700; letter-spacing: -0.025em; }
+.page-sub { font-size: 13px; color: var(--ink-3); font-weight: 500; margin-top: 2px; white-space: nowrap; }
+.topbar-spacer { flex: 1; }
+
+.search {
+  display: flex; align-items: center; gap: 9px;
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--r-md); padding: 8px 13px; width: 240px;
+  color: var(--ink-3);
+}
+.search input { border: none; background: none; outline: none; flex: 1; font-size: 13.5px; color: var(--ink); min-width: 0; }
+.search input::placeholder { color: var(--ink-3); }
+
+.icon-btn {
+  width: 38px; height: 38px; border-radius: var(--r-md);
+  display: grid; place-items: center; color: var(--ink-2);
+  background: var(--surface); border: 1px solid var(--line);
+  transition: background .12s, color .12s;
+}
+.icon-btn:hover { background: var(--surface-2); color: var(--ink); }
+.icon-btn svg { width: 18px; height: 18px; }
+
+.btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 9px 15px; border-radius: var(--r-md);
+  font-size: 14px; font-weight: 600; transition: transform .08s, filter .12s, background .12s;
+}
+.btn:active { transform: translateY(1px); }
+.btn { white-space: nowrap; }
+.btn-primary { background: var(--accent); color: var(--accent-on); box-shadow: var(--sh-1); }
+.btn-primary:hover { filter: brightness(1.05); }
+.btn-ghost { background: var(--surface); border: 1px solid var(--line); color: var(--ink); }
+.btn-ghost:hover { background: var(--surface-2); }
+.btn svg { width: 16px; height: 16px; }
+
+/* ---------- toolbar (filters/sort) ---------- */
+.toolbar { display: flex; align-items: center; gap: 10px; padding: 6px 30px 14px; flex-wrap: wrap; }
+.seg { display: inline-flex; background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--r-md); padding: 3px; gap: 2px; }
+.seg button { padding: 6px 13px; border-radius: 9px; font-size: 13px; font-weight: 600; color: var(--ink-2); display: inline-flex; align-items: center; gap: 6px; transition: color .12s; }
+.seg button svg { width: 15px; height: 15px; }
+.seg button.on { background: var(--surface); color: var(--ink); box-shadow: var(--sh-1); }
+.chip-toggle { padding: 7px 13px; border-radius: 99px; font-size: 13px; font-weight: 600; color: var(--ink-2); background: var(--surface); border: 1px solid var(--line); }
+.chip-toggle.on { background: var(--accent-soft); color: var(--accent-ink); border-color: transparent; }
+
+.content { flex: 1; min-height: 0; }
+.content-pad { padding: 4px 30px 40px; }
+
+/* ============================================================
+   TASK CARD / ROW
+   ============================================================ */
+.task-group-head { display: flex; align-items: center; gap: 9px; margin: 22px 2px 11px; }
+.task-group-head:first-child { margin-top: 6px; }
+.task-group-title { font-size: 13px; font-weight: 700; letter-spacing: 0.02em; color: var(--ink-2); }
+.task-group-count { font-size: 12px; font-weight: 600; color: var(--ink-3); background: var(--surface-2); padding: 1px 9px; border-radius: 99px; }
+.task-group-line { flex: 1; height: 1px; background: var(--line-soft); }
+
+.tasklist { display: flex; flex-direction: column; gap: 10px; }
+.tasklist.rows { gap: 0; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); overflow: hidden; box-shadow: var(--sh-1); }
+
+/* desktop: lay cards/grouped lists out in two columns */
+.desktop .tasklist:not(.rows) {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: 12px;
+}
+@media (max-width: 840px) {
+  .desktop .tasklist:not(.rows) { grid-template-columns: 1fr; }
+}
+
+.task {
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--r-lg); padding: 15px 17px;
+  box-shadow: var(--sh-1); transition: box-shadow .14s, border-color .14s, transform .08s;
+  position: relative;
+}
+.task:hover { box-shadow: var(--sh-2); border-color: var(--line); }
+.rows .task { border-radius: 0; border: none; border-bottom: 1px solid var(--line-soft); box-shadow: none; padding: 14px 18px; }
+.rows .task:last-child { border-bottom: none; }
+.rows .task:hover { background: var(--surface-2); box-shadow: none; }
+.task.done { opacity: 0.62; }
+.task.overdue { border-left: 3px solid var(--red); }
+.task.due-soon { border-left: 3px solid var(--amber); }
+.rows .task.overdue, .rows .task.due-soon { border-left-width: 3px; border-left-style: solid; }
+
+.task-main { display: flex; align-items: flex-start; gap: 13px; }
+
+/* round checkbox */
+.check {
+  width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0; margin-top: 1px;
+  border: 2px solid var(--line); background: var(--surface);
+  display: grid; place-items: center; color: #fff; transition: background .14s, border-color .14s, transform .1s;
+}
+.check svg { width: 13px; height: 13px; opacity: 0; transform: scale(0.5); transition: opacity .12s, transform .14s; }
+.check:hover { border-color: var(--accent); }
+.check.on { background: var(--green); border-color: var(--green); }
+.check.on svg { opacity: 1; transform: scale(1); }
+.check.sm { width: 18px; height: 18px; }
+.check.sm svg { width: 11px; height: 11px; }
+
+.task-body { flex: 1; min-width: 0; }
+.task-titlerow { display: flex; align-items: center; gap: 9px; }
+.task-title { font-size: 15px; font-weight: 600; letter-spacing: -0.01em; line-height: 1.35; color: var(--ink); }
+.task.done .task-title { text-decoration: line-through; text-decoration-color: var(--ink-3); }
+.task-notes { font-size: 13px; color: var(--ink-3); margin-top: 3px; line-height: 1.45; }
+
+.meta-row { display: flex; align-items: center; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+
+.chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 3px 9px; border-radius: 99px; font-size: 11.5px; font-weight: 650;
+}
+.chip svg { width: 12px; height: 12px; }
+.chip-cat { /* colors injected inline */ }
+.chip-date { background: var(--surface-2); color: var(--ink-2); }
+.chip-date.due-soon { background: var(--amber-soft); color: var(--amber-ink); }
+.chip-date.overdue { background: var(--red-soft); color: var(--red-ink); }
+.chip-attach { background: var(--surface-2); color: var(--ink-2); }
+.chip-recur { background: var(--surface-2); color: var(--ink-2); }
+
+.flag { width: 8px; height: 8px; border-radius: 2.5px; flex-shrink: 0; }
+.flag.high { background: var(--red); }
+.flag.med  { background: var(--amber); }
+.flag.low  { background: var(--ink-3); }
+.flag-pill { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 650; color: var(--ink-2); }
+
+/* progress */
+.progress { display: flex; align-items: center; gap: 9px; margin-top: 11px; }
+.bar { flex: 1; height: 6px; border-radius: 99px; background: var(--surface-2); overflow: hidden; }
+.bar > span { display: block; height: 100%; border-radius: 99px; background: var(--accent); transition: width .35s cubic-bezier(.4,0,.2,1); }
+.bar.full > span { background: var(--green); }
+.progress-num { font-size: 11.5px; font-weight: 650; color: var(--ink-3); min-width: 30px; text-align: right; }
+
+/* subtasks */
+.subtasks { margin-top: 12px; padding-top: 11px; border-top: 1px dashed var(--line); display: flex; flex-direction: column; gap: 2px; margin-left: 35px; }
+.subtask { display: flex; align-items: center; gap: 10px; padding: 5px 0; }
+.subtask-title { font-size: 13.5px; color: var(--ink-2); flex: 1; }
+.subtask.done .subtask-title { text-decoration: line-through; color: var(--ink-3); }
+.subtask-date { font-size: 11px; font-weight: 600; color: var(--ink-3); }
+.subtask-date.due-soon { color: var(--amber-ink); }
+.subtask-date.overdue { color: var(--red-ink); }
+.subtask-toggle { display: inline-flex; align-items: center; gap: 6px; margin-top: 9px; margin-left: 35px; font-size: 12.5px; font-weight: 600; color: var(--accent-ink); }
+.subtask-toggle svg { width: 14px; height: 14px; transition: transform .18s; }
+.subtask-toggle.open svg { transform: rotate(90deg); }
+.add-sub { display: inline-flex; align-items: center; gap: 7px; font-size: 12.5px; color: var(--ink-3); font-weight: 600; padding: 5px 0; margin-left: 0; }
+.add-sub:hover { color: var(--accent-ink); }
+
+.task-actions { display: flex; gap: 3px; align-items: center; opacity: 0; transition: opacity .12s; }
+.task:hover .task-actions { opacity: 1; }
+.mini-btn { width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center; color: var(--ink-3); }
+.mini-btn:hover { background: var(--surface-2); color: var(--ink); }
+.mini-btn svg { width: 16px; height: 16px; }
+
+/* ============================================================
+   CALENDAR
+   ============================================================ */
+.cal-head { display: flex; align-items: center; gap: 14px; padding: 4px 30px 16px; }
+.cal-month { font-size: 21px; font-weight: 700; letter-spacing: -0.02em; min-width: 178px; }
+.cal-nav { display: flex; gap: 6px; }
+
+.cal-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 0; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); overflow: hidden; box-shadow: var(--sh-1); }
+.cal-dow { padding: 11px 12px; font-size: 11.5px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink-3); border-bottom: 1px solid var(--line); text-align: left; }
+.cal-cell { min-width: 0; min-height: 116px; border-right: 1px solid var(--line-soft); border-bottom: 1px solid var(--line-soft); padding: 8px; display: flex; flex-direction: column; gap: 5px; position: relative; transition: background .12s; }
+.cal-cell:nth-child(7n) { border-right: none; }
+.cal-cell.out { background: var(--surface-2); }
+.cal-cell:hover { background: var(--surface-2); }
+.cal-daynum { font-size: 13px; font-weight: 650; color: var(--ink-2); width: 25px; height: 25px; display: grid; place-items: center; border-radius: 50%; }
+.cal-cell.out .cal-daynum { color: var(--ink-3); }
+.cal-cell.today .cal-daynum { background: var(--accent); color: var(--accent-on); }
+.cal-event { font-size: 11.5px; font-weight: 600; padding: 3px 7px; border-radius: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 5px; line-height: 1.3; }
+.cal-event .ev-dot { width: 6px; height: 6px; border-radius: 2px; flex-shrink: 0; }
+.cal-event.done { opacity: 0.5; text-decoration: line-through; }
+.cal-event.overdue { background: var(--red-soft); color: var(--red-ink); }
+.cal-more { font-size: 10.5px; font-weight: 600; color: var(--ink-3); padding-left: 7px; }
+
+/* agenda */
+.agenda { display: flex; flex-direction: column; gap: 2px; }
+.agenda-day { display: flex; gap: 18px; padding: 14px 0; border-bottom: 1px solid var(--line-soft); }
+.agenda-date { width: 86px; flex-shrink: 0; text-align: right; }
+.agenda-dow { font-size: 12px; font-weight: 650; color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.03em; }
+.agenda-num { font-size: 27px; font-weight: 700; letter-spacing: -0.03em; line-height: 1; margin-top: 3px; }
+.agenda-day.today .agenda-num { color: var(--accent-ink); }
+.agenda-items { flex: 1; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+
+/* timeline */
+.timeline { display: flex; flex-direction: column; }
+.tl-row { display: grid; grid-template-columns: 92px 1fr; gap: 16px; padding: 7px 0; align-items: center; }
+.tl-label { text-align: right; font-size: 12.5px; font-weight: 650; color: var(--ink-3); }
+.tl-track { position: relative; height: 34px; background: var(--surface-2); border-radius: 99px; }
+.tl-bar { position: absolute; top: 5px; height: 24px; border-radius: 99px; display: flex; align-items: center; padding: 0 12px; font-size: 12px; font-weight: 650; color: #fff; white-space: nowrap; overflow: hidden; box-shadow: var(--sh-1); }
+.tl-scale { display: grid; grid-template-columns: 92px 1fr; gap: 16px; padding-bottom: 8px; border-bottom: 1px solid var(--line); margin-bottom: 6px; }
+.tl-scale-inner { display: flex; justify-content: space-between; font-size: 11px; font-weight: 600; color: var(--ink-3); }
+
+/* ============================================================
+   STATS row
+   ============================================================ */
+.stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; padding: 4px 30px 8px; }
+.stat { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md); padding: 14px 16px; box-shadow: var(--sh-1); }
+.stat-num { font-size: 26px; font-weight: 700; letter-spacing: -0.03em; line-height: 1; }
+.stat-label { font-size: 12px; color: var(--ink-3); font-weight: 600; margin-top: 6px; }
+.stat.amber .stat-num { color: var(--amber-ink); }
+.stat.red .stat-num { color: var(--red-ink); }
+.stat.green .stat-num { color: var(--green); }
+
+/* ============================================================
+   MODAL / editor
+   ============================================================ */
+.scrim { position: absolute; inset: 0; background: rgba(20,22,45,0.42); backdrop-filter: blur(3px); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 24px; animation: fade .15s ease; }
+.mobile .scrim { align-items: flex-end; padding: 0; }
+@keyframes fade { from { opacity: 0; } }
+@keyframes pop { from { opacity: 0; transform: translateY(10px) scale(.98); } }
+@keyframes sheet { from { transform: translateY(100%); } }
+
+.modal { background: var(--surface); border-radius: var(--r-xl); width: 540px; max-width: 100%; max-height: 90%; display: flex; flex-direction: column; box-shadow: var(--sh-pop); animation: pop .18s cubic-bezier(.2,.7,.3,1); overflow: hidden; }
+.mobile .modal { width: 100%; border-radius: 26px 26px 0 0; max-height: 92%; animation: sheet .26s cubic-bezier(.2,.7,.3,1); }
+.modal-head { display: flex; align-items: center; gap: 12px; padding: 18px 20px; border-bottom: 1px solid var(--line); }
+.modal-head h3 { font-size: 17px; font-weight: 700; letter-spacing: -0.02em; flex: 1; }
+.modal-body { padding: 18px 20px; gap: 16px; display: flex; flex-direction: column; }
+.modal-foot { padding: 14px 20px; border-top: 1px solid var(--line); display: flex; gap: 10px; justify-content: space-between; align-items: center; }
+
+.field { display: flex; flex-direction: column; gap: 7px; }
+.field-label { font-size: 12px; font-weight: 700; color: var(--ink-2); letter-spacing: 0.01em; }
+.input, .textarea, .select {
+  width: 100%; background: var(--surface-2); border: 1.5px solid var(--line);
+  border-radius: var(--r-md); padding: 11px 13px; font-size: 14.5px; color: var(--ink);
+  outline: none; transition: border-color .12s, background .12s;
+}
+.input::placeholder, .textarea::placeholder { color: var(--ink-3); }
+.input:focus, .textarea:focus, .select:focus { border-color: var(--accent); background: var(--surface); }
+.input.title-input { font-size: 17px; font-weight: 600; }
+.textarea { resize: none; min-height: 60px; line-height: 1.5; }
+.field-row { display: flex; gap: 12px; }
+.field-row > .field { flex: 1; }
+
+.opt-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.opt {
+  padding: 8px 13px; border-radius: var(--r-md); font-size: 13px; font-weight: 600;
+  background: var(--surface-2); border: 1.5px solid var(--line); color: var(--ink-2);
+  display: inline-flex; align-items: center; gap: 7px;
+}
+.opt:hover { border-color: var(--ink-3); }
+.opt.on { border-color: var(--accent); background: var(--accent-soft); color: var(--accent-ink); }
+.opt .flag { width: 9px; height: 9px; }
+.opt .cat-dot { width: 9px; height: 9px; }
+
+.sub-edit { display: flex; align-items: center; gap: 10px; padding: 8px 11px; border-radius: var(--r-sm); background: var(--surface-2); }
+.sub-edit input { flex: 1; border: none; background: none; outline: none; font-size: 14px; color: var(--ink); }
+.sub-edit .sub-date-btn { font-size: 11.5px; font-weight: 600; color: var(--ink-3); padding: 4px 8px; border-radius: 7px; background: var(--surface); border: 1px solid var(--line); }
+.sub-edit .sub-date-btn.set { color: var(--accent-ink); }
+
+.attach-list { display: flex; flex-direction: column; gap: 8px; }
+.attach { display: flex; align-items: center; gap: 11px; padding: 10px 12px; border-radius: var(--r-md); background: var(--surface-2); border: 1px solid var(--line); }
+.attach-ic { width: 34px; height: 34px; border-radius: 9px; display: grid; place-items: center; flex-shrink: 0; }
+.attach-ic.file { background: var(--accent-soft); color: var(--accent-ink); }
+.attach-ic.link { background: var(--green-soft); color: var(--green); }
+.attach-ic.image { background: var(--amber-soft); color: var(--amber-ink); }
+.attach-ic svg { width: 17px; height: 17px; }
+.attach-name { font-size: 13.5px; font-weight: 600; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.attach-meta { font-size: 11.5px; color: var(--ink-3); }
+.add-attach-row { display: flex; gap: 8px; }
+
+/* image placeholder (striped) */
+.img-ph { border-radius: var(--r-md); border: 1px solid var(--line); background-color: var(--surface-2);
+  background-image: repeating-linear-gradient(45deg, transparent, transparent 9px, var(--line-soft) 9px, var(--line-soft) 18px);
+  display: grid; place-items: center; color: var(--ink-3); font-family: ui-monospace, monospace; font-size: 11px; }
+
+/* ============================================================
+   MOBILE shell
+   ============================================================ */
+.mobile { flex-direction: column; background: var(--bg); }
+.m-header { padding: max(env(safe-area-inset-top), 18px) 18px 10px; display: flex; align-items: flex-end; gap: 12px; }
+.m-title { font-size: 28px; font-weight: 700; letter-spacing: -0.03em; line-height: 1.05; white-space: nowrap; }
+.m-sub { font-size: 12.5px; color: var(--ink-3); font-weight: 500; margin-top: 3px; white-space: nowrap; }
+.m-header-spacer { flex: 1; }
+.m-content { flex: 1; min-height: 0; padding: 0 16px 12px; }
+.m-search { display: flex; align-items: center; gap: 9px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md); padding: 10px 13px; margin: 0 16px 12px; color: var(--ink-3); }
+.m-search input { border: none; background: none; outline: none; flex: 1; font-size: 14px; color: var(--ink); min-width: 0; }
+
+.m-filters { display: flex; gap: 8px; padding: 0 16px 12px; overflow-x: auto; }
+.m-filters::-webkit-scrollbar { display: none; }
+.m-chip { padding: 7px 14px; border-radius: 99px; font-size: 13px; font-weight: 600; white-space: nowrap; background: var(--surface); border: 1px solid var(--line); color: var(--ink-2); display: inline-flex; align-items: center; gap: 7px; flex-shrink: 0; }
+.m-chip.on { background: var(--accent-soft); color: var(--accent-ink); border-color: transparent; }
+.m-chip .cat-dot { width: 9px; height: 9px; }
+
+/* mobile stat strip */
+.m-stats { display: flex; gap: 9px; padding: 0 16px 14px; }
+.m-stat { flex: 1; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md); padding: 11px 12px; box-shadow: var(--sh-1); }
+.m-stat-num { font-size: 21px; font-weight: 700; letter-spacing: -0.03em; line-height: 1; }
+.m-stat-label { font-size: 10.5px; color: var(--ink-3); font-weight: 600; margin-top: 5px; }
+.m-stat.amber .m-stat-num { color: var(--amber-ink); }
+.m-stat.red .m-stat-num { color: var(--red-ink); }
+
+/* bottom tabbar */
+.tabbar { display: flex; padding: 8px 14px max(env(safe-area-inset-bottom), 14px); background: var(--surface); border-top: 1px solid var(--line); gap: 4px; position: relative; flex-shrink: 0; }
+.tab { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 6px 0; color: var(--ink-3); font-size: 10.5px; font-weight: 650; }
+.tab svg { width: 23px; height: 23px; }
+.tab.active { color: var(--accent-ink); }
+.fab-wrap { position: absolute; top: -28px; left: 50%; transform: translateX(-50%); }
+.fab { width: 56px; height: 56px; border-radius: 50%; background: var(--accent); color: var(--accent-on); display: grid; place-items: center; box-shadow: var(--sh-3); transition: transform .1s; }
+.fab:active { transform: scale(0.94); }
+.fab svg { width: 26px; height: 26px; }
+
+/* mobile calendar tweaks */
+.mobile .cal-cell { min-height: 0; aspect-ratio: 1; padding: 4px; align-items: center; gap: 2px; }
+.mobile .cal-daynum { font-size: 12px; width: 26px; height: 26px; }
+.mobile .cal-dots { display: flex; gap: 3px; }
+.mobile .cal-dots .ev-dot { width: 5px; height: 5px; border-radius: 99px; }
+.mobile .cal-dow { padding: 8px 0; text-align: center; font-size: 10px; }
+
+/* empty state */
+.empty { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 20px; text-align: center; color: var(--ink-3); gap: 12px; }
+.empty-ic { width: 56px; height: 56px; border-radius: 18px; background: var(--surface-2); display: grid; place-items: center; color: var(--ink-3); }
+.empty-ic svg { width: 26px; height: 26px; }
+.empty h4 { font-size: 16px; font-weight: 650; color: var(--ink-2); }
+.empty p { font-size: 13.5px; max-width: 280px; line-height: 1.5; }
+
+/* day detail popover for calendar */
+.day-detail { position: absolute; z-index: 100; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); box-shadow: var(--sh-pop); width: 280px; padding: 14px; }
+.day-detail h4 { font-size: 14px; font-weight: 700; margin-bottom: 10px; }
+
+/* ============================================================
+   SHOWCASE stage (side-by-side frames)
+   ============================================================ */
+.stage { position: fixed; inset: 0; background:
+   radial-gradient(1200px 700px at 20% -10%, oklch(0.94 0.03 120), transparent),
+   radial-gradient(1000px 600px at 100% 110%, oklch(0.94 0.035 70), transparent),
+   oklch(0.945 0.014 80);
+  overflow: auto; }
+.stage-inner { min-height: 100%; display: flex; align-items: center; justify-content: center; padding: 40px; transform-origin: center center; }
+.frames { display: flex; align-items: center; gap: 56px; }
+.frame-wrap { display: flex; flex-direction: column; align-items: center; gap: 16px; }
+.frame-label { font-size: 13px; font-weight: 650; color: oklch(0.45 0.02 270); letter-spacing: 0.01em; display: flex; align-items: center; gap: 8px; }
+.frame-label .dotpair { display: flex; gap: 4px; }
+.frame-label .dotpair i { width: 7px; height: 7px; border-radius: 99px; background: oklch(0.7 0.02 270); }
+
+.stage-hint { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); font-size: 12px; color: oklch(0.5 0.02 270); background: rgba(255,255,255,0.7); backdrop-filter: blur(6px); padding: 7px 15px; border-radius: 99px; font-weight: 550; box-shadow: var(--sh-1); z-index: 10; }
+
+/* ============================================================
+   SKINS — alternate design directions (toggle via Tweaks)
+   skin-sage = default look, no overrides needed.
+   ============================================================ */
+
+/* ---------- Paper · journal: serif, cream, ruled, flat ---------- */
+.surface.skin-paper {
+  --font: "Lora", Georgia, serif;
+  --r-xs: 4px; --r-sm: 6px; --r-md: 8px; --r-lg: 10px; --r-xl: 14px;
+  --sh-1: none; --sh-2: 0 2px 8px rgba(80,60,20,0.07);
+}
+.surface.skin-paper:not(.dark) {
+  --bg:        oklch(0.962 0.024 92);
+  --surface:   oklch(0.985 0.013 95);
+  --surface-2: oklch(0.945 0.024 90);
+  --line:      oklch(0.868 0.03 85);
+  --line-soft: oklch(0.905 0.026 88);
+  --ink:       oklch(0.3 0.038 65);
+  --ink-2:     oklch(0.46 0.036 65);
+  --ink-3:     oklch(0.6 0.03 68);
+  --accent-soft: color-mix(in oklab, var(--accent) 15%, oklch(0.97 0.02 92));
+}
+.surface.skin-paper.dark {
+  --bg:        oklch(0.215 0.018 75);
+  --surface:   oklch(0.26 0.02 75);
+  --surface-2: oklch(0.295 0.02 75);
+  --line:      oklch(0.35 0.02 75);
+  --line-soft: oklch(0.32 0.018 75);
+}
+.skin-paper .page-title, .skin-paper .m-title, .skin-paper .cal-month,
+.skin-paper .brand-name, .skin-paper .agenda-num, .skin-paper .modal-head h3,
+.skin-paper .stat-num, .skin-paper .m-stat-num { font-style: italic; letter-spacing: 0; }
+.skin-paper .nav-label, .skin-paper .task-group-title { letter-spacing: 0.09em; }
+.skin-paper .task, .skin-paper .stat, .skin-paper .m-stat, .skin-paper .cal-grid, .skin-paper .tasklist.rows { box-shadow: none; }
+.skin-paper .subtasks { border-top-style: dotted; }
+.skin-paper .check { border-radius: 50%; }
+
+/* ---------- Editorial · inky, sharp, print-like ---------- */
+.surface.skin-editorial {
+  --font: "Space Grotesk", sans-serif;
+  --r-xs: 2px; --r-sm: 3px; --r-md: 5px; --r-lg: 7px; --r-xl: 10px;
+  --sh-1: none;
+  --sh-2: 3px 3px 0 color-mix(in oklab, var(--ink) 14%, transparent);
+  --sh-3: 5px 5px 0 color-mix(in oklab, var(--ink) 16%, transparent);
+}
+.surface.skin-editorial:not(.dark) {
+  --bg:        oklch(0.972 0.008 85);
+  --surface:   oklch(0.995 0.004 90);
+  --surface-2: oklch(0.955 0.008 85);
+  --line:      oklch(0.79 0.014 80);
+  --line-soft: oklch(0.885 0.012 82);
+  --ink:       oklch(0.23 0.014 75);
+  --ink-2:     oklch(0.42 0.016 75);
+  --ink-3:     oklch(0.58 0.016 76);
+}
+.surface.skin-editorial.dark {
+  --bg:        oklch(0.2 0.005 80);
+  --surface:   oklch(0.245 0.006 80);
+  --surface-2: oklch(0.285 0.006 80);
+  --line:      oklch(0.38 0.006 80);
+  --line-soft: oklch(0.32 0.006 80);
+}
+.skin-editorial .page-title, .skin-editorial .m-title, .skin-editorial .cal-month, .skin-editorial .brand-name { text-transform: uppercase; letter-spacing: 0.02em; }
+.skin-editorial .chip, .skin-editorial .chip-toggle, .skin-editorial .m-chip, .skin-editorial .task-group-count { border-radius: 4px; }
+.skin-editorial .check, .skin-editorial .cal-daynum { border-radius: 6px; }
+.skin-editorial .check.sm { border-radius: 5px; }
+.skin-editorial .task:hover { transform: translate(-1px, -1px); }
+.skin-editorial .btn-primary { box-shadow: 2px 2px 0 color-mix(in oklab, var(--ink) 30%, transparent); }
+.skin-editorial .fab { border-radius: 16px; box-shadow: 3px 3px 0 color-mix(in oklab, var(--ink) 25%, transparent); }
+.skin-editorial .bar, .skin-editorial .bar > span { border-radius: 2px; }
+
+/* ---------- Candy · blush pastel, extra round, chunky ---------- */
+.surface.skin-candy {
+  --font: "Nunito", sans-serif;
+  --r-xs: 10px; --r-sm: 13px; --r-md: 17px; --r-lg: 24px; --r-xl: 32px;
+}
+.surface.skin-candy:not(.dark) {
+  --bg:        oklch(0.962 0.021 345);
+  --surface:   oklch(0.995 0.005 340);
+  --surface-2: oklch(0.953 0.019 342);
+  --line:      oklch(0.89 0.026 340);
+  --line-soft: oklch(0.92 0.022 340);
+  --ink:       oklch(0.33 0.045 330);
+  --ink-2:     oklch(0.5 0.04 330);
+  --ink-3:     oklch(0.64 0.032 332);
+  --accent-soft: color-mix(in oklab, var(--accent) 15%, oklch(0.975 0.012 345));
+}
+.surface.skin-candy.dark {
+  --bg:        oklch(0.215 0.022 330);
+  --surface:   oklch(0.26 0.024 330);
+  --surface-2: oklch(0.295 0.024 330);
+  --line:      oklch(0.35 0.024 330);
+  --line-soft: oklch(0.32 0.022 330);
+}
+.skin-candy .task { border-width: 1.5px; }
+.skin-candy .task-title, .skin-candy .btn, .skin-candy .chip, .skin-candy .nav-item, .skin-candy .tab { font-weight: 700; }
+.skin-candy .check { border-width: 2.5px; }
+.skin-candy .brand-mark { border-radius: 12px; }
+.skin-candy .bar { height: 8px; }
+.skin-candy .avatar, .skin-candy .cat-dot { border-radius: 50%; }
+
+/* ============================================================
+   Studio · card-based, rounded, friendly (reference look)
+   warm cream base, soft peach hero, circular progress rings
+   ============================================================ */
+.surface.skin-studio {
+  --font: "Poppins", -apple-system, system-ui, sans-serif;
+  --r-xs: 9px; --r-sm: 12px; --r-md: 15px; --r-lg: 20px; --r-xl: 26px;
+  --sh-1: 0 1px 2px rgba(18,24,38,0.05), 0 1px 3px rgba(18,24,38,0.05);
+  --sh-2: 0 2px 4px rgba(18,24,38,0.04), 0 6px 16px rgba(18,24,38,0.08);
+  --sh-3: 0 12px 32px rgba(18,24,38,0.12);
+  --sh-pop: 0 24px 60px rgba(18,24,38,0.22), 0 6px 18px rgba(18,24,38,0.12);
+}
+.surface.skin-studio:not(.dark) {
+  --bg:        oklch(0.976 0.0015 250);
+  --surface:   oklch(1 0 0);
+  --surface-2: oklch(0.965 0.002 250);
+  --line:      oklch(0.912 0.003 250);
+  --line-soft: oklch(0.945 0.0025 250);
+  --ink:       oklch(0.27 0.012 258);
+  --ink-2:     oklch(0.46 0.011 258);
+  --ink-3:     oklch(0.62 0.009 258);
+  --accent-soft: color-mix(in oklab, var(--accent) 13%, oklch(0.99 0 0));
+}
+.surface.skin-studio.dark {
+  --bg:        oklch(0.04 0 0);
+  --surface:   oklch(0.165 0.006 280);
+  --surface-2: oklch(0.225 0.008 280);
+  --line:      oklch(0.32 0.012 280);
+  --line-soft: oklch(0.26 0.01 280);
+  --sh-1: 0 1px 2px rgba(0,0,0,0.6);
+  --sh-2: 0 6px 20px rgba(0,0,0,0.7);
+  --sh-3: 0 16px 40px rgba(0,0,0,0.8);
+}
+/* elevate & outline cards so they read on pure black */
+.skin-studio.dark .status-row,
+.skin-studio.dark .task,
+.skin-studio.dark .cal-grid,
+.skin-studio.dark .stat,
+.skin-studio.dark .tasklist.rows {
+  border-color: oklch(0.3 0.012 280);
+  box-shadow: 0 1px 0 oklch(0.26 0.01 280) inset, 0 4px 16px rgba(0,0,0,0.55);
+}
+.skin-studio.dark .project-card { background: color-mix(in oklab, var(--pc) 26%, oklch(0.2 0.008 280)); border-color: color-mix(in oklab, var(--pc) 34%, oklch(0.34 0.01 280)); }
+.skin-studio.dark .proj-pct,
+.skin-studio.dark .proj-name { color: oklch(0.96 0.01 280); }
+.skin-studio.dark .proj-meta { color: oklch(0.74 0.012 280); }
+
+/* softer, friendlier shared bits */
+.skin-studio .nav-item.active { border-radius: 99px; }
+.skin-studio .nav-item { border-radius: 99px; }
+.skin-studio .chip, .skin-studio .m-chip, .skin-studio .chip-toggle { border-radius: 99px; }
+.skin-studio .seg { border-radius: 99px; }
+.skin-studio .seg button { border-radius: 99px; }
+.skin-studio .btn { border-radius: 99px; }
+.skin-studio .task-title { font-weight: 600; }
+.skin-studio .page-title, .skin-studio .m-title, .skin-studio .brand-name,
+.skin-studio .cal-month, .skin-studio .hero-name { letter-spacing: -0.02em; }
+.skin-studio .icon-btn { border-radius: 50%; }
+.skin-studio .brand-mark { border-radius: 12px; }
+
+/* ---- circular ring ---- */
+.ring { position: relative; display: grid; place-items: center; flex-shrink: 0; }
+.ring-svg { display: block; }
+.ring-label { position: absolute; inset: 0; display: grid; place-items: center; }
+
+/* ---- dashboard wrapper ---- */
+.studio-dash { display: flex; flex-direction: column; }
+.dash-sec-head { font-size: 12px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: var(--ink-3); margin: 26px 2px 12px; }
+.dash-sec-head.sched { display: flex; align-items: center; }
+.studio-dash + * .task-group-head:first-child,
+.studio-dash ~ * { }
+
+/* ---- hero card ---- */
+.hero {
+  position: relative; overflow: hidden;
+  border-radius: var(--r-xl);
+  padding: 18px 22px 18px;
+  color: #fff;
+  background: #708871;
+  box-shadow: var(--sh-2);
+}
+.hero::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: radial-gradient(130% 150% at 100% 0%, rgba(255,255,255,0.16), transparent 55%);
+}
+.skin-studio.dark .hero {
+  color: oklch(0.97 0.015 150);
+  background: oklch(0.46 0.05 150);
+}
+.hero-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.hero-eyebrow { display: inline-flex; align-items: center; gap: 7px; font-size: 12.5px; font-weight: 600; opacity: 0.82; }
+.hero-eyebrow svg { width: 14px; height: 14px; }
+.hero-btn { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; color: inherit; background: rgba(255,255,255,0.35); }
+.hero-btn:hover { background: rgba(255,255,255,0.5); }
+.skin-studio.dark .hero-btn { background: rgba(255,255,255,0.14); }
+
+.hero-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.hero-id { display: flex; align-items: center; gap: 14px; min-width: 0; }
+.hero-av {
+  width: 56px; height: 56px; border-radius: 50%; flex-shrink: 0;
+  display: grid; place-items: center; font-weight: 700; font-size: 18px;
+  color: #fff; background: rgba(255,255,255,0.22);
+  box-shadow: 0 0 0 3px rgba(255,255,255,0.18);
+}
+.hero-name { font-size: 21px; font-weight: 700; line-height: 1.1; }
+.hero-role { font-size: 13px; font-weight: 500; opacity: 0.78; margin-top: 2px; }
+.hero-pct { font-size: 17px; font-weight: 700; color: #fff; }
+.hero-pct i { font-size: 11px; font-style: normal; font-weight: 600; opacity: 0.85; }
+.hero-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 16px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.32); font-size: 13px; font-weight: 500; }
+.hero-foot b { font-weight: 700; }
+.hero-add { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 650; color: oklch(0.4 0.06 150); background: #fff; padding: 7px 14px; border-radius: 99px; }
+.hero-add:hover { background: rgba(255,255,255,0.88); }
+.hero-add svg { width: 15px; height: 15px; }
+.hero-actions { display: inline-flex; align-items: center; gap: 8px; }
+.hero-ai { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 650; color: #fff; background: rgba(255,255,255,0.22); padding: 7px 14px; border-radius: 99px; transition: background .12s; }
+.hero-ai:hover { background: rgba(255,255,255,0.34); }
+.hero-ai svg { width: 15px; height: 15px; }
+.hero-ai[disabled] { opacity: 0.7; cursor: default; }
+.skin-studio.dark .hero-ai { background: rgba(255,255,255,0.14); }
+
+.hero-ai-panel {
+  margin-top: 14px; padding: 14px 16px; border-radius: var(--r-lg);
+  background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.26);
+  color: #fff; font-size: 13.5px; line-height: 1.55; animation: fade .2s;
+}
+.skin-studio.dark .hero-ai-panel { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.16); }
+.hero-ai-head { display: flex; align-items: center; gap: 7px; font-size: 11px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; opacity: 0.85; margin-bottom: 9px; }
+.hero-ai-head svg { width: 14px; height: 14px; }
+.hero-ai-head .hero-ai-close { margin-left: auto; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; color: inherit; background: rgba(255,255,255,0.18); }
+.hero-ai-head .hero-ai-close:hover { background: rgba(255,255,255,0.3); }
+.hero-ai-body { white-space: pre-wrap; }
+.hero-ai-loading { display: flex; align-items: center; gap: 10px; opacity: 0.9; }
+.ai-spinner { width: 16px; height: 16px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.35); border-top-color: #fff; animation: aispin .7s linear infinite; }
+@keyframes aispin { to { transform: rotate(360deg); } }
+.skin-studio.dark .hero-av { color: #fff; background: rgba(255,255,255,0.16); box-shadow: 0 0 0 3px rgba(255,255,255,0.1); }
+.skin-studio.dark .hero-add { color: oklch(0.95 0.02 150); background: rgba(255,255,255,0.16); }
+
+/* ---- My tasks status rows ---- */
+.status-list { display: flex; flex-direction: column; gap: 10px; }
+.status-row {
+  display: flex; align-items: center; gap: 14px;
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--r-lg); padding: 13px 16px; box-shadow: var(--sh-1);
+  transition: box-shadow .14s, transform .08s;
+}
+.status-ic { width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; flex-shrink: 0; }
+.status-row.todo .status-ic { background: var(--red-soft); color: var(--red-ink); }
+.status-row.prog .status-ic { background: var(--amber-soft); color: var(--amber-ink); }
+.status-row.done .status-ic { background: var(--green-soft); color: var(--green); }
+.status-txt { flex: 1; min-width: 0; }
+.status-label { font-size: 15px; font-weight: 650; color: var(--ink); }
+.status-sub { font-size: 12.5px; font-weight: 500; color: var(--ink-3); margin-top: 1px; }
+.status-n { font-size: 22px; font-weight: 700; letter-spacing: -0.02em; color: var(--ink-2); }
+
+/* ---- Active projects ring cards ---- */
+.project-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+.project-card {
+  text-align: left; border-radius: var(--r-lg); padding: 16px 16px 15px;
+  background: color-mix(in oklab, var(--pc) 14%, var(--surface));
+  border: 1px solid color-mix(in oklab, var(--pc) 24%, var(--line));
+  color: var(--ink); box-shadow: var(--sh-1); display: flex; flex-direction: column; gap: 12px;
+  transition: transform .1s, box-shadow .14s; min-height: 120px;
+}
+.skin-studio.dark .project-card { background: color-mix(in oklab, var(--pc) 20%, var(--surface)); }
+.project-card:hover { transform: translateY(-2px); box-shadow: var(--sh-2); }
+.project-card:active { transform: translateY(0); }
+.proj-pct { font-size: 13px; font-weight: 700; color: var(--pc-ink); }
+.proj-pct i { font-size: 9px; font-style: normal; font-weight: 600; opacity: 0.7; }
+.proj-name { font-size: 15.5px; font-weight: 650; margin-top: auto; color: var(--ink); }
+.proj-meta { font-size: 12px; font-weight: 500; color: var(--ink-3); }
+
+/* ---- Studio editor (Create new task) ---- */
+.skin-studio .modal-head {
+  border-bottom: none; padding: 22px 24px 20px;
+  color: #fff;
+  background: #708871;
+}
+.skin-studio.dark .modal-head {
+  color: oklch(0.97 0.015 150);
+  background: oklch(0.46 0.05 150);
+}
+.skin-studio .modal-head h3 { font-size: 22px; font-weight: 700; }
+.skin-studio .modal-head .mini-btn { color: inherit; background: rgba(255,255,255,0.35); }
+.skin-studio.dark .modal-head .mini-btn { background: rgba(255,255,255,0.16); }
+.skin-studio .field-label { text-transform: uppercase; letter-spacing: 0.05em; font-size: 11px; color: var(--ink-3); }
+.skin-studio .opt { border-radius: 99px; }
+.skin-studio .modal-foot .btn-primary { flex: 1; justify-content: center; padding: 13px; font-size: 15px; }
+.skin-studio .modal-foot { gap: 12px; }
+
+/* desktop: hero spans full width; My-tasks is a responsive 3-up row */
+.desktop.skin-studio .hero { max-width: none; }
+.desktop.skin-studio .status-list {
+  max-width: none;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+@media (max-width: 760px) {
+  .desktop.skin-studio .status-list { grid-template-columns: 1fr; }
+}
+.mobile.skin-studio .studio-dash { padding-top: max(env(safe-area-inset-top), 14px); }
+.mobile.skin-studio .dash-sec-head:first-child { margin-top: 18px; }
+
+/* ---- crisper, more structured polish ---- */
+.skin-studio .status-row:hover { transform: translateY(-1px); box-shadow: var(--sh-2); }
+.skin-studio.dark .status-row:hover { box-shadow: 0 1px 0 oklch(0.26 0.01 280) inset, 0 8px 22px rgba(0,0,0,0.6); }
+.skin-studio .status-n { font-variant-numeric: tabular-nums; }
+.skin-studio .task { transition: transform .1s, box-shadow .14s, border-color .14s; }
+.skin-studio .task:hover { transform: translateY(-1px); box-shadow: var(--sh-2); }
+.skin-studio .stat { transition: box-shadow .14s; }
+.desktop.skin-studio .sidebar { background: var(--surface); box-shadow: 1px 0 0 var(--line-soft); }
+.skin-studio .nav-item.active { box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--accent) 22%, transparent); }
+.skin-studio .search { box-shadow: var(--sh-1); }
+
+</style>
+<style>
+  html, body { margin: 0; padding: 0; height: 100%; background: oklch(0.976 0.0015 250); }
+  #root { height: 100%; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<template id="__bundler_thumbnail" data-bg-color="#f0ead9">
+  <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <rect width="100" height="100" rx="22" fill="#708871"/>
+    <rect x="30" y="30" width="40" height="40" rx="9" fill="none" stroke="#fff" stroke-width="5"/>
+    <path d="M40 50l7 7 14-14" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>
+</template>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" data-src="data.jsx">
+/* ============================================================
+   data.jsx — categories, seed tasks, date + status helpers
+   ============================================================ */
+
+// "today" anchor for the prototype
+const TODAY = new Date(2026, 5, 9); // June 9, 2026 (month 0-indexed)
+
+const CATEGORIES = [
+  { id: 'work',     name: 'Work',      h: 264, c: 0.13 }, // periwinkle
+  { id: 'personal', name: 'Personal',  h: 322, c: 0.12 }, // lavender-pink
+  { id: 'health',   name: 'Health',    h: 156, c: 0.12 }, // mint
+  { id: 'errands',  name: 'Errands',   h: 58,  c: 0.13 }, // peach
+  { id: 'finance',  name: 'Finance',   h: 200, c: 0.11 }, // teal-blue
+];
+
+const PRIORITIES = [
+  { id: 'high', name: 'High' },
+  { id: 'med',  name: 'Medium' },
+  { id: 'low',  name: 'Low' },
+];
+
+const RECUR = [
+  { id: 'none',    name: 'Does not repeat' },
+  { id: 'daily',   name: 'Daily' },
+  { id: 'weekly',  name: 'Weekly' },
+  { id: 'monthly', name: 'Monthly' },
+];
+
+// ---------- date helpers ----------
+function pad(n) { return String(n).padStart(2, '0'); }
+function ymd(d) { return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; }
+function parseYmd(s) { if (!s) return null; const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); }
+const TODAY_STR = ymd(TODAY);
+
+function addDays(d, n) { const x = new Date(d); x.setDate(x.getDate() + n); return x; }
+function dayDiff(a, b) { // whole days from a -> b
+  const A = new Date(a.getFullYear(), a.getMonth(), a.getDate());
+  const B = new Date(b.getFullYear(), b.getMonth(), b.getDate());
+  return Math.round((B - A) / 86400000);
+}
+
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const MON_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const DOW = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+function fmtDate(s) {
+  const d = parseYmd(s); if (!d) return '';
+  const diff = dayDiff(TODAY, d);
+  if (diff === 0) return 'Today';
+  if (diff === 1) return 'Tomorrow';
+  if (diff === -1) return 'Yesterday';
+  if (diff > 1 && diff <= 6) return DOW[d.getDay()];
+  return `${MON_SHORT[d.getMonth()]} ${d.getDate()}`;
+}
+
+// status: 'done' | 'overdue' | 'soon' | 'upcoming' | 'none'
+function dateStatus(s, done) {
+  if (done) return 'done';
+  if (!s) return 'none';
+  const diff = dayDiff(TODAY, parseYmd(s));
+  if (diff < 0) return 'overdue';
+  if (diff <= 2) return 'soon';
+  return 'upcoming';
+}
+
+// ---------- completion ----------
+function taskProgress(t) {
+  if (t.subtasks && t.subtasks.length) {
+    const done = t.subtasks.filter(s => s.done).length;
+    return Math.round((done / t.subtasks.length) * 100);
+  }
+  return t.done ? 100 : 0;
+}
+function taskDone(t) {
+  if (t.subtasks && t.subtasks.length) return t.subtasks.every(s => s.done);
+  return t.done;
+}
+// effective status for a whole task (worst-case across task + subtasks)
+function taskStatus(t) {
+  if (taskDone(t)) return 'done';
+  const dates = [t.due, ...(t.subtasks || []).filter(s => !s.done).map(s => s.due)].filter(Boolean);
+  let best = 'none';
+  const rank = { overdue: 3, soon: 2, upcoming: 1, none: 0 };
+  for (const d of dates) {
+    const st = dateStatus(d, false);
+    if (rank[st] > rank[best]) best = st;
+  }
+  return best;
+}
+
+let _id = 100;
+const uid = () => `id${++_id}`;
+
+// ---------- seed data ----------
+const SEED = [
+  {
+    id: uid(), title: 'Finalize Q3 product roadmap', categoryId: 'work', priority: 'high',
+    due: ymd(addDays(TODAY, -1)), recurring: 'none', done: false,
+    notes: 'Lock scope before the leadership review. Circulate the one-pager after.',
+    subtasks: [
+      { id: uid(), title: 'Collect feature requests from CS', due: ymd(addDays(TODAY, -3)), done: true },
+      { id: uid(), title: 'Draft prioritization matrix', due: ymd(addDays(TODAY, -1)), done: true },
+      { id: uid(), title: 'Review with design lead', due: ymd(TODAY), done: false },
+      { id: uid(), title: 'Publish to Notion', due: ymd(addDays(TODAY, 1)), done: false },
+    ],
+    attachments: [
+      { id: uid(), type: 'file', name: 'Roadmap-draft-v4.pdf', meta: '2.4 MB' },
+      { id: uid(), type: 'link', name: 'Feature request board', meta: 'linear.app' },
+    ],
+  },
+  {
+    id: uid(), title: 'Renew apartment lease', categoryId: 'personal', priority: 'high',
+    due: ymd(TODAY), recurring: 'none', done: false,
+    notes: 'Landlord needs signed copy by end of day.',
+    subtasks: [
+      { id: uid(), title: 'Re-read renewal terms', due: ymd(addDays(TODAY, -1)), done: true },
+      { id: uid(), title: 'Sign & email back', due: ymd(TODAY), done: false },
+    ],
+    attachments: [{ id: uid(), type: 'file', name: 'Lease-2026.docx', meta: '180 KB' }],
+  },
+  {
+    id: uid(), title: 'Morning run — 5k', categoryId: 'health', priority: 'low',
+    due: ymd(TODAY), recurring: 'daily', done: false, notes: '',
+    subtasks: [], attachments: [],
+  },
+  {
+    id: uid(), title: 'Submit expense report', categoryId: 'finance', priority: 'med',
+    due: ymd(addDays(TODAY, 1)), recurring: 'monthly', done: false,
+    notes: 'Reimbursement for the offsite + software subscriptions.',
+    subtasks: [
+      { id: uid(), title: 'Gather receipts', due: ymd(TODAY), done: true },
+      { id: uid(), title: 'Categorize in Ramp', due: ymd(addDays(TODAY, 1)), done: false },
+    ],
+    attachments: [
+      { id: uid(), type: 'image', name: 'hotel-receipt.jpg', meta: 'Image' },
+      { id: uid(), type: 'image', name: 'dinner-receipt.jpg', meta: 'Image' },
+    ],
+  },
+  {
+    id: uid(), title: 'Grocery run', categoryId: 'errands', priority: 'low',
+    due: ymd(addDays(TODAY, 2)), recurring: 'weekly', done: false, notes: 'Weekend meal prep.',
+    subtasks: [
+      { id: uid(), title: 'Produce + greens', due: null, done: false },
+      { id: uid(), title: 'Pantry restock', due: null, done: false },
+      { id: uid(), title: 'Coffee beans', due: null, done: false },
+    ],
+    attachments: [],
+  },
+  {
+    id: uid(), title: 'Prep design review deck', categoryId: 'work', priority: 'high',
+    due: ymd(addDays(TODAY, 2)), recurring: 'none', done: false,
+    notes: 'Walk through the new onboarding flow + metrics.',
+    subtasks: [
+      { id: uid(), title: 'Export latest mockups', due: ymd(addDays(TODAY, 1)), done: false },
+      { id: uid(), title: 'Write narrative', due: ymd(addDays(TODAY, 2)), done: false },
+      { id: uid(), title: 'Rehearse', due: ymd(addDays(TODAY, 2)), done: false },
+    ],
+    attachments: [{ id: uid(), type: 'link', name: 'Figma — Onboarding v3', meta: 'figma.com' }],
+  },
+  {
+    id: uid(), title: 'Dentist appointment', categoryId: 'health', priority: 'med',
+    due: ymd(addDays(TODAY, 4)), recurring: 'none', done: false, notes: '2:30 PM — Dr. Alvarez.',
+    subtasks: [], attachments: [],
+  },
+  {
+    id: uid(), title: 'Book flights for Lisbon trip', categoryId: 'personal', priority: 'med',
+    due: ymd(addDays(TODAY, 5)), recurring: 'none', done: false,
+    notes: 'Compare fares before prices climb.',
+    subtasks: [
+      { id: uid(), title: 'Check dates with Sam', due: ymd(addDays(TODAY, 3)), done: true },
+      { id: uid(), title: 'Compare carriers', due: ymd(addDays(TODAY, 4)), done: false },
+      { id: uid(), title: 'Book + add to calendar', due: ymd(addDays(TODAY, 5)), done: false },
+    ],
+    attachments: [{ id: uid(), type: 'link', name: 'Google Flights search', meta: 'google.com' }],
+  },
+  {
+    id: uid(), title: 'Pay quarterly taxes', categoryId: 'finance', priority: 'high',
+    due: ymd(addDays(TODAY, 6)), recurring: 'none', done: false, notes: 'Estimated payment to IRS + state.',
+    subtasks: [], attachments: [{ id: uid(), type: 'file', name: 'Q2-estimate.pdf', meta: '320 KB' }],
+  },
+  {
+    id: uid(), title: 'Team retro notes', categoryId: 'work', priority: 'low',
+    due: ymd(addDays(TODAY, -2)), recurring: 'none', done: true,
+    notes: 'Summarize action items.', subtasks: [], attachments: [],
+  },
+  {
+    id: uid(), title: 'Call mom', categoryId: 'personal', priority: 'med',
+    due: ymd(addDays(TODAY, 3)), recurring: 'weekly', done: false, notes: '', subtasks: [], attachments: [],
+  },
+  {
+    id: uid(), title: 'Replace air filter', categoryId: 'errands', priority: 'low',
+    due: ymd(addDays(TODAY, 9)), recurring: 'monthly', done: false, notes: '', subtasks: [], attachments: [],
+  },
+  {
+    id: uid(), title: 'Read 30 pages', categoryId: 'personal', priority: 'low',
+    due: ymd(addDays(TODAY, -1)), recurring: 'daily', done: false, notes: 'Currently: "The Creative Act".',
+    subtasks: [], attachments: [],
+  },
+];
+
+// ---------- color derivation (theme + vibrancy aware) ----------
+function catById(id) { return CATEGORIES.find(c => c.id === id) || CATEGORIES[0]; }
+
+function catStyle(cat, { vibrant = false, dark = false, mono = false } = {}) {
+  const c = mono ? 0 : (vibrant ? Math.min(cat.c * 1.65, 0.22) : cat.c);
+  const h = cat.h;
+  if (dark) {
+    return {
+      '--cc-bg':  `oklch(0.36 ${c * 0.8} ${h})`,
+      '--cc-tx':  `oklch(0.9 ${Math.min(c, 0.1)} ${h})`,
+      '--cc-dot': `oklch(0.72 ${c} ${h})`,
+    };
+  }
+  return {
+    '--cc-bg':  `oklch(0.95 ${c * 0.5} ${h})`,
+    '--cc-tx':  `oklch(0.46 ${Math.min(c * 1.3, 0.15)} ${h})`,
+    '--cc-dot': `oklch(0.72 ${c} ${h})`,
+  };
+}
+function catDotColor(cat, vibrant, mono) {
+  if (mono) return 'oklch(0.7 0 0)';
+  const c = vibrant ? Math.min(cat.c * 1.65, 0.22) : cat.c;
+  return `oklch(0.72 ${c} ${cat.h})`;
+}
+
+Object.assign(window, {
+  TODAY, TODAY_STR, CATEGORIES, PRIORITIES, RECUR, SEED,
+  ymd, parseYmd, addDays, dayDiff, fmtDate, dateStatus,
+  taskProgress, taskDone, taskStatus, catById, catStyle, catDotColor, uid,
+  MONTHS, MON_SHORT, DOW,
+});
+
+</script>
+
+<script type="text/babel" data-src="icons.jsx">
+/* ============================================================
+   icons.jsx — minimal line icons (1.8 stroke, 24 grid)
+   ============================================================ */
+const ICON_PATHS = {
+  check:    <polyline points="20 6 9 17 4 12" />,
+  plus:     <g><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></g>,
+  list:     <g><line x1="8" y1="6" x2="20" y2="6" /><line x1="8" y1="12" x2="20" y2="12" /><line x1="8" y1="18" x2="20" y2="18" /><circle cx="3.5" cy="6" r="1.2" fill="currentColor" stroke="none" /><circle cx="3.5" cy="12" r="1.2" fill="currentColor" stroke="none" /><circle cx="3.5" cy="18" r="1.2" fill="currentColor" stroke="none" /></g>,
+  calendar: <g><rect x="3" y="4.5" width="18" height="16" rx="2.5" /><line x1="3" y1="9" x2="21" y2="9" /><line x1="8" y1="2.5" x2="8" y2="6" /><line x1="16" y1="2.5" x2="16" y2="6" /></g>,
+  inbox:    <g><path d="M3 12h5l2 3h4l2-3h5" /><path d="M5 5.5h14a2 2 0 0 1 2 2V18a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7.5a2 2 0 0 1 2-2z" /></g>,
+  today:    <g><rect x="3" y="4.5" width="18" height="16" rx="2.5" /><line x1="3" y1="9" x2="21" y2="9" /><circle cx="12" cy="14.5" r="2.3" fill="currentColor" stroke="none" /></g>,
+  flag:     <g><line x1="5" y1="22" x2="5" y2="3" /><path d="M5 4h11l-2 3 2 3H5" /></g>,
+  search:   <g><circle cx="11" cy="11" r="7" /><line x1="21" y1="21" x2="16.5" y2="16.5" /></g>,
+  chevronR: <polyline points="9 6 15 12 9 18" />,
+  chevronL: <polyline points="15 6 9 12 15 18" />,
+  chevronD: <polyline points="6 9 12 15 18 9" />,
+  x:        <g><line x1="6" y1="6" x2="18" y2="18" /><line x1="18" y1="6" x2="6" y2="18" /></g>,
+  trash:    <g><polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /><path d="M10 11v6M14 11v6" /><path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2" /></g>,
+  edit:     <g><path d="M12 20h9" /><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z" /></g>,
+  paperclip:<path d="M21 11.5l-8.5 8.5a5 5 0 0 1-7-7l8.5-8.5a3.3 3.3 0 0 1 4.7 4.7l-8.5 8.5a1.6 1.6 0 0 1-2.3-2.3l7.8-7.8" />,
+  link:     <g><path d="M10 13a5 5 0 0 0 7 0l2.5-2.5a5 5 0 0 0-7-7L11 5" /><path d="M14 11a5 5 0 0 0-7 0l-2.5 2.5a5 5 0 0 0 7 7L13 19" /></g>,
+  file:     <g><path d="M14 2.5H7a2 2 0 0 0-2 2v15a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7.5z" /><polyline points="14 2.5 14 8 19.5 8" /></g>,
+  image:    <g><rect x="3" y="4.5" width="18" height="15" rx="2.5" /><circle cx="8.5" cy="9.5" r="1.8" /><path d="M21 16l-5-5L5 19.5" /></g>,
+  repeat:   <g><polyline points="17 2 21 6 17 10" /><path d="M3 11V9a4 4 0 0 1 4-4h14" /><polyline points="7 22 3 18 7 14" /><path d="M21 13v2a4 4 0 0 1-4 4H3" /></g>,
+  clock:    <g><circle cx="12" cy="12" r="8.5" /><polyline points="12 7 12 12 15.5 14" /></g>,
+  filter:   <polygon points="22 4 2 4 10 12.5 10 19 14 21 14 12.5" />,
+  sort:     <g><line x1="4" y1="7" x2="14" y2="7" /><line x1="4" y1="12" x2="11" y2="12" /><line x1="4" y1="17" x2="8" y2="17" /><polyline points="17 8 17 18 21 14" /><line x1="17" y1="18" x2="17" y2="6" /></g>,
+  grid:     <g><rect x="3.5" y="3.5" width="7" height="7" rx="1.5" /><rect x="13.5" y="3.5" width="7" height="7" rx="1.5" /><rect x="3.5" y="13.5" width="7" height="7" rx="1.5" /><rect x="13.5" y="13.5" width="7" height="7" rx="1.5" /></g>,
+  rows:     <g><rect x="3.5" y="4.5" width="17" height="5" rx="1.5" /><rect x="3.5" y="14.5" width="17" height="5" rx="1.5" /></g>,
+  layers:   <g><polygon points="12 2.5 22 8 12 13.5 2 8" /><polyline points="2 13 12 18.5 22 13" /></g>,
+  sun:      <g><circle cx="12" cy="12" r="4.2" /><line x1="12" y1="2.5" x2="12" y2="5" /><line x1="12" y1="19" x2="12" y2="21.5" /><line x1="4.2" y1="4.2" x2="6" y2="6" /><line x1="18" y1="18" x2="19.8" y2="19.8" /><line x1="2.5" y1="12" x2="5" y2="12" /><line x1="19" y1="12" x2="21.5" y2="12" /><line x1="4.2" y1="19.8" x2="6" y2="18" /><line x1="18" y1="6" x2="19.8" y2="4.2" /></g>,
+  moon:     <path d="M21 12.8A8.5 8.5 0 1 1 11.2 3a6.6 6.6 0 0 0 9.8 9.8z" />,
+  bell:     <g><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.7 21a2 2 0 0 1-3.4 0" /></g>,
+  timeline: <g><line x1="4" y1="6" x2="4" y2="18" /><rect x="7" y="4.5" width="9" height="4" rx="2" /><rect x="7" y="14.5" width="13" height="4" rx="2" /></g>,
+  agenda:   <g><line x1="9" y1="6" x2="20" y2="6" /><line x1="9" y1="12" x2="20" y2="12" /><line x1="9" y1="18" x2="20" y2="18" /><rect x="3.5" y="4.5" width="3" height="3" rx="1" /><rect x="3.5" y="10.5" width="3" height="3" rx="1" /><rect x="3.5" y="16.5" width="3" height="3" rx="1" /></g>,
+  chart:    <g><line x1="4" y1="20" x2="20" y2="20" /><rect x="6" y="11" width="3" height="6" rx="1" /><rect x="11" y="7" width="3" height="10" rx="1" /><rect x="16" y="13" width="3" height="4" rx="1" /></g>,
+  spark:    <g><path d="M12 3v3.5M12 17.5V21M3 12h3.5M17.5 12H21M5.6 5.6l2.4 2.4M16 16l2.4 2.4M18.4 5.6L16 8M8 16l-2.4 2.4" /><circle cx="12" cy="12" r="3.1" /></g>,
+  ffwd:     <g fill="currentColor" stroke="none"><polygon points="3 5 11.5 12 3 19" /><polygon points="12.5 5 21 12 12.5 19" /></g>,
+  menu:     <g><line x1="3" y1="7" x2="21" y2="7" /><line x1="3" y1="12" x2="14" y2="12" /><line x1="3" y1="17" x2="21" y2="17" /></g>,
+};
+
+function Icon({ name, size, style, strokeWidth = 1.8 }) {
+  const p = ICON_PATHS[name];
+  if (!p) return null;
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} fill="none"
+      stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round"
+      style={style}>{p}</svg>
+  );
+}
+
+Object.assign(window, { Icon });
+
+</script>
+
+<script type="text/babel" data-src="ui.jsx">
+/* ============================================================
+   ui.jsx — shared primitives
+   ============================================================ */
+
+function Checkbox({ checked, onClick, small }) {
+  return (
+    <button className={`check${small ? ' sm' : ''}${checked ? ' on' : ''}`}
+      onClick={(e) => { e.stopPropagation(); onClick && onClick(); }}
+      aria-pressed={checked}>
+      <Icon name="check" size={small ? 11 : 13} strokeWidth={3} />
+    </button>
+  );
+}
+
+function CategoryChip({ cat, vibrant, dark, mono, withDot = true }) {
+  return (
+    <span className="chip chip-cat" style={{ ...catStyle(cat, { vibrant, dark, mono }), background: 'var(--cc-bg)', color: 'var(--cc-tx)' }}>
+      {withDot && <span className="cat-dot" style={{ width: 8, height: 8, background: 'var(--cc-dot)' }} />}
+      {cat.name}
+    </span>
+  );
+}
+
+function PriorityTag({ p, pill }) {
+  if (!p) return null;
+  if (pill) return <span className="flag-pill"><span className={`flag ${p}`} />{PRIORITIES.find(x => x.id === p).name}</span>;
+  return <span className={`flag ${p}`} title={`${p} priority`} />;
+}
+
+function DateChip({ due, done }) {
+  if (!due) return null;
+  const st = dateStatus(due, done);
+  const cls = st === 'overdue' ? ' overdue' : st === 'soon' ? ' due-soon' : '';
+  return (
+    <span className={`chip chip-date${cls}`}>
+      <Icon name="calendar" size={12} />{fmtDate(due)}
+    </span>
+  );
+}
+
+function ProgressBar({ value }) {
+  return (
+    <div className="progress">
+      <div className={`bar${value >= 100 ? ' full' : ''}`}><span style={{ width: `${value}%` }} /></div>
+      <span className="progress-num">{value}%</span>
+    </div>
+  );
+}
+
+function Segmented({ options, value, onChange }) {
+  return (
+    <div className="seg">
+      {options.map(o => (
+        <button key={o.id} className={value === o.id ? 'on' : ''} onClick={() => onChange(o.id)}>
+          {o.icon && <Icon name={o.icon} size={15} />}{o.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function Modal({ children, onClose }) {
+  React.useEffect(() => {
+    const h = (e) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', h);
+    return () => window.removeEventListener('keydown', h);
+  }, []);
+  return (
+    <div className="scrim" onMouseDown={onClose}>
+      <div className="modal" onMouseDown={(e) => e.stopPropagation()}>{children}</div>
+    </div>
+  );
+}
+
+function EmptyState({ icon = 'check', title, sub }) {
+  return (
+    <div className="empty">
+      <div className="empty-ic"><Icon name={icon} size={26} /></div>
+      <h4>{title}</h4>
+      {sub && <p>{sub}</p>}
+    </div>
+  );
+}
+
+function AttachIcon({ type }) {
+  const ic = type === 'link' ? 'link' : type === 'image' ? 'image' : 'file';
+  return <span className={`attach-ic ${type}`}><Icon name={ic} size={17} /></span>;
+}
+
+Object.assign(window, { Checkbox, CategoryChip, PriorityTag, DateChip, ProgressBar, Segmented, Modal, EmptyState, AttachIcon });
+
+</script>
+
+<script type="text/babel" data-src="TaskList.jsx">
+/* ============================================================
+   TaskList.jsx — TaskItem (layouts + subtask modes) + grouped list
+   ============================================================ */
+
+function TaskItem({ task, vibrant, dark, mono, subtaskMode, onToggleTask, onToggleSub,
+                    onEdit, onDelete, onAddSub }) {
+  const cat = catById(task.categoryId);
+  const progress = taskProgress(task);
+  const done = taskDone(task);
+  const status = taskStatus(task);
+  const hasSubs = task.subtasks && task.subtasks.length > 0;
+  const cls = status === 'overdue' ? ' overdue' : status === 'soon' ? ' due-soon' : '';
+
+  const [open, setOpen] = React.useState(false);
+  const [adding, setAdding] = React.useState(false);
+  const [newSub, setNewSub] = React.useState('');
+  const showSubs = hasSubs && (subtaskMode === 'inline' || (subtaskMode === 'collapsible' && open));
+
+  const addSub = () => {
+    const v = newSub.trim();
+    if (v) { onAddSub(task.id, v); setNewSub(''); }
+  };
+
+  return (
+    <div className={`task${done ? ' done' : ''}${cls}`}>
+      <div className="task-main">
+        <Checkbox checked={done} onClick={() => onToggleTask(task.id)} />
+        <div className="task-body">
+          <div className="task-titlerow">
+            <PriorityTag p={task.priority} />
+            <span className="task-title">{task.title}</span>
+          </div>
+          {task.notes && <div className="task-notes">{task.notes}</div>}
+
+          <div className="meta-row">
+            <CategoryChip cat={cat} vibrant={vibrant} dark={dark} mono={mono} />
+            <DateChip due={task.due} done={done} />
+            {task.recurring && task.recurring !== 'none' && (
+              <span className="chip chip-recur"><Icon name="repeat" size={12} />
+                {task.recurring[0].toUpperCase() + task.recurring.slice(1)}</span>
+            )}
+            {task.attachments && task.attachments.length > 0 && (
+              <span className="chip chip-attach"><Icon name="paperclip" size={12} />{task.attachments.length}</span>
+            )}
+          </div>
+
+          {hasSubs && <ProgressBar value={progress} />}
+
+          {subtaskMode === 'collapsible' && hasSubs && (
+            <button className={`subtask-toggle${open ? ' open' : ''}`} onClick={() => setOpen(o => !o)}>
+              <Icon name="chevronR" size={14} />
+              {open ? 'Hide' : 'Show'} {task.subtasks.length} subtasks
+              <span style={{ color: 'var(--ink-3)', fontWeight: 600 }}>
+                · {task.subtasks.filter(s => s.done).length}/{task.subtasks.length} done
+              </span>
+            </button>
+          )}
+
+          {showSubs && (
+            <div className="subtasks">
+              {task.subtasks.map(s => {
+                const sst = dateStatus(s.due, s.done);
+                return (
+                  <div key={s.id} className={`subtask${s.done ? ' done' : ''}`}>
+                    <Checkbox small checked={s.done} onClick={() => onToggleSub(task.id, s.id)} />
+                    <span className="subtask-title">{s.title}</span>
+                    {s.due && <span className={`subtask-date${sst === 'overdue' ? ' overdue' : sst === 'soon' ? ' due-soon' : ''}`}>{fmtDate(s.due)}</span>}
+                  </div>
+                );
+              })}
+              {adding ? (
+                <div className="sub-edit" style={{ marginTop: 4 }}>
+                  <Checkbox small checked={false} onClick={() => {}} />
+                  <input autoFocus value={newSub} placeholder="New subtask…"
+                    onChange={e => setNewSub(e.target.value)}
+                    onKeyDown={e => { if (e.key === 'Enter') addSub(); if (e.key === 'Escape') { setAdding(false); setNewSub(''); } }}
+                    onBlur={() => { addSub(); setAdding(false); }} />
+                </div>
+              ) : (
+                <button className="add-sub" onClick={() => setAdding(true)}><Icon name="plus" size={13} />Add subtask</button>
+              )}
+            </div>
+          )}
+        </div>
+
+        <div className="task-actions">
+          <button className="mini-btn" onClick={() => onEdit(task.id)} title="Edit"><Icon name="edit" size={16} /></button>
+          <button className="mini-btn" onClick={() => onDelete(task.id)} title="Delete"><Icon name="trash" size={16} /></button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// time-bucket grouping
+const BUCKETS = [
+  { id: 'overdue', label: 'Overdue' },
+  { id: 'today',   label: 'Today' },
+  { id: 'week',    label: 'This week' },
+  { id: 'later',   label: 'Later' },
+  { id: 'nodate',  label: 'No date' },
+  { id: 'done',    label: 'Completed' },
+];
+function bucketOf(t) {
+  if (taskDone(t)) return 'done';
+  if (!t.due) return 'nodate';
+  const diff = dayDiff(TODAY, parseYmd(t.due));
+  if (diff < 0) return 'overdue';
+  if (diff === 0) return 'today';
+  if (diff <= 7) return 'week';
+  return 'later';
+}
+const PRANK = { high: 0, med: 1, low: 2, null: 3, undefined: 3 };
+function sortTasks(arr, sort) {
+  const a = [...arr];
+  if (sort === 'priority') {
+    a.sort((x, y) => (PRANK[x.priority] - PRANK[y.priority]) || cmpDue(x, y));
+  } else {
+    a.sort(cmpDue);
+  }
+  return a;
+}
+function cmpDue(x, y) {
+  if (!x.due && !y.due) return 0;
+  if (!x.due) return 1;
+  if (!y.due) return -1;
+  return x.due < y.due ? -1 : x.due > y.due ? 1 : 0;
+}
+
+function TaskList({ tasks, layout, sort, vibrant, dark, mono, subtaskMode, handlers }) {
+  if (tasks.length === 0) {
+    return <EmptyState icon="check" title="Nothing here yet"
+      sub="You're all caught up. Add a task or adjust your filters." />;
+  }
+
+  let groups;
+  if (layout === 'grouped') {
+    groups = CATEGORIES.map(c => ({
+      key: c.id, label: c.name, dot: catDotColor(c, vibrant, mono),
+      items: sortTasks(tasks.filter(t => t.categoryId === c.id), sort),
+    })).filter(g => g.items.length);
+  } else {
+    groups = BUCKETS.map(b => ({
+      key: b.id, label: b.label,
+      items: sortTasks(tasks.filter(t => bucketOf(t) === b.id), sort),
+    })).filter(g => g.items.length);
+  }
+
+  const isRows = layout === 'rows';
+
+  return (
+    <div>
+      {groups.map(g => (
+        <div key={g.key}>
+          <div className="task-group-head">
+            {g.dot && <span className="cat-dot" style={{ width: 10, height: 10, background: g.dot }} />}
+            <span className="task-group-title">{g.label}</span>
+            <span className="task-group-count">{g.items.length}</span>
+            <span className="task-group-line" />
+          </div>
+          <div className={`tasklist${isRows ? ' rows' : ''}`}>
+            {g.items.map(t => (
+              <TaskItem key={t.id} task={t} vibrant={vibrant} dark={dark} mono={mono} subtaskMode={subtaskMode} {...handlers} />
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+Object.assign(window, { TaskItem, TaskList, bucketOf, BUCKETS });
+
+</script>
+
+<script type="text/babel" data-src="studio.jsx">
+/* ============================================================
+   studio.jsx — "Studio" skin dashboard pieces:
+   circular progress Ring, hero card, My-tasks status,
+   Active-projects ring cards.
+   ============================================================ */
+
+function Ring({ value, size = 56, stroke = 6, color = 'var(--accent)', track = 'var(--surface-2)', children }) {
+  const r = (size - stroke) / 2;
+  const c = 2 * Math.PI * r;
+  const v = Math.max(0, Math.min(100, value));
+  const off = c * (1 - v / 100);
+  return (
+    <div className="ring" style={{ width: size, height: size }}>
+      <svg width={size} height={size} className="ring-svg">
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={track} strokeWidth={stroke} />
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={color} strokeWidth={stroke}
+          strokeDasharray={c} strokeDashoffset={off} strokeLinecap="round"
+          transform={`rotate(-90 ${size / 2} ${size / 2})`} style={{ transition: 'stroke-dashoffset .6s cubic-bezier(.4,0,.2,1)' }} />
+      </svg>
+      {children != null && <div className="ring-label">{children}</div>}
+    </div>
+  );
+}
+
+const STUDIO_WD = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+function StudioDashboard({ tasks, dark, onToggleDark, onPickCat, onAdd }) {
+  const total = tasks.length;
+  const done = tasks.filter(taskDone).length;
+  const inprog = tasks.filter((t) => !taskDone(t) && taskProgress(t) > 0).length;
+  const todo = tasks.filter((t) => !taskDone(t) && taskProgress(t) === 0).length;
+  const overall = total ? Math.round((done / total) * 100) : 0;
+
+  const status = [
+    { key: 'todo', label: 'To Do', icon: 'clock', tone: 'todo', n: todo, sub: `${todo} ${todo === 1 ? 'task' : 'tasks'} to start` },
+    { key: 'prog', label: 'In Progress', icon: 'spark', tone: 'prog', n: inprog, sub: `${inprog} underway` },
+    { key: 'done', label: 'Done', icon: 'ffwd', tone: 'done', n: done, sub: `${done} completed` },
+  ];
+
+  const projects = CATEGORIES.map((c) => {
+    const items = tasks.filter((t) => t.categoryId === c.id);
+    const d = items.filter(taskDone).length;
+    return { ...c, total: items.length, done: d, pct: items.length ? Math.round((d / items.length) * 100) : 0 };
+  }).filter((p) => p.total > 0);
+
+  const sub = `${STUDIO_WD[TODAY.getDay()]}, ${MONTHS[TODAY.getMonth()]} ${TODAY.getDate()}`;
+
+  const [aiOpen, setAiOpen] = React.useState(false);
+  const [aiLoading, setAiLoading] = React.useState(false);
+  const [aiText, setAiText] = React.useState('');
+
+  const runAiOverview = async () => {
+    setAiOpen(true);
+    setAiLoading(true);
+    setAiText('');
+    try {
+      const lines = tasks.map((t) => {
+        const cat = catById(t.categoryId);
+        const st = taskStatus(t);
+        const due = t.due ? `due ${t.due}` : 'no due date';
+        const pr = t.priority ? `, ${t.priority} priority` : '';
+        return `- ${t.title} [${cat ? cat.name : 'uncategorized'}, ${st}, ${due}${pr}]`;
+      }).join('\n');
+      const prompt = `You are a friendly productivity assistant. Today is ${sub}. Here is my task list (${done} of ${total} complete):\n\n${lines}\n\nWrite a short overview in plain text. Begin with one or two sentences on where things stand — call out anything overdue or due soon. Then add 2-4 brief, specific suggestions for what to focus on next, each on its own line starting with "- ". Keep it under 110 words. No markdown headers or bold.`;
+      const text = await window.claude.complete(prompt);
+      setAiText((text || '').trim() || 'No overview available.');
+    } catch (e) {
+      setAiText('Could not generate an overview right now. Please try again.');
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  return (
+    <div className="studio-dash">
+      <div className="hero">
+        <div className="hero-top">
+          <span className="hero-eyebrow"><Icon name="today" size={14} />{sub}</span>
+          <button className="hero-btn" onClick={onToggleDark} title="Toggle theme">
+            <Icon name={dark ? 'sun' : 'moon'} size={17} />
+          </button>
+        </div>
+        <div className="hero-row">
+          <div className="hero-id">
+            <div className="hero-av">JR</div>
+            <div>
+              <div className="hero-name">Jordan Rivera</div>
+              <div className="hero-role">Productive day ahead</div>
+            </div>
+          </div>
+          <Ring value={overall} size={66} stroke={7} color="#fff" track="rgba(255,255,255,0.38)">
+            <span className="hero-pct">{overall}<i>%</i></span>
+          </Ring>
+        </div>
+        <div className="hero-foot">
+          <span><b>{done}</b> of <b>{total}</b> tasks complete</span>
+          <div className="hero-actions">
+            <button className="hero-ai" onClick={runAiOverview} disabled={aiLoading}>
+              <Icon name="spark" size={15} />AI overview
+            </button>
+            <button className="hero-add" onClick={onAdd}><Icon name="plus" size={15} />Add task</button>
+          </div>
+        </div>
+        {aiOpen && (
+          <div className="hero-ai-panel">
+            <div className="hero-ai-head">
+              <Icon name="spark" size={14} />AI overview
+              <button className="hero-ai-close" onClick={() => setAiOpen(false)} title="Dismiss">
+                <Icon name="x" size={13} />
+              </button>
+            </div>
+            {aiLoading
+              ? <div className="hero-ai-loading"><span className="ai-spinner" />Reviewing your tasks…</div>
+              : <div className="hero-ai-body">{aiText}</div>}
+          </div>
+        )}
+      </div>
+
+      <div className="dash-sec-head">My tasks</div>
+      <div className="status-list">
+        {status.map((s) => (
+          <div key={s.key} className={`status-row ${s.tone}`}>
+            <span className="status-ic"><Icon name={s.icon} size={18} strokeWidth={2} /></span>
+            <div className="status-txt">
+              <div className="status-label">{s.label}</div>
+              <div className="status-sub">{s.sub}</div>
+            </div>
+            <div className="status-n">{s.n}</div>
+          </div>
+        ))}
+      </div>
+
+      <div className="dash-sec-head">Active projects</div>
+      <div className="project-grid">
+        {projects.map((p) => (
+          <button key={p.id} className="project-card" style={{ '--pc': `oklch(0.7 ${Math.min(p.c * 0.85, 0.1)} ${p.h})`, '--pc-ink': `oklch(0.5 ${Math.min(p.c, 0.12)} ${p.h})` }}
+            onClick={() => onPickCat(p.id)}>
+            <Ring value={p.pct} size={52} stroke={6} color="var(--pc-ink)" track="color-mix(in oklab, var(--pc-ink) 18%, transparent)">
+              <span className="proj-pct">{p.pct}<i>%</i></span>
+            </Ring>
+            <div className="proj-name">{p.name}</div>
+            <div className="proj-meta">{p.done}/{p.total} tasks done</div>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+Object.assign(window, { Ring, StudioDashboard });
+
+</script>
+
+<script type="text/babel" data-src="TaskEditor.jsx">
+/* ============================================================
+   TaskEditor.jsx — create / edit modal
+   ============================================================ */
+
+function blankTask() {
+  return {
+    id: null, title: '', notes: '', categoryId: 'work', priority: 'med',
+    due: TODAY_STR, recurring: 'none', done: false, subtasks: [], attachments: [],
+  };
+}
+
+function TaskEditor({ initial, vibrant, dark, onSave, onClose, onDelete }) {
+  const [t, setT] = React.useState(() => initial ? JSON.parse(JSON.stringify(initial)) : blankTask());
+  const [subInput, setSubInput] = React.useState('');
+  const [attachType, setAttachType] = React.useState(null);
+  const [attachVal, setAttachVal] = React.useState('');
+  const set = (k, v) => setT(p => ({ ...p, [k]: v }));
+  const isNew = !t.id;
+
+  const addSub = () => {
+    const v = subInput.trim(); if (!v) return;
+    set('subtasks', [...t.subtasks, { id: uid(), title: v, due: null, done: false }]);
+    setSubInput('');
+  };
+  const updSub = (id, patch) => set('subtasks', t.subtasks.map(s => s.id === id ? { ...s, ...patch } : s));
+  const delSub = (id) => set('subtasks', t.subtasks.filter(s => s.id !== id));
+
+  const addAttach = () => {
+    const v = attachVal.trim(); if (!v) { setAttachType(null); return; }
+    const meta = attachType === 'link' ? v.replace(/^https?:\/\//, '').split('/')[0] : attachType === 'image' ? 'Image' : 'File';
+    set('attachments', [...t.attachments, { id: uid(), type: attachType, name: v, meta }]);
+    setAttachVal(''); setAttachType(null);
+  };
+  const delAttach = (id) => set('attachments', t.attachments.filter(a => a.id !== id));
+
+  const save = () => { if (!t.title.trim()) return; onSave({ ...t, title: t.title.trim() }); };
+
+  return (
+    <Modal onClose={onClose}>
+      <div className="modal-head">
+        <h3>{isNew ? 'New task' : 'Edit task'}</h3>
+        <button className="mini-btn" onClick={onClose}><Icon name="x" size={18} /></button>
+      </div>
+
+      <div className="modal-body scroll" style={{ overflowY: 'auto' }}>
+        <div className="field">
+          <input className="input title-input" autoFocus value={t.title} placeholder="What needs doing?"
+            onChange={e => set('title', e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter' && e.metaKey) save(); }} />
+        </div>
+
+        <div className="field">
+          <label className="field-label">Notes</label>
+          <textarea className="textarea" value={t.notes} placeholder="Add details, context, links…"
+            onChange={e => set('notes', e.target.value)} />
+        </div>
+
+        <div className="field-row">
+          <div className="field">
+            <label className="field-label">Due date</label>
+            <input className="input" type="date" value={t.due || ''} onChange={e => set('due', e.target.value || null)} />
+          </div>
+          <div className="field">
+            <label className="field-label">Repeat</label>
+            <select className="select" value={t.recurring} onChange={e => set('recurring', e.target.value)}>
+              {RECUR.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+            </select>
+          </div>
+        </div>
+
+        <div className="field">
+          <label className="field-label">Category</label>
+          <div className="opt-row">
+            {CATEGORIES.map(c => (
+              <button key={c.id} className={`opt${t.categoryId === c.id ? ' on' : ''}`} onClick={() => set('categoryId', c.id)}>
+                <span className="cat-dot" style={{ background: catDotColor(c, vibrant) }} />{c.name}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="field">
+          <label className="field-label">Priority</label>
+          <div className="opt-row">
+            {PRIORITIES.map(p => (
+              <button key={p.id} className={`opt${t.priority === p.id ? ' on' : ''}`} onClick={() => set('priority', p.id)}>
+                <span className={`flag ${p.id}`} />{p.name}
+              </button>
+            ))}
+            <button className={`opt${!t.priority ? ' on' : ''}`} onClick={() => set('priority', null)}>None</button>
+          </div>
+        </div>
+
+        <div className="field">
+          <label className="field-label">Subtasks {t.subtasks.length > 0 && `· ${t.subtasks.filter(s => s.done).length}/${t.subtasks.length}`}</label>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+            {t.subtasks.map(s => (
+              <div key={s.id} className="sub-edit">
+                <Checkbox small checked={s.done} onClick={() => updSub(s.id, { done: !s.done })} />
+                <input value={s.title} onChange={e => updSub(s.id, { title: e.target.value })} />
+                <input className={`sub-date-btn${s.due ? ' set' : ''}`} type="date" value={s.due || ''}
+                  style={{ width: 130 }} onChange={e => updSub(s.id, { due: e.target.value || null })} />
+                <button className="mini-btn" onClick={() => delSub(s.id)}><Icon name="x" size={15} /></button>
+              </div>
+            ))}
+            <div className="sub-edit">
+              <Icon name="plus" size={16} style={{ color: 'var(--ink-3)' }} />
+              <input value={subInput} placeholder="Add a subtask…"
+                onChange={e => setSubInput(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') addSub(); }} />
+            </div>
+          </div>
+        </div>
+
+        <div className="field">
+          <label className="field-label">Attachments</label>
+          <div className="attach-list">
+            {t.attachments.map(a => (
+              <div key={a.id} className="attach">
+                <AttachIcon type={a.type} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div className="attach-name">{a.name}</div>
+                  <div className="attach-meta">{a.meta}</div>
+                </div>
+                <button className="mini-btn" onClick={() => delAttach(a.id)}><Icon name="x" size={15} /></button>
+              </div>
+            ))}
+            {attachType ? (
+              <div className="sub-edit">
+                <AttachIcon type={attachType} />
+                <input autoFocus value={attachVal}
+                  placeholder={attachType === 'link' ? 'Paste a URL…' : attachType === 'image' ? 'Image file name…' : 'File name…'}
+                  onChange={e => setAttachVal(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter') addAttach(); if (e.key === 'Escape') { setAttachType(null); setAttachVal(''); } }}
+                  onBlur={addAttach} />
+              </div>
+            ) : (
+              <div className="add-attach-row">
+                <button className="opt" onClick={() => setAttachType('file')}><Icon name="file" size={15} />File</button>
+                <button className="opt" onClick={() => setAttachType('link')}><Icon name="link" size={15} />Link</button>
+                <button className="opt" onClick={() => setAttachType('image')}><Icon name="image" size={15} />Image</button>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="modal-foot">
+        {!isNew ? (
+          <button className="btn btn-ghost" style={{ color: 'var(--red-ink)' }} onClick={() => onDelete(t.id)}>
+            <Icon name="trash" size={16} />Delete
+          </button>
+        ) : <span />}
+        <div style={{ display: 'flex', gap: 10 }}>
+          <button className="btn btn-ghost" onClick={onClose}>Cancel</button>
+          <button className="btn btn-primary" onClick={save}><Icon name="check" size={16} />{isNew ? 'Add task' : 'Save'}</button>
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
+Object.assign(window, { TaskEditor, blankTask });
+
+</script>
+
+<script type="text/babel" data-src="Calendar.jsx">
+/* ============================================================
+   Calendar.jsx — month grid · agenda · timeline
+   ============================================================ */
+
+// flatten tasks into dated events (task-level + dated subtasks)
+function eventsFor(tasks) {
+  const ev = [];
+  tasks.forEach(t => {
+    const cat = catById(t.categoryId);
+    if (t.due) ev.push({ date: t.due, title: t.title, taskId: t.id, cat, done: taskDone(t), status: taskStatus(t), kind: 'task' });
+    (t.subtasks || []).forEach(s => {
+      if (s.due) ev.push({ date: s.due, title: s.title, taskId: t.id, cat, done: s.done, status: dateStatus(s.due, s.done), kind: 'sub', parent: t.title });
+    });
+  });
+  return ev;
+}
+function byDay(events) {
+  const m = {};
+  events.forEach(e => { (m[e.date] = m[e.date] || []).push(e); });
+  return m;
+}
+
+function MonthGrid({ tasks, monthDate, onEdit, vibrant, mono, mobile, selected, setSelected }) {
+  const events = byDay(eventsFor(tasks));
+  const y = monthDate.getFullYear(), m = monthDate.getMonth();
+  const first = new Date(y, m, 1);
+  const startOffset = first.getDay();
+  const gridStart = addDays(first, -startOffset);
+
+  const cells = [];
+  for (let i = 0; i < 42; i++) {
+    const d = addDays(gridStart, i);
+    const key = ymd(d);
+    const inMonth = d.getMonth() === m;
+    const isToday = key === TODAY_STR;
+    const dayEv = events[key] || [];
+    if (i >= 35 && cells.slice(35).length === 0) { /* allow 6th row only if needed */ }
+    cells.push({ d, key, inMonth, isToday, dayEv });
+  }
+  // trim to 5 rows if 6th row entirely out of month & empty
+  const lastRow = cells.slice(35);
+  const showSix = lastRow.some(c => c.inMonth || c.dayEv.length);
+  const visible = showSix ? cells : cells.slice(0, 35);
+
+  return (
+    <div className="cal-grid" style={{ gridTemplateRows: mobile ? undefined : `auto repeat(${visible.length / 7}, 1fr)` }}>
+      {DOW.map(d => <div key={d} className="cal-dow">{mobile ? d[0] : d}</div>)}
+      {visible.map(c => {
+        const isSel = mobile && selected === c.key;
+        return (
+          <div key={c.key}
+            className={`cal-cell${c.inMonth ? '' : ' out'}${c.isToday ? ' today' : ''}`}
+            style={isSel ? { background: 'var(--accent-soft)' } : undefined}
+            onClick={() => mobile && setSelected(c.key)}>
+            <div className="cal-daynum">{c.d.getDate()}</div>
+            {mobile ? (
+              <div className="cal-dots">
+                {c.dayEv.slice(0, 4).map((e, i) => (
+                  <span key={i} className="ev-dot" style={{ background: e.status === 'overdue' ? 'var(--red)' : catDotColor(e.cat, vibrant, mono), opacity: e.done ? 0.4 : 1 }} />
+                ))}
+              </div>
+            ) : (
+              <React.Fragment>
+                {c.dayEv.slice(0, 3).map((e, i) => (
+                  <button key={i} className={`cal-event${e.done ? ' done' : ''}${e.status === 'overdue' ? ' overdue' : ''}`}
+                    style={e.status === 'overdue' ? undefined : { background: catStyle(e.cat, { vibrant, mono })['--cc-bg'], color: catStyle(e.cat, { vibrant, mono })['--cc-tx'] }}
+                    onClick={() => onEdit(e.taskId)}>
+                    <span className="ev-dot" style={{ background: e.status === 'overdue' ? 'var(--red)' : catDotColor(e.cat, vibrant, mono) }} />
+                    {e.title}
+                  </button>
+                ))}
+                {c.dayEv.length > 3 && <span className="cal-more">+{c.dayEv.length - 3} more</span>}
+              </React.Fragment>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function MobileDayList({ tasks, day, onEdit, vibrant, dark, mono }) {
+  const events = byDay(eventsFor(tasks))[day] || [];
+  const d = parseYmd(day);
+  return (
+    <div style={{ marginTop: 14 }}>
+      <div className="task-group-head" style={{ marginTop: 4 }}>
+        <span className="task-group-title">{DOW[d.getDay()]}, {MON_SHORT[d.getMonth()]} {d.getDate()}</span>
+        <span className="task-group-count">{events.length}</span>
+        <span className="task-group-line" />
+      </div>
+      {events.length === 0
+        ? <EmptyState icon="calendar" title="No tasks this day" />
+        : <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {events.map((e, i) => (
+              <button key={i} className="task" style={{ textAlign: 'left', width: '100%' }} onClick={() => onEdit(e.taskId)}>
+                <div className="task-main">
+                  <span className="cat-dot" style={{ width: 12, height: 12, marginTop: 4, background: e.status === 'overdue' ? 'var(--red)' : catDotColor(e.cat, vibrant, mono) }} />
+                  <div className="task-body">
+                    <div className="task-title" style={{ fontSize: 14, textDecoration: e.done ? 'line-through' : 'none', opacity: e.done ? 0.6 : 1 }}>{e.title}</div>
+                    {e.kind === 'sub' && <div className="task-notes">in {e.parent}</div>}
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>}
+    </div>
+  );
+}
+
+function AgendaView({ tasks, monthDate, onEdit, vibrant, dark, mono }) {
+  const events = eventsFor(tasks).filter(e => !e.done);
+  const map = byDay(events);
+  const days = Object.keys(map).sort();
+  if (days.length === 0) return <EmptyState icon="agenda" title="Nothing scheduled" sub="Tasks with due dates appear here, grouped by day." />;
+  return (
+    <div className="agenda">
+      {days.map(key => {
+        const d = parseYmd(key);
+        const isToday = key === TODAY_STR;
+        return (
+          <div key={key} className={`agenda-day${isToday ? ' today' : ''}`}>
+            <div className="agenda-date">
+              <div className="agenda-dow">{isToday ? 'Today' : DOW[d.getDay()]}</div>
+              <div className="agenda-num">{d.getDate()}</div>
+              <div className="agenda-dow" style={{ fontWeight: 600 }}>{MON_SHORT[d.getMonth()]}</div>
+            </div>
+            <div className="agenda-items">
+              {map[key].map((e, i) => (
+                <button key={i} className={`task${e.status === 'overdue' ? ' overdue' : e.status === 'soon' ? ' due-soon' : ''}`} style={{ textAlign: 'left' }} onClick={() => onEdit(e.taskId)}>
+                  <div className="task-main">
+                    <span className="cat-dot" style={{ width: 11, height: 11, marginTop: 4, background: catDotColor(e.cat, vibrant, mono) }} />
+                    <div className="task-body">
+                      <div className="task-title" style={{ fontSize: 14.5 }}>{e.title}</div>
+                      <div className="meta-row" style={{ marginTop: 7 }}>
+                        <CategoryChip cat={e.cat} vibrant={vibrant} dark={dark} mono={mono} />
+                        {e.kind === 'sub' && <span className="chip chip-attach">subtask</span>}
+                      </div>
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function TimelineView({ tasks, onEdit, vibrant, dark, mono, mobile }) {
+  const WIN = mobile ? 10 : 14;
+  const start = TODAY;
+  const list = tasks.filter(t => !taskDone(t) && t.due).map(t => {
+    const cat = catById(t.categoryId);
+    const subDues = (t.subtasks || []).map(s => s.due).filter(Boolean).map(parseYmd);
+    const dueD = parseYmd(t.due);
+    let startD = subDues.length ? new Date(Math.min(...subDues.map(d => +d), +dueD)) : dueD;
+    if (startD < start) startD = start;
+    return { t, cat, startOff: dayDiff(start, startD), endOff: dayDiff(start, dueD), status: taskStatus(t) };
+  }).filter(x => x.endOff >= 0 && x.startOff < WIN)
+    .sort((a, b) => a.endOff - b.endOff);
+
+  if (list.length === 0) return <EmptyState icon="timeline" title="No upcoming deadlines" sub={`Tasks due in the next ${WIN} days show as bars here.`} />;
+
+  const ticks = [];
+  for (let i = 0; i < WIN; i += (mobile ? 2 : 2)) ticks.push(addDays(start, i));
+
+  return (
+    <div className="timeline">
+      <div className="tl-scale">
+        <div className="tl-label">Task</div>
+        <div className="tl-scale-inner">
+          {ticks.map((d, i) => <span key={i}>{MON_SHORT[d.getMonth()]} {d.getDate()}</span>)}
+        </div>
+      </div>
+      {list.map(({ t, cat, startOff, endOff, status }) => {
+        const s = Math.max(0, startOff);
+        const e = Math.min(WIN - 1, endOff);
+        const left = (s / WIN) * 100;
+        const width = Math.max(((e - s + 1) / WIN) * 100, 9);
+        const color = status === 'overdue' ? 'var(--red)' : status === 'soon' ? 'var(--amber)' : catDotColor(cat, vibrant, mono);
+        return (
+          <div key={t.id} className="tl-row">
+            <div className="tl-label" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t.title}</div>
+            <div className="tl-track">
+              <button className="tl-bar" style={{ left: `${left}%`, width: `${width}%`, background: color }} onClick={() => onEdit(t.id)}>
+                {t.title}
+              </button>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+Object.assign(window, { MonthGrid, AgendaView, TimelineView, MobileDayList, eventsFor, byDay });
+
+</script>
+
+<script type="text/babel" data-src="tweaks-panel.jsx">
+// @ds-adherence-ignore -- omelette starter scaffold (raw elements/hex/px by design)
+
+/* BEGIN USAGE */
+// tweaks-panel.jsx
+// Reusable Tweaks shell + form-control helpers.
+// Exports (to window): useTweaks, TweaksPanel, TweakSection, TweakRow, TweakSlider,
+//   TweakToggle, TweakRadio, TweakSelect, TweakText, TweakNumber, TweakColor, TweakButton.
+//
+// Owns the host protocol (listens for __activate_edit_mode / __deactivate_edit_mode,
+// posts __edit_mode_available / __edit_mode_set_keys / __edit_mode_dismissed) so
+// individual prototypes don't re-roll it. Ships a consistent set of controls so you
+// don't hand-draw <input type="range">, segmented radios, steppers, etc.
+//
+// Usage (in an HTML file that loads React + Babel):
+//
+//   const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+//     "primaryColor": "#D97757",
+//     "palette": ["#D97757", "#29261b", "#f6f4ef"],
+//     "fontSize": 16,
+//     "density": "regular",
+//     "dark": false
+//   }/*EDITMODE-END*/;
+//
+//   function App() {
+//     const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
+//     return (
+//       <div style={{ fontSize: t.fontSize, color: t.primaryColor }}>
+//         Hello
+//         <TweaksPanel>
+//           <TweakSection label="Typography" />
+//           <TweakSlider label="Font size" value={t.fontSize} min={10} max={32} unit="px"
+//                        onChange={(v) => setTweak('fontSize', v)} />
+//           <TweakRadio  label="Density" value={t.density}
+//                        options={['compact', 'regular', 'comfy']}
+//                        onChange={(v) => setTweak('density', v)} />
+//           <TweakSection label="Theme" />
+//           <TweakColor  label="Primary" value={t.primaryColor}
+//                        options={['#D97757', '#2A6FDB', '#1F8A5B', '#7A5AE0']}
+//                        onChange={(v) => setTweak('primaryColor', v)} />
+//           <TweakColor  label="Palette" value={t.palette}
+//                        options={[['#D97757', '#29261b', '#f6f4ef'],
+//                                  ['#475569', '#0f172a', '#f1f5f9']]}
+//                        onChange={(v) => setTweak('palette', v)} />
+//           <TweakToggle label="Dark mode" value={t.dark}
+//                        onChange={(v) => setTweak('dark', v)} />
+//         </TweaksPanel>
+//       </div>
+//     );
+//   }
+//
+// TweakRadio is the segmented control for 2–3 short options (auto-falls-back to
+// TweakSelect past ~16/~10 chars per label); reach for TweakSelect directly when
+// options are many or long. For color tweaks always curate 3-4 options rather than
+// a free picker; an option can also be a whole 2–5 color palette (the stored value
+// is the array). The Tweak* controls are a floor, not a ceiling — build custom
+// controls inside the panel if a tweak calls for UI they don't cover.
+/* END USAGE */
+// ─────────────────────────────────────────────────────────────────────────────
+
+const __TWEAKS_STYLE = `
+  .twk-panel{position:fixed;right:16px;bottom:16px;z-index:2147483646;width:280px;
+    max-height:calc(100vh - 32px);display:flex;flex-direction:column;
+    transform:scale(var(--dc-inv-zoom,1));transform-origin:bottom right;
+    background:rgba(250,249,247,.78);color:#29261b;
+    -webkit-backdrop-filter:blur(24px) saturate(160%);backdrop-filter:blur(24px) saturate(160%);
+    border:.5px solid rgba(255,255,255,.6);border-radius:14px;
+    box-shadow:0 1px 0 rgba(255,255,255,.5) inset,0 12px 40px rgba(0,0,0,.18);
+    font:11.5px/1.4 ui-sans-serif,system-ui,-apple-system,sans-serif;overflow:hidden}
+  .twk-hd{display:flex;align-items:center;justify-content:space-between;
+    padding:10px 8px 10px 14px;cursor:move;user-select:none}
+  .twk-hd b{font-size:12px;font-weight:600;letter-spacing:.01em}
+  .twk-x{appearance:none;border:0;background:transparent;color:rgba(41,38,27,.55);
+    width:22px;height:22px;border-radius:6px;cursor:default;font-size:13px;line-height:1}
+  .twk-x:hover{background:rgba(0,0,0,.06);color:#29261b}
+  .twk-body{padding:2px 14px 14px;display:flex;flex-direction:column;gap:10px;
+    overflow-y:auto;overflow-x:hidden;min-height:0;
+    scrollbar-width:thin;scrollbar-color:rgba(0,0,0,.15) transparent}
+  .twk-body::-webkit-scrollbar{width:8px}
+  .twk-body::-webkit-scrollbar-track{background:transparent;margin:2px}
+  .twk-body::-webkit-scrollbar-thumb{background:rgba(0,0,0,.15);border-radius:4px;
+    border:2px solid transparent;background-clip:content-box}
+  .twk-body::-webkit-scrollbar-thumb:hover{background:rgba(0,0,0,.25);
+    border:2px solid transparent;background-clip:content-box}
+  .twk-row{display:flex;flex-direction:column;gap:5px}
+  .twk-row-h{flex-direction:row;align-items:center;justify-content:space-between;gap:10px}
+  .twk-lbl{display:flex;justify-content:space-between;align-items:baseline;
+    color:rgba(41,38,27,.72)}
+  .twk-lbl>span:first-child{font-weight:500}
+  .twk-val{color:rgba(41,38,27,.5);font-variant-numeric:tabular-nums}
+
+  .twk-sect{font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;
+    color:rgba(41,38,27,.45);padding:10px 0 0}
+  .twk-sect:first-child{padding-top:0}
+
+  .twk-field{appearance:none;box-sizing:border-box;width:100%;min-width:0;height:26px;padding:0 8px;
+    border:.5px solid rgba(0,0,0,.1);border-radius:7px;
+    background:rgba(255,255,255,.6);color:inherit;font:inherit;outline:none}
+  .twk-field:focus{border-color:rgba(0,0,0,.25);background:rgba(255,255,255,.85)}
+  select.twk-field{padding-right:22px;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path fill='rgba(0,0,0,.5)' d='M0 0h10L5 6z'/></svg>");
+    background-repeat:no-repeat;background-position:right 8px center}
+
+  .twk-slider{appearance:none;-webkit-appearance:none;width:100%;height:4px;margin:6px 0;
+    border-radius:999px;background:rgba(0,0,0,.12);outline:none}
+  .twk-slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;
+    width:14px;height:14px;border-radius:50%;background:#fff;
+    border:.5px solid rgba(0,0,0,.12);box-shadow:0 1px 3px rgba(0,0,0,.2);cursor:default}
+  .twk-slider::-moz-range-thumb{width:14px;height:14px;border-radius:50%;
+    background:#fff;border:.5px solid rgba(0,0,0,.12);box-shadow:0 1px 3px rgba(0,0,0,.2);cursor:default}
+
+  .twk-seg{position:relative;display:flex;padding:2px;border-radius:8px;
+    background:rgba(0,0,0,.06);user-select:none}
+  .twk-seg-thumb{position:absolute;top:2px;bottom:2px;border-radius:6px;
+    background:rgba(255,255,255,.9);box-shadow:0 1px 2px rgba(0,0,0,.12);
+    transition:left .15s cubic-bezier(.3,.7,.4,1),width .15s}
+  .twk-seg.dragging .twk-seg-thumb{transition:none}
+  .twk-seg button{appearance:none;position:relative;z-index:1;flex:1;border:0;
+    background:transparent;color:inherit;font:inherit;font-weight:500;min-height:22px;
+    border-radius:6px;cursor:default;padding:4px 6px;line-height:1.2;
+    overflow-wrap:anywhere}
+
+  .twk-toggle{position:relative;width:32px;height:18px;border:0;border-radius:999px;
+    background:rgba(0,0,0,.15);transition:background .15s;cursor:default;padding:0}
+  .twk-toggle[data-on="1"]{background:#34c759}
+  .twk-toggle i{position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;
+    background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.25);transition:transform .15s}
+  .twk-toggle[data-on="1"] i{transform:translateX(14px)}
+
+  .twk-num{display:flex;align-items:center;box-sizing:border-box;min-width:0;height:26px;padding:0 0 0 8px;
+    border:.5px solid rgba(0,0,0,.1);border-radius:7px;background:rgba(255,255,255,.6)}
+  .twk-num-lbl{font-weight:500;color:rgba(41,38,27,.6);cursor:ew-resize;
+    user-select:none;padding-right:8px}
+  .twk-num input{flex:1;min-width:0;height:100%;border:0;background:transparent;
+    font:inherit;font-variant-numeric:tabular-nums;text-align:right;padding:0 8px 0 0;
+    outline:none;color:inherit;-moz-appearance:textfield}
+  .twk-num input::-webkit-inner-spin-button,.twk-num input::-webkit-outer-spin-button{
+    -webkit-appearance:none;margin:0}
+  .twk-num-unit{padding-right:8px;color:rgba(41,38,27,.45)}
+
+  .twk-btn{appearance:none;height:26px;padding:0 12px;border:0;border-radius:7px;
+    background:rgba(0,0,0,.78);color:#fff;font:inherit;font-weight:500;cursor:default}
+  .twk-btn:hover{background:rgba(0,0,0,.88)}
+  .twk-btn.secondary{background:rgba(0,0,0,.06);color:inherit}
+  .twk-btn.secondary:hover{background:rgba(0,0,0,.1)}
+
+  .twk-swatch{appearance:none;-webkit-appearance:none;width:56px;height:22px;
+    border:.5px solid rgba(0,0,0,.1);border-radius:6px;padding:0;cursor:default;
+    background:transparent;flex-shrink:0}
+  .twk-swatch::-webkit-color-swatch-wrapper{padding:0}
+  .twk-swatch::-webkit-color-swatch{border:0;border-radius:5.5px}
+  .twk-swatch::-moz-color-swatch{border:0;border-radius:5.5px}
+
+  .twk-chips{display:flex;gap:6px}
+  .twk-chip{position:relative;appearance:none;flex:1;min-width:0;height:46px;
+    padding:0;border:0;border-radius:6px;overflow:hidden;cursor:default;
+    box-shadow:0 0 0 .5px rgba(0,0,0,.12),0 1px 2px rgba(0,0,0,.06);
+    transition:transform .12s cubic-bezier(.3,.7,.4,1),box-shadow .12s}
+  .twk-chip:hover{transform:translateY(-1px);
+    box-shadow:0 0 0 .5px rgba(0,0,0,.18),0 4px 10px rgba(0,0,0,.12)}
+  .twk-chip[data-on="1"]{box-shadow:0 0 0 1.5px rgba(0,0,0,.85),
+    0 2px 6px rgba(0,0,0,.15)}
+  .twk-chip>span{position:absolute;top:0;bottom:0;right:0;width:34%;
+    display:flex;flex-direction:column;box-shadow:-1px 0 0 rgba(0,0,0,.1)}
+  .twk-chip>span>i{flex:1;box-shadow:0 -1px 0 rgba(0,0,0,.1)}
+  .twk-chip>span>i:first-child{box-shadow:none}
+  .twk-chip svg{position:absolute;top:6px;left:6px;width:13px;height:13px;
+    filter:drop-shadow(0 1px 1px rgba(0,0,0,.3))}
+`;
+
+// ── useTweaks ───────────────────────────────────────────────────────────────
+// Single source of truth for tweak values. setTweak persists via the host
+// (__edit_mode_set_keys → host rewrites the EDITMODE block on disk).
+function useTweaks(defaults) {
+  const [values, setValues] = React.useState(defaults);
+  // Accepts either setTweak('key', value) or setTweak({ key: value, ... }) so a
+  // useState-style call doesn't write a "[object Object]" key into the persisted
+  // JSON block.
+  const setTweak = React.useCallback((keyOrEdits, val) => {
+    const edits = typeof keyOrEdits === 'object' && keyOrEdits !== null
+      ? keyOrEdits : { [keyOrEdits]: val };
+    setValues((prev) => ({ ...prev, ...edits }));
+    window.parent.postMessage({ type: '__edit_mode_set_keys', edits }, '*');
+    // Same-window signal so in-page listeners (deck-stage rail thumbnails)
+    // can react — the parent message only reaches the host, not peers.
+    window.dispatchEvent(new CustomEvent('tweakchange', { detail: edits }));
+  }, []);
+  return [values, setTweak];
+}
+
+// ── TweaksPanel ─────────────────────────────────────────────────────────────
+// Floating shell. Registers the protocol listener BEFORE announcing
+// availability — if the announce ran first, the host's activate could land
+// before our handler exists and the toolbar toggle would silently no-op.
+// The close button posts __edit_mode_dismissed so the host's toolbar toggle
+// flips off in lockstep; the host echoes __deactivate_edit_mode back which
+// is what actually hides the panel.
+function TweaksPanel({ title = 'Tweaks', children }) {
+  const [open, setOpen] = React.useState(false);
+  const dragRef = React.useRef(null);
+  const offsetRef = React.useRef({ x: 16, y: 16 });
+  const PAD = 16;
+
+  const clampToViewport = React.useCallback(() => {
+    const panel = dragRef.current;
+    if (!panel) return;
+    const w = panel.offsetWidth, h = panel.offsetHeight;
+    const maxRight = Math.max(PAD, window.innerWidth - w - PAD);
+    const maxBottom = Math.max(PAD, window.innerHeight - h - PAD);
+    offsetRef.current = {
+      x: Math.min(maxRight, Math.max(PAD, offsetRef.current.x)),
+      y: Math.min(maxBottom, Math.max(PAD, offsetRef.current.y)),
+    };
+    panel.style.right = offsetRef.current.x + 'px';
+    panel.style.bottom = offsetRef.current.y + 'px';
+  }, []);
+
+  React.useEffect(() => {
+    if (!open) return;
+    clampToViewport();
+    if (typeof ResizeObserver === 'undefined') {
+      window.addEventListener('resize', clampToViewport);
+      return () => window.removeEventListener('resize', clampToViewport);
+    }
+    const ro = new ResizeObserver(clampToViewport);
+    ro.observe(document.documentElement);
+    return () => ro.disconnect();
+  }, [open, clampToViewport]);
+
+  React.useEffect(() => {
+    const onMsg = (e) => {
+      const t = e?.data?.type;
+      if (t === '__activate_edit_mode') setOpen(true);
+      else if (t === '__deactivate_edit_mode') setOpen(false);
+    };
+    window.addEventListener('message', onMsg);
+    window.parent.postMessage({ type: '__edit_mode_available' }, '*');
+    return () => window.removeEventListener('message', onMsg);
+  }, []);
+
+  const dismiss = () => {
+    setOpen(false);
+    window.parent.postMessage({ type: '__edit_mode_dismissed' }, '*');
+  };
+
+  const onDragStart = (e) => {
+    const panel = dragRef.current;
+    if (!panel) return;
+    const r = panel.getBoundingClientRect();
+    const sx = e.clientX, sy = e.clientY;
+    const startRight = window.innerWidth - r.right;
+    const startBottom = window.innerHeight - r.bottom;
+    const move = (ev) => {
+      offsetRef.current = {
+        x: startRight - (ev.clientX - sx),
+        y: startBottom - (ev.clientY - sy),
+      };
+      clampToViewport();
+    };
+    const up = () => {
+      window.removeEventListener('mousemove', move);
+      window.removeEventListener('mouseup', up);
+    };
+    window.addEventListener('mousemove', move);
+    window.addEventListener('mouseup', up);
+  };
+
+  if (!open) return null;
+  return (
+    <>
+      <style>{__TWEAKS_STYLE}</style>
+      <div ref={dragRef} className="twk-panel" data-omelette-chrome=""
+           style={{ right: offsetRef.current.x, bottom: offsetRef.current.y }}>
+        <div className="twk-hd" onMouseDown={onDragStart}>
+          <b>{title}</b>
+          <button className="twk-x" aria-label="Close tweaks"
+                  onMouseDown={(e) => e.stopPropagation()}
+                  onClick={dismiss}>✕</button>
+        </div>
+        <div className="twk-body">
+          {children}
+        </div>
+      </div>
+    </>
+  );
+}
+
+// ── Layout helpers ──────────────────────────────────────────────────────────
+
+function TweakSection({ label, children }) {
+  return (
+    <>
+      <div className="twk-sect">{label}</div>
+      {children}
+    </>
+  );
+}
+
+function TweakRow({ label, value, children, inline = false }) {
+  return (
+    <div className={inline ? 'twk-row twk-row-h' : 'twk-row'}>
+      <div className="twk-lbl">
+        <span>{label}</span>
+        {value != null && <span className="twk-val">{value}</span>}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+// ── Controls ────────────────────────────────────────────────────────────────
+
+function TweakSlider({ label, value, min = 0, max = 100, step = 1, unit = '', onChange }) {
+  return (
+    <TweakRow label={label} value={`${value}${unit}`}>
+      <input type="range" className="twk-slider" min={min} max={max} step={step}
+             value={value} onChange={(e) => onChange(Number(e.target.value))} />
+    </TweakRow>
+  );
+}
+
+function TweakToggle({ label, value, onChange }) {
+  return (
+    <div className="twk-row twk-row-h">
+      <div className="twk-lbl"><span>{label}</span></div>
+      <button type="button" className="twk-toggle" data-on={value ? '1' : '0'}
+              role="switch" aria-checked={!!value}
+              onClick={() => onChange(!value)}><i /></button>
+    </div>
+  );
+}
+
+function TweakRadio({ label, value, options, onChange }) {
+  const trackRef = React.useRef(null);
+  const [dragging, setDragging] = React.useState(false);
+  // The active value is read by pointer-move handlers attached for the lifetime
+  // of a drag — ref it so a stale closure doesn't fire onChange for every move.
+  const valueRef = React.useRef(value);
+  valueRef.current = value;
+
+  // Segments wrap mid-word once per-segment width runs out. The track is
+  // ~248px (280 panel − 28 body pad − 4 seg pad), each button loses 12px
+  // to its own padding, and 11.5px system-ui averages ~6.3px/char — so 2
+  // options fit ~16 chars each, 3 fit ~10. Past that (or >3 options), fall
+  // back to a dropdown rather than wrap.
+  const labelLen = (o) => String(typeof o === 'object' ? o.label : o).length;
+  const maxLen = options.reduce((m, o) => Math.max(m, labelLen(o)), 0);
+  const fitsAsSegments = maxLen <= ({ 2: 16, 3: 10 }[options.length] ?? 0);
+  if (!fitsAsSegments) {
+    // <select> emits strings — map back to the original option value so the
+    // fallback stays type-preserving (numbers, booleans) like the segment path.
+    const resolve = (s) => {
+      const m = options.find((o) => String(typeof o === 'object' ? o.value : o) === s);
+      return m === undefined ? s : typeof m === 'object' ? m.value : m;
+    };
+    return <TweakSelect label={label} value={value} options={options}
+                        onChange={(s) => onChange(resolve(s))} />;
+  }
+  const opts = options.map((o) => (typeof o === 'object' ? o : { value: o, label: o }));
+  const idx = Math.max(0, opts.findIndex((o) => o.value === value));
+  const n = opts.length;
+
+  const segAt = (clientX) => {
+    const r = trackRef.current.getBoundingClientRect();
+    const inner = r.width - 4;
+    const i = Math.floor(((clientX - r.left - 2) / inner) * n);
+    return opts[Math.max(0, Math.min(n - 1, i))].value;
+  };
+
+  const onPointerDown = (e) => {
+    setDragging(true);
+    const v0 = segAt(e.clientX);
+    if (v0 !== valueRef.current) onChange(v0);
+    const move = (ev) => {
+      if (!trackRef.current) return;
+      const v = segAt(ev.clientX);
+      if (v !== valueRef.current) onChange(v);
+    };
+    const up = () => {
+      setDragging(false);
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', up);
+    };
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+  };
+
+  return (
+    <TweakRow label={label}>
+      <div ref={trackRef} role="radiogroup" onPointerDown={onPointerDown}
+           className={dragging ? 'twk-seg dragging' : 'twk-seg'}>
+        <div className="twk-seg-thumb"
+             style={{ left: `calc(2px + ${idx} * (100% - 4px) / ${n})`,
+                      width: `calc((100% - 4px) / ${n})` }} />
+        {opts.map((o) => (
+          <button key={o.value} type="button" role="radio" aria-checked={o.value === value}>
+            {o.label}
+          </button>
+        ))}
+      </div>
+    </TweakRow>
+  );
+}
+
+function TweakSelect({ label, value, options, onChange }) {
+  return (
+    <TweakRow label={label}>
+      <select className="twk-field" value={value} onChange={(e) => onChange(e.target.value)}>
+        {options.map((o) => {
+          const v = typeof o === 'object' ? o.value : o;
+          const l = typeof o === 'object' ? o.label : o;
+          return <option key={v} value={v}>{l}</option>;
+        })}
+      </select>
+    </TweakRow>
+  );
+}
+
+function TweakText({ label, value, placeholder, onChange }) {
+  return (
+    <TweakRow label={label}>
+      <input className="twk-field" type="text" value={value} placeholder={placeholder}
+             onChange={(e) => onChange(e.target.value)} />
+    </TweakRow>
+  );
+}
+
+function TweakNumber({ label, value, min, max, step = 1, unit = '', onChange }) {
+  const clamp = (n) => {
+    if (min != null && n < min) return min;
+    if (max != null && n > max) return max;
+    return n;
+  };
+  const startRef = React.useRef({ x: 0, val: 0 });
+  const onScrubStart = (e) => {
+    e.preventDefault();
+    startRef.current = { x: e.clientX, val: value };
+    const decimals = (String(step).split('.')[1] || '').length;
+    const move = (ev) => {
+      const dx = ev.clientX - startRef.current.x;
+      const raw = startRef.current.val + dx * step;
+      const snapped = Math.round(raw / step) * step;
+      onChange(clamp(Number(snapped.toFixed(decimals))));
+    };
+    const up = () => {
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', up);
+    };
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+  };
+  return (
+    <div className="twk-num">
+      <span className="twk-num-lbl" onPointerDown={onScrubStart}>{label}</span>
+      <input type="number" value={value} min={min} max={max} step={step}
+             onChange={(e) => onChange(clamp(Number(e.target.value)))} />
+      {unit && <span className="twk-num-unit">{unit}</span>}
+    </div>
+  );
+}
+
+// Relative-luminance contrast pick — checkmarks drawn over a swatch need to
+// read on both #111 and #fafafa without per-option configuration. Hex input
+// only (#rgb / #rrggbb); named or rgb()/hsl() colors fall through to "light".
+function __twkIsLight(hex) {
+  const h = String(hex).replace('#', '');
+  const x = h.length === 3 ? h.replace(/./g, (c) => c + c) : h.padEnd(6, '0');
+  const n = parseInt(x.slice(0, 6), 16);
+  if (Number.isNaN(n)) return true;
+  const r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+  return r * 299 + g * 587 + b * 114 > 148000;
+}
+
+const __TwkCheck = ({ light }) => (
+  <svg viewBox="0 0 14 14" aria-hidden="true">
+    <path d="M3 7.2 5.8 10 11 4.2" fill="none" strokeWidth="2.2"
+          strokeLinecap="round" strokeLinejoin="round"
+          stroke={light ? 'rgba(0,0,0,.78)' : '#fff'} />
+  </svg>
+);
+
+// TweakColor — curated color/palette picker. Each option is either a single
+// hex string or an array of 1-5 hex strings; the card adapts — a lone color
+// renders solid, a palette renders colors[0] as the hero (left ~2/3) with the
+// rest stacked in a sharp column on the right. onChange emits the
+// option in the shape it was passed (string stays string, array stays array).
+// Without options it falls back to the native color input for back-compat.
+function TweakColor({ label, value, options, onChange }) {
+  if (!options || !options.length) {
+    return (
+      <div className="twk-row twk-row-h">
+        <div className="twk-lbl"><span>{label}</span></div>
+        <input type="color" className="twk-swatch" value={value}
+               onChange={(e) => onChange(e.target.value)} />
+      </div>
+    );
+  }
+  // Native <input type=color> emits lowercase hex per the HTML spec, so
+  // compare case-insensitively. String() guards JSON.stringify(undefined),
+  // which returns the primitive undefined (no .toLowerCase).
+  const key = (o) => String(JSON.stringify(o)).toLowerCase();
+  const cur = key(value);
+  return (
+    <TweakRow label={label}>
+      <div className="twk-chips" role="radiogroup">
+        {options.map((o, i) => {
+          const colors = Array.isArray(o) ? o : [o];
+          const [hero, ...rest] = colors;
+          const sup = rest.slice(0, 4);
+          const on = key(o) === cur;
+          return (
+            <button key={i} type="button" className="twk-chip" role="radio"
+                    aria-checked={on} data-on={on ? '1' : '0'}
+                    aria-label={colors.join(', ')} title={colors.join(' · ')}
+                    style={{ background: hero }}
+                    onClick={() => onChange(o)}>
+              {sup.length > 0 && (
+                <span>
+                  {sup.map((c, j) => <i key={j} style={{ background: c }} />)}
+                </span>
+              )}
+              {on && <__TwkCheck light={__twkIsLight(hero)} />}
+            </button>
+          );
+        })}
+      </div>
+    </TweakRow>
+  );
+}
+
+function TweakButton({ label, onClick, secondary = false }) {
+  return (
+    <button type="button" className={secondary ? 'twk-btn secondary' : 'twk-btn'}
+            onClick={onClick}>{label}</button>
+  );
+}
+
+Object.assign(window, {
+  useTweaks, TweaksPanel, TweakSection, TweakRow,
+  TweakSlider, TweakToggle, TweakRadio, TweakSelect,
+  TweakText, TweakNumber, TweakColor, TweakButton,
+});
+
+</script>
+
+<script type="text/babel" data-src="App.jsx">
+/* ============================================================
+   App.jsx — PlannerSurface (responsive) + AppRoot (shared state,
+   tweaks, side-by-side web + mobile showcase)
+   ============================================================ */
+
+const WD_FULL = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+function todaySub() {return `${WD_FULL[TODAY.getDay()]}, ${MONTHS[TODAY.getMonth()]} ${TODAY.getDate()}`;}
+
+const TAB_DEF = [
+{ id: 'today', label: 'Today', icon: 'today' },
+{ id: 'upcoming', label: 'Upcoming', icon: 'clock' },
+{ id: 'all', label: 'All Tasks', icon: 'list' },
+{ id: 'calendar', label: 'Calendar', icon: 'calendar' }];
+
+const CAL_VIEWS = [
+{ id: 'month', label: 'Month', icon: 'grid' },
+{ id: 'agenda', label: 'Agenda', icon: 'agenda' },
+{ id: 'timeline', label: 'Timeline', icon: 'timeline' }];
+
+
+function matchSearch(t, q) {
+  if (!q) return true;
+  q = q.toLowerCase();
+  return t.title.toLowerCase().includes(q) || (t.notes || '').toLowerCase().includes(q) ||
+  (t.subtasks || []).some((s) => s.title.toLowerCase().includes(q));
+}
+
+function PlannerSurface({ formFactor, tasks, t, root }) {
+  const mobile = formFactor === 'mobile';
+  const [tab, setTab] = React.useState('today');
+  const [catFilter, setCatFilter] = React.useState(null);
+  const [search, setSearch] = React.useState('');
+  const [sort, setSort] = React.useState('due');
+  const [hideDone, setHideDone] = React.useState(false);
+  const [calView, setCalView] = React.useState(t.calendarDefault);
+  const [monthDate, setMonthDate] = React.useState(new Date(TODAY.getFullYear(), TODAY.getMonth(), 1));
+  const [selDay, setSelDay] = React.useState(TODAY_STR);
+  const [editId, setEditId] = React.useState(undefined); // undefined=closed, null=new, id=edit
+
+  React.useEffect(() => {setCalView(t.calendarDefault);}, [t.calendarDefault]);
+
+  const vibrant = t.theme === 'vibrant';
+  const mono = t.theme === 'mono';
+  const studio = t.skin === 'studio';
+  const colorOpts = { vibrant, mono };
+
+  // base filtered (category + search)
+  const base = tasks.filter((x) => (!catFilter || x.categoryId === catFilter) && matchSearch(x, search));
+
+  // tab filtered
+  let listTasks = base;
+  if (tab === 'today') listTasks = base.filter((x) => ['overdue', 'today'].includes(bucketOf(x)));else
+  if (tab === 'upcoming') listTasks = base.filter((x) => ['week', 'later', 'nodate'].includes(bucketOf(x)) && !taskDone(x));else
+  if (tab === 'all' && hideDone) listTasks = base.filter((x) => !taskDone(x));
+
+  // counts
+  const cnt = {
+    today: tasks.filter((x) => ['overdue', 'today'].includes(bucketOf(x))).length,
+    upcoming: tasks.filter((x) => ['week', 'later', 'nodate'].includes(bucketOf(x)) && !taskDone(x)).length,
+    all: tasks.length
+  };
+  const stats = {
+    today: tasks.filter((x) => bucketOf(x) === 'today').length,
+    overdue: tasks.filter((x) => bucketOf(x) === 'overdue').length,
+    week: tasks.filter((x) => bucketOf(x) === 'week').length,
+    done: tasks.filter((x) => taskDone(x)).length
+  };
+
+  const handlers = {
+    onToggleTask: root.toggleTask, onToggleSub: root.toggleSub, onAddSub: root.addSub,
+    onEdit: (id) => setEditId(id), onDelete: root.deleteTask
+  };
+
+  const titles = {
+    today: ['Today', todaySub()],
+    upcoming: ['Upcoming', 'Tasks with a future due date'],
+    all: ['All Tasks', `${tasks.length} tasks · ${stats.done} completed`],
+    calendar: ['Calendar', `${MONTHS[monthDate.getMonth()]} ${monthDate.getFullYear()}`]
+  };
+
+  // ---- calendar block (shared) ----
+  function CalendarBlock() {
+    return (
+      <div>
+        {!mobile &&
+        <div className="cal-head">
+            {calView === 'month' &&
+          <React.Fragment>
+                <div className="cal-month">{MONTHS[monthDate.getMonth()]} {monthDate.getFullYear()}</div>
+                <div className="cal-nav">
+                  <button className="icon-btn" onClick={() => setMonthDate(new Date(monthDate.getFullYear(), monthDate.getMonth() - 1, 1))}><Icon name="chevronL" size={18} /></button>
+                  <button className="icon-btn" onClick={() => setMonthDate(new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 1))}><Icon name="chevronR" size={18} /></button>
+                  <button className="btn btn-ghost" onClick={() => setMonthDate(new Date(TODAY.getFullYear(), TODAY.getMonth(), 1))}>Today</button>
+                </div>
+              </React.Fragment>
+          }
+            <div className="topbar-spacer" />
+            <Segmented options={CAL_VIEWS} value={calView} onChange={setCalView} />
+          </div>
+        }
+        {mobile &&
+        <div style={{ display: 'flex', gap: 8, padding: '0 0 12px', alignItems: 'center' }}>
+            <Segmented options={CAL_VIEWS} value={calView} onChange={setCalView} />
+            {calView === 'month' &&
+          <div className="cal-nav" style={{ marginLeft: 'auto' }}>
+                <button className="icon-btn" style={{ width: 34, height: 34 }} onClick={() => setMonthDate(new Date(monthDate.getFullYear(), monthDate.getMonth() - 1, 1))}><Icon name="chevronL" size={16} /></button>
+                <button className="icon-btn" style={{ width: 34, height: 34 }} onClick={() => setMonthDate(new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 1))}><Icon name="chevronR" size={16} /></button>
+              </div>
+          }
+          </div>
+        }
+        {calView === 'month' && <MonthGrid tasks={base} monthDate={monthDate} onEdit={handlers.onEdit} {...colorOpts} mobile={mobile} selected={selDay} setSelected={setSelDay} />}
+        {calView === 'month' && mobile && <MobileDayList tasks={base} day={selDay} onEdit={handlers.onEdit} vibrant={vibrant} dark={t.dark} mono={mono} />}
+        {calView === 'agenda' && <AgendaView tasks={base} monthDate={monthDate} onEdit={handlers.onEdit} vibrant={vibrant} dark={t.dark} mono={mono} />}
+        {calView === 'timeline' && <TimelineView tasks={base} onEdit={handlers.onEdit} vibrant={vibrant} dark={t.dark} mono={mono} mobile={mobile} />}
+      </div>);
+
+  }
+
+  function ListBlock() {
+    return <TaskList tasks={listTasks} layout={t.listLayout} sort={sort} vibrant={vibrant} dark={t.dark} mono={mono} subtaskMode={t.subtaskMode} handlers={handlers} />;
+  }
+
+  function TodayBlock() {
+    if (!studio) return <ListBlock />;
+    return (
+      <React.Fragment>
+        <StudioDashboard
+          tasks={tasks} dark={t.dark}
+          onToggleDark={() => root.setTweak('dark', !t.dark)}
+          onPickCat={(id) => {setCatFilter(id);setTab('all');}}
+          onAdd={() => setEditId(null)} />
+        <div className="dash-sec-head sched">Today’s schedule</div>
+        <ListBlock />
+      </React.Fragment>);
+
+  }
+
+  const editor = editId !== undefined &&
+  <TaskEditor
+    initial={editId === null ? null : tasks.find((x) => x.id === editId)}
+    vibrant={vibrant} dark={t.dark}
+    onSave={(task) => {root.saveTask(task);setEditId(undefined);}}
+    onClose={() => setEditId(undefined)}
+    onDelete={(id) => {root.deleteTask(id);setEditId(undefined);}} />;
+
+
+
+  // ============ DESKTOP ============
+  if (!mobile) {
+    return (
+      <div className={`surface desktop skin-${t.skin}${t.dark ? ' dark' : ''}`} style={{ '--accent': t.accent }}>
+        <aside className="sidebar">
+          <div className="brand">
+            <div className="brand-mark"><Icon name="check" size={19} strokeWidth={2.6} /></div>
+            <div>
+              <div className="brand-name">Work Planner</div>
+              <div className="brand-sub">Plan · Track · Done</div>
+            </div>
+          </div>
+          {TAB_DEF.map((d) =>
+          <button key={d.id} className={`nav-item${tab === d.id ? ' active' : ''}`} onClick={() => setTab(d.id)}>
+              <Icon name={d.icon} size={19} />{d.label}
+              {cnt[d.id] != null && <span className="count">{cnt[d.id]}</span>}
+            </button>
+          )}
+          <div className="nav-label">Categories</div>
+          {CATEGORIES.map((c) => {
+            const n = tasks.filter((x) => x.categoryId === c.id && !taskDone(x)).length;
+            return (
+              <button key={c.id} className={`cat-row${catFilter === c.id ? ' active' : ''}`} onClick={() => setCatFilter(catFilter === c.id ? null : c.id)}>
+                <span className="cat-dot" style={{ background: catDotColor(c, vibrant, mono) }} />{c.name}
+                <span className="count">{n}</span>
+              </button>);
+
+          })}
+          <div className="sidebar-foot">
+            <div className="avatar">JR</div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 13.5, fontWeight: 650 }}>Jordan Rivera</div>
+              <div style={{ fontSize: 11.5, color: 'var(--ink-3)' }}>Personal plan</div>
+            </div>
+            <button className="mini-btn" onClick={() => root.setTweak('dark', !t.dark)} title="Toggle theme">
+              <Icon name={t.dark ? 'sun' : 'moon'} size={17} />
+            </button>
+          </div>
+        </aside>
+
+        <main className="main">
+          <div className="topbar">
+            <div>
+              <div className="page-title">{titles[tab][0]}{catFilter && <span style={{ color: 'var(--ink-3)', fontWeight: 600 }}> · {catById(catFilter).name}</span>}</div>
+              <div className="page-sub">{titles[tab][1]}</div>
+            </div>
+            <div className="topbar-spacer" />
+            <div className="search">
+              <Icon name="search" size={16} />
+              <input placeholder="Search tasks…" value={search} onChange={(e) => setSearch(e.target.value)} />
+            </div>
+            <button className="btn btn-primary" onClick={() => setEditId(null)}><Icon name="plus" size={16} />New task</button>
+          </div>
+
+          {tab === 'today' && !studio &&
+          <div className="stats">
+              <div className="stat"><div className="stat-num">{stats.today}</div><div className="stat-label">Due today</div></div>
+              <div className="stat red"><div className="stat-num">{stats.overdue}</div><div className="stat-label">Overdue</div></div>
+              <div className="stat amber"><div className="stat-num">{stats.week}</div><div className="stat-label">Due this week</div></div>
+              <div className="stat green"><div className="stat-num">{stats.done}</div><div className="stat-label">Completed</div></div>
+            </div>
+          }
+
+          {tab !== 'calendar' &&
+          <div className="toolbar">
+              <Segmented options={[{ id: 'due', label: 'Due date', icon: 'calendar' }, { id: 'priority', label: 'Priority', icon: 'flag' }]} value={sort} onChange={setSort} />
+              {tab === 'all' && <button className={`chip-toggle${hideDone ? ' on' : ''}`} onClick={() => setHideDone((h) => !h)}>Hide completed</button>}
+            </div>
+          }
+
+          <div className="content scroll">
+            <div className="content-pad">
+              {tab === 'calendar' ? <CalendarBlock /> : tab === 'today' ? <TodayBlock /> : <ListBlock />}
+            </div>
+          </div>
+        </main>
+        {editor}
+      </div>);
+
+  }
+
+  // ============ MOBILE ============
+  const mTabs = [TAB_DEF[0], TAB_DEF[1], 'fab', TAB_DEF[3], TAB_DEF[2]];
+  return (
+    <div className={`surface mobile skin-${t.skin}${t.dark ? ' dark' : ''}`} style={{ '--accent': t.accent }}>
+      {!(studio && tab === 'today') &&
+      <div className="m-header">
+        <div>
+          <div className="m-title">{titles[tab][0]}</div>
+          <div className="m-sub">{titles[tab][1]}</div>
+        </div>
+        <div className="m-header-spacer" />
+        <button className="icon-btn" onClick={() => root.setTweak('dark', !t.dark)}><Icon name={t.dark ? 'sun' : 'moon'} size={17} /></button>
+      </div>
+      }
+
+      {tab !== 'calendar' && !(studio && tab === 'today') &&
+      <div className="m-search">
+          <Icon name="search" size={16} />
+          <input placeholder="Search tasks…" value={search} onChange={(e) => setSearch(e.target.value)} />
+        </div>
+      }
+
+      {tab !== 'calendar' && !(studio && tab === 'today') &&
+      <div className="m-filters">
+          <button className={`m-chip${!catFilter ? ' on' : ''}`} onClick={() => setCatFilter(null)}>All</button>
+          {CATEGORIES.map((c) =>
+        <button key={c.id} className={`m-chip${catFilter === c.id ? ' on' : ''}`} onClick={() => setCatFilter(catFilter === c.id ? null : c.id)}>
+              <span className="cat-dot" style={{ background: catDotColor(c, vibrant, mono) }} />{c.name}
+            </button>
+        )}
+        </div>
+      }
+
+      {tab === 'today' && !studio &&
+      <div className="m-stats">
+          <div className="m-stat"><div className="m-stat-num">{stats.today}</div><div className="m-stat-label">Today</div></div>
+          <div className="m-stat red"><div className="m-stat-num">{stats.overdue}</div><div className="m-stat-label">Overdue</div></div>
+          <div className="m-stat amber"><div className="m-stat-num">{stats.week}</div><div className="m-stat-label">This week</div></div>
+        </div>
+      }
+
+      <div className="m-content scroll">
+        {tab === 'calendar' ? <CalendarBlock /> : tab === 'today' ? <TodayBlock /> : <ListBlock />}
+      </div>
+
+      <nav className="tabbar">
+        {mTabs.map((d, i) => d === 'fab' ?
+        <div key="fab" className="fab-wrap"><button className="fab" onClick={() => setEditId(null)}><Icon name="plus" size={26} strokeWidth={2.4} /></button></div> :
+
+        <button key={d.id} className={`tab${tab === d.id ? ' active' : ''}`} onClick={() => setTab(d.id)}>
+            <Icon name={d.icon} size={23} />{d.label}
+          </button>
+        )}
+      </nav>
+      {editor}
+    </div>);
+
+}
+
+// ============================================================
+// AppRoot — shared task state + tweaks + showcase
+// ============================================================
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "theme": "soft",
+  "skin": "studio",
+  "listLayout": "cards",
+  "subtaskMode": "inline",
+  "calendarDefault": "month",
+  "accent": "#708871",
+  "dark": false
+} /*EDITMODE-END*/;
+
+function AppRoot() {
+  const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
+  const [tasks, setTasks] = React.useState(SEED);
+
+  const root = React.useMemo(() => ({
+    setTweak,
+    toggleTask: (id) => setTasks((ts) => ts.map((x) => {
+      if (x.id !== id) return x;
+      if (x.subtasks && x.subtasks.length) {
+        const all = x.subtasks.every((s) => s.done);
+        return { ...x, subtasks: x.subtasks.map((s) => ({ ...s, done: !all })), done: !all };
+      }
+      return { ...x, done: !x.done };
+    })),
+    toggleSub: (id, sid) => setTasks((ts) => ts.map((x) => {
+      if (x.id !== id) return x;
+      const subtasks = x.subtasks.map((s) => s.id === sid ? { ...s, done: !s.done } : s);
+      return { ...x, subtasks, done: subtasks.every((s) => s.done) };
+    })),
+    addSub: (id, title) => setTasks((ts) => ts.map((x) => x.id === id ?
+    { ...x, subtasks: [...x.subtasks, { id: uid(), title, due: null, done: false }], done: false } : x)),
+    deleteTask: (id) => setTasks((ts) => ts.filter((x) => x.id !== id)),
+    saveTask: (task) => setTasks((ts) => {
+      if (task.id && ts.some((x) => x.id === task.id)) return ts.map((x) => x.id === task.id ? task : x);
+      return [{ ...task, id: task.id || uid() }, ...ts];
+    })
+  }), []);
+
+  // ---- responsive: render ONE layout based on the device/viewport ----
+  // Phones (narrow viewports) get the mobile app; everything wider gets desktop.
+  const [isMobile, setIsMobile] = React.useState(
+    typeof window !== 'undefined' ? window.innerWidth < 768 : false
+  );
+  React.useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth < 768);
+    onResize();
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
+  return (
+    <React.Fragment>
+      <PlannerSurface formFactor={isMobile ? 'mobile' : 'desktop'} tasks={tasks} t={t} root={root} />
+
+      <TweaksPanel>
+        <TweakSection label="Visual theme" />
+        <TweakRadio label="Design" value={t.skin} options={[{ value: 'studio', label: 'Studio' }, { value: 'sage', label: 'Sage' }, { value: 'paper', label: 'Paper' }, { value: 'editorial', label: 'Editorial' }, { value: 'candy', label: 'Candy' }]} onChange={(v) => setTweak('skin', v)} />
+        <TweakRadio label="Style" value={t.theme} options={[{ value: 'soft', label: 'Soft' }, { value: 'vibrant', label: 'Vibrant' }, { value: 'mono', label: 'Minimal' }]} onChange={(v) => setTweak('theme', v)} />
+        <TweakColor label="Accent" value={t.accent} options={['#708871', '#6C72E0', '#A98EC7', '#DE6FA1', '#2FA8A0', '#E0A35C']} onChange={(v) => setTweak('accent', v)} />
+        <TweakToggle label="Dark mode" value={t.dark} onChange={(v) => setTweak('dark', v)} />
+
+        <TweakSection label="Task list" />
+        <TweakRadio label="Layout" value={t.listLayout} options={[{ value: 'cards', label: 'Cards' }, { value: 'rows', label: 'Rows' }, { value: 'grouped', label: 'By category' }]} onChange={(v) => setTweak('listLayout', v)} />
+        <TweakRadio label="Subtasks" value={t.subtaskMode} options={[{ value: 'inline', label: 'Inline' }, { value: 'collapsible', label: 'Collapse' }, { value: 'progress', label: 'Bar only' }]} onChange={(v) => setTweak('subtaskMode', v)} />
+
+        <TweakSection label="Calendar" />
+        <TweakRadio label="Default view" value={t.calendarDefault} options={[{ value: 'month', label: 'Month' }, { value: 'agenda', label: 'Agenda' }, { value: 'timeline', label: 'Timeline' }]} onChange={(v) => setTweak('calendarDefault', v)} />
+      </TweaksPanel>
+    </React.Fragment>);
+
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<AppRoot />);
+</script>
+
+</body>
+</html>
