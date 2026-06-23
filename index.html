@@ -966,7 +966,7 @@ function StudioDashboard({tasks,dark,displayName,accent,onToggleDark,onPickCat,o
       const anthropicKey=cfg.ANTHROPIC_API_KEY;
       let p=null,usedApi=false;
       if(geminiKey&&geminiKey.length>10){
-        const resp=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{maxOutputTokens:2048,temperature:0.2},thinkingConfig:{thinkingBudget:0}})});
+        const resp=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{maxOutputTokens:8192,temperature:0.2}})});
         if(!resp.ok){const err=await resp.text();throw new Error(`Gemini ${resp.status}: ${err.slice(0,200)}`);}
         const data=await resp.json();
         const rawText=data.candidates?.[0]?.content?.parts?.[0]?.text||'';
@@ -1143,7 +1143,7 @@ function MobileHero({tasks,displayName,onCreateTask}){
       const geminiKey=cfg.GEMINI_API_KEY;const anthropicKey=cfg.ANTHROPIC_API_KEY;
       let p=null,usedApi=false;
       if(geminiKey&&geminiKey.length>10){
-        const resp=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{maxOutputTokens:2048,temperature:0.2},thinkingConfig:{thinkingBudget:0}})});
+        const resp=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{maxOutputTokens:8192,temperature:0.2}})});
         if(!resp.ok){const err=await resp.text();throw new Error(`Gemini ${resp.status}: ${err.slice(0,200)}`);}
         const data=await resp.json();
         const rawText=data.candidates?.[0]?.content?.parts?.[0]?.text||'';
